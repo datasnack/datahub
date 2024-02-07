@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Data Layers" %}{% endblock %}
+
+{% block content %}
+<h1>{% translate "Data Layers" %}</h1>
+
+<table class="table table-sm table-striped" id="shapes">
+    <thead>
+        <tr>
+            <th>{% translate "Category" %}</th>
+            <th>{% translate "Name" %}</th>
+            <th>{% translate "Key" %}</th>
+            <th>{% translate "State" %}</th>
+            <th class="no-sort text-end">{% translate "Actions" %}</th>
+        </tr>
+    </thead>
+
+<tbody>
+{% for dl in datalayer %}
+    <tr>
+        <td class="align-middle">{{ dl.category }}</td>
+        <td class="align-middle"><a href="{% url 'datalayers:detail' dl.id %}">{{ dl.name }}</a></td>
+        <td class="align-middle"><code>{{ dl.key }}</code></td>
+        <td class="dl-state-pill" data-order="">
+            <span class="datalayer-state
+                {% if dl.has_class %}datalayer-state--active
+                {% else %}datalayer-state--inactive
+                {% endif %}">
+                {% icon "file-code" %}
+            </span>
+            <span class="datalayer-state
+                {% if dl.is_loaded %}datalayer-state--active
+                {% else %}datalayer-state--inactive
+                {% endif %}">
+                {% icon "database" %}
+            </span>
+        </td>
+        <td>
+            <div class="d-flex justify-content-end">
+                <a href="{% url 'datalayers:detail' dl.id %}"  class="btn btn-sm btn-link">{% translate "Details" %}</a>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+
+{% endblock %}

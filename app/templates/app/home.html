@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<h1>Welcome to the Data Hub</h1>
+
+<p>
+    The hub currently holds {{ shapes_count }} shapes, from the following types:
+</p>
+<ul>
+{% for type in shape_types %}
+    <li><a href="{% url 'shapes:index' type.key %}">{{ type.name }}</a> ({{ type.shapes.all.count }})</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

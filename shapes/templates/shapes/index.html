@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Shapes{% endblock %}
+
+{% block content %}
+<h1>{{ type.name }}</h1>
+
+
+
+<div class="row">
+	<div class="col-12 col-md-4 order-md-last">
+		<div class="mb-3 bg-light" id="map" style="width: 100%; height: 300px"></div>
+	</div>
+	<div class="col-12 col-md-8 order-md-first">
+		<div class="mb-3">
+			<table class="table table-sm table-striped" id="shapes">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Area</th>
+						<th class="no-sort text-end">Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for shape in shapes %}
+					<tr>
+						<td class="align-middle">
+							<a href="{% url 'shapes:detail' shape.id %}">{{ shape.name }}</a>
+						</td>
+
+						<td class="align-middle" data-order="{{ shape.area_sqm }}">
+							{{ shape.area_sqkm|floatformat:2|intcomma }} km<sup>2</sup></td>
+						<td>
+							<div class="d-flex justify-content-end">
+								<a href="{% url 'shapes:detail' shape.id %}"  class="btn btn-sm btn-link">Details</a>
+							</div>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script>
+$(document).ready(function() {
+    $('#shapes').DataTable({
+      pageLength: 25,
+      order: [[1, 'asc']],
+      columnDefs: [
+        {targets: 'no-sort', orderable: false }
+    ]
+    });
+});
+</script>
+
+<script>
+  var osmUrl    = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var osmAttrib = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  var osm       = L.tileLayer(osmUrl, {maxZoom: 18, attribution: osmAttrib});
+  var map_position = {lat: DATAHUB.CENTER_Y, lng: DATAHUB.CENTER_X, zoom: DATAHUB.CENTER_ZOOM};
+
+  var map = L.map('map', {
+    preferCanvas: true,
+    loadingControl: true
+  }).setView([map_position.lat, map_position.lng], map_position.zoom).addLayer(osm);
+
+  load_shape(map, '{{ type.key }}');
+
+  function highlightShape(e) {
+    map.eachLayer(function (layer) {
+      if (!layer.hasOwnProperty('feature')) {
+        return;
+      }
+
+      if (layer.feature.properties.shape_id == e) {
+          layer.setStyle({color: '#FF8000'});
+          layer.bringToFront();
+          map.flyToBounds(layer.getBounds());
+      } else {
+        // resetStyle() only works on GeoJSON layer and we it not in scope here
+        // so just reset the style to the default blue.
+        layer.setStyle({
+          color: '#3188FF'
+        });
+      }
+    });
+  }
+
+$('.js-highlight-shape').on('click', function(e) {
+  highlightShape(parseInt($(this).attr('data-shape_id')));
+});
+
+  </script>
+{% endblock %}

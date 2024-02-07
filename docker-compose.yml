@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  datahub:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - ${DATAHUB_PORT:-80}:80
+    volumes:
+      - ./:/app/
+
+  postgis:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: ${DB_NAME:-didex}
+      POSTGRES_USER: ${DB_USER:-didex}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-didex}
+      PGDATA: /var/lib/postgresql/data/pgdat
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data

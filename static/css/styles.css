@@ -1,0 +1,106 @@
+.footer-copy {
+    border-top: 1px solid var(--bs-gray-200);
+  }
+
+
+  .table-meta_data thead th:first-child {
+    width: 33%;
+  }
+
+
+  .link-subtle {
+    color: currentColor;
+    text-decoration: none;
+  }
+  .link-subtle:hover,
+  .link-subtle:focus {
+    text-decoration: underline;
+  }
+
+
+  /**
+   * Map Control overlay for map.
+   * https://leafletjs.com/examples/choropleth/
+   */
+  .info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    min-width: 150px;
+  }
+  .info h4 {
+    margin: 0 0 5px;
+    color: #777;
+  }
+
+  .legend {
+    line-height: 18px;
+    color: #555;
+  }
+  .legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+  }
+
+
+  .c-icon {
+    fill: currentColor;
+  }
+
+  .icon-text {
+    fill: currentColor;
+  }
+
+  .m-reasoning {
+    position: relative;
+  }
+
+  .m-reasoning::before {
+    position: absolute;
+    content: "";
+    left: 7px;
+    top: 23px;
+    bottom: 3px;
+    border-left: 1px solid var(--bs-gray-400);
+  }
+
+  .m-reasoning:last-child::before {
+    display: none;
+  }
+
+
+  .dl-state-pill .rounded-pill {
+    --bs-badge-padding-x: 0.35em;
+  }
+
+  .dl-state-pill svg {
+    fill: currentColor;
+  }
+
+
+.datalayer-state {
+  position: relative;
+}
+.datalayer-state--active {
+  color: var(--bs-success);
+}
+
+.datalayer-state--inactive {
+  color: var(--bs-gray-400);
+}
+
+/*.datalayer-state--active::after {
+  position: absolute;
+  content: '';
+  background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBkPSJNMTMuNzggNC4yMmEuNzUuNzUgMCAwIDEgMCAxLjA2bC03LjI1IDcuMjVhLjc1Ljc1IDAgMCAxLTEuMDYgMEwyLjIyIDkuMjhhLjc1MS43NTEgMCAwIDEgLjAxOC0xLjA0Mi43NTEuNzUxIDAgMCAxIDEuMDQyLS4wMThMNiAxMC45NGw2LjcyLTYuNzJhLjc1Ljc1IDAgMCAxIDEuMDYgMFoiLz48L3N2Zz4=');
+  width: 8px;
+  height: 8px;
+  bottom: 0;
+  right: 0;
+}*/

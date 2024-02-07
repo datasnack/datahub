@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Login" %}{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center mt-5 mb-5">
+    <div class="col-sm-12 col-md-8 col-lg-6 col-xl-5 ">
+
+		{% if form.errors %}
+			<div class="alert alert-danger">
+				{% translate "Your username and password didn't match. Please try again." %}
+			</div>
+		{% endif %}
+
+		<div class="card">
+			<div class="card-header">{% translate "Login" %}</div>
+			<div class="card-body">
+				<form method="POST" action="{% url 'login' %}">
+					{% csrf_token %}
+					<input type="hidden" name="next" value="{{ next }}">
+
+					<div class="mb-3 row">
+						<label for="{{ form.username.auto_id }}" class="col-md-4 col-form-label text-md-end">{{ form.username.label }}</label>
+
+						<div class="col-md-6">
+							<input id="{{ form.username.auto_id }}" type="text" class="form-control " name="{{ form.username.name }}" value="" required autocomplete="email" autofocus>
+						</div>
+					</div>
+
+					<div class="mb-3 row">
+						<label for="{{ form.password.auto_id }}" class="col-md-4 col-form-label text-md-end">{{ form.password.label }}</label>
+
+						<div class="col-md-6">
+							<input id="{{ form.password.auto_id }}" type="password" class="form-control " name="{{ form.password.name }}" required autocomplete="current-password">
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-md-8 offset-md-4">
+							<button type="submit" class="btn btn-primary">
+								{% translate "Login" %}
+							</button>
+
+							{% comment %}
+							<a class="btn btn-link" href="{% url 'password_reset' %}">
+								{% translate "Forgot Your Password?" %}
+							</a>
+							{% endcomment %}
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
