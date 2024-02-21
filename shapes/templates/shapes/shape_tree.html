@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% blocktranslate with name=shape.name type=shape.type.name %}{{ name }} ({{ type}}){% endblocktranslate %}{% endblock %}
+
+{% block content %}
+<div class="d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
+	</div>
+
+	<h1 class="bd-title">{% translate "Tree" %}</h1>
+</div>
+
+<div class="row">
+	<div class="col">
+		<ul>
+			{% for shape in shapes %}
+			<li>
+				{% include "shapes/shape_tree_branch.html" with shape=shape %}
+			</li>
+			{% endfor %}
+		</ul>
+	</div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script>
+</script>
+{% endblock %}

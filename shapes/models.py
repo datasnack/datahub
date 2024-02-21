@@ -1,6 +1,6 @@
 from django.db import models as djmodels
 from django.contrib.gis.db import models
-
+from django.urls import reverse
 
 class Type(djmodels.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
@@ -15,6 +15,10 @@ class Type(djmodels.Model):
     # Returns the string representation of the model.
     def __str__(self):
         return str(self.name)
+
+    def get_absolute_url(self):
+        return reverse("shapes:shape_index", kwargs={'type_key': self.key})
+
 
 class MyManager(models.Manager):
     use_for_related_fields = True
@@ -49,11 +53,20 @@ class Shape(models.Model):
 
     objects = MyManager()
 
+    class Meta:
+        ordering = ['name']
+
     @property
     def area_sqkm(self):
         return self.area_sqm / 1000000
+
+    @property
+    def has_properties(self):
+        return len(self.properties) > 0
 
     # Returns the string representation of the model.
     def __str__(self):
         return str(self.name)
 
+    def get_absolute_url(self):
+        return reverse("shapes:shape_detail", kwargs={'pk': self.id})

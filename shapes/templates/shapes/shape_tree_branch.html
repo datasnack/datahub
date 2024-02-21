@@ -1,0 +1,12 @@
+<a href="{{ shape.get_absolute_url }}">{{ shape.name }}</a>
+
+{% with children=shape.children.all %}
+{% if children %}
+<ul class="m-0">
+	{% for child in children %}
+	<li>
+		{% include "shapes/shape_tree_branch.html" with shape=child %}
+	</li>
+	{% endfor %}</ul>
+{% endif %}
+{% endwith %}

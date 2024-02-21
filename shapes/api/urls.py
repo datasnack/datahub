@@ -1,9 +1,10 @@
 
 from django.urls import path, include
 
-from .models import Shape
-
 from rest_framework import routers, serializers, viewsets
+
+from shapes.models import Shape
+from . import views
 
 # Serializers define the API representation.
 class ShapeSerializer(serializers.HyperlinkedModelSerializer):
@@ -22,5 +23,6 @@ router.register(r'shapes', ShapeViewSet)
 
 
 urlpatterns = [
+    path("shapes/geo/", views.shape_geojson, name="shape_geojson"),
     path('', include(router.urls)),
 ]

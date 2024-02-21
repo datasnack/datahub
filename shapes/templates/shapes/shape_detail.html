@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% blocktranslate with name=shape.name type=shape.type.name %}{{ name }} ({{ type}}){% endblocktranslate %}{% endblock %}
+
+{% block content %}
+<div class="d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+
+	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
+
+		<a class="btn btn-sm btn-outline-primary" href="#">{% translate "Download all data" %}</a>
+
+		<div class="btn-group">
+			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+				{% translate "Download shape" %}
+			</button>
+
+			<ul class="dropdown-menu dropdown-menu-end">
+				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.geojson" href="#">GeoJSON</a></li>
+				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.wkt" href="#">WKT</a></li>
+			</ul>
+		</div>
+
+		{% if perms.shapes.change_shape %}
+		<a class="btn btn-sm btn-outline-primary" href="{% url "admin:shapes_shape_change" shape.id %}">{% icon "pencil" %}</a>
+		{% endif %}
+	</div>
+
+	<h1 class="h2">{{ shape.name }}</h1>
+
+</div>
+
+
+
+<div class="row">
+    <div class="col-12 col-lg-6">
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th>{% translate "Information" %}</th>
+                <th>{% translate "Value" %}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if shape.parent %}
+            <tr>
+                <th>{% translate "Parent" %}</th>
+                <td><a href="{% url 'shapes:shape_detail' shape.parent.id %}">{{ shape.parent.name }}</a></td>
+            </tr>
+            {% endif %}
+
+            <tr class="table-info">
+                <th>{% translate "Type" %}</th>
+                <td>{{ shape.type }}</td>
+            </tr>
+            <tr>
+                <th>{% translate "Name" %}</th>
+                <td>{{ shape.name }}</td>
+            </tr>
+            <tr>
+                <th>{% translate "Area" %}</th>
+                <td>{{ shape.area_sqkm|floatformat:2|intcomma }} km<sup>2</sup></td>
+            </tr>
+			{% if shape.has_properties %}
+            <tr>
+                <th>{% translate "Properties" %}</th>
+                <td>
+					<table class="table table-sm">
+						<thead>
+							<tr>
+								<th>{% translate "Key" %}</th>
+								<th>{% translate "Value" %}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for key, value in shape.properties.items %}
+								<tr>
+									<td><code>{{ key }}</code></td>
+									<td>{{ value }}</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+
+				</td>
+            </tr>
+			{% endif %}
+
+            {% if shape.children.all.count > 0 %}
+            <tr>
+                <th>{% blocktranslate with count=shape.children.all.count %}Children ({{ count }}){% endblocktranslate %}</th>
+                <td><ul class="m-0">{% for child in shape.children.all %}
+                <li><a href="{% url 'shapes:shape_detail' child.id %}">{{ child.name }}</a></li>
+                {% endfor %}</ul></td>
+            </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div id="map" class="mb-3" style="width: 100%; height: 400px; z-index: 1"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}
+<script>
+$(document).ready(function() {
+    $('#shapes').DataTable({
+      pageLength: 25,
+      order: [[1, 'asc']],
+      columnDefs: [
+        {targets: 'no-sort', orderable: false }
+    ]
+    });
+});
+</script>
+
+<script>
+	var map = get_base_map('map');
+	load_shape(map, {shape_id: '{{ shape.id }}'});
+</script>
+{% endblock %}

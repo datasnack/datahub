@@ -1,28 +1,53 @@
-function load_shape(map, type) {
-  map.fire('dataloading');
-  $.getJSON(`/shapes/geojson/${type}`, function(data) {
+function get_base_map(container, options = {}) {
+	// allow local overwrite if required
+	const config = {
+		'lat':  DATAHUB.CENTER_Y,
+		'lng':  DATAHUB.CENTER_X,
+		'zoom': DATAHUB.CENTER_ZOOM,
+	};
+	let settings = {...config, ...options};
 
-    var m = L.geoJSON(data, {
-      onEachFeature: function (feature, layer) {
-        const p = feature.properties;
-        layer.bindPopup(`<h5 class="mb-0">${p['name']}</h5>
-        <p class="mt-0">
-          <small class="text-muted">${p['type']}</small>
-        </p>
-        <a href="${p['url']}" class="btn btn-link">Details</a>`);
-      }
-    }).addTo(map);
-    map.fitBounds(m.getBounds());
+	var osmUrl       = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+	var osmAttrib    = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+	var osm          = L.tileLayer(osmUrl, {maxZoom: 18, attribution: osmAttrib});
+	var map_position = {lat: settings.lng, lng: settings.lng, zoom: settings.zoom};
 
-    if (layerControl) {
-      layerControl.addOverlay(m, layer_name);
-    }
+	var map = L.map(container, {
+		preferCanvas: true,
+		loadingControl: true
+	}).setView([map_position.lat, map_position.lng], map_position.zoom).addLayer(osm);
 
-    map.fire('dataload');
-  }).fail(function(data) {
-    alert("Something went wrong during loading the geometry of the shape.");
-    map.fire('dataload');
-  });
+	L.control.scale({imperial: false}).addTo(map);
+
+	return map;
+}
+
+function load_shape(map, query) {
+	map.fire('dataloading');
+
+	if (!query.hasOwnProperty('format')) {
+		query['format'] = 'json';
+	}
+	query_string = new URLSearchParams(query).toString();
+
+	$.getJSON(`/api/shapes/geo/?${query_string}`, function(data) {
+		var m = L.geoJSON(data, {
+			onEachFeature: function (feature, layer) {
+				const p = feature.properties;
+				layer.bindPopup(`<h5 class="mb-0">${p['name']}</h5>
+				<p class="mt-0">
+				<small class="text-muted">${p['type']}</small>
+				</p>
+				<a href="${p['url']}" class="btn btn-link">Details</a>`);
+			}
+		}).addTo(map);
+		map.fitBounds(m.getBounds());
+
+		map.fire('dataload');
+	}).fail(function(data) {
+		alert("Something went wrong during loading the geometry of the shape.");
+		map.fire('dataload');
+	});
 }
 
 function load_data_for_layer(map, dl, layerControl) {
@@ -82,28 +107,7 @@ function load_data_for_layer(map, dl, layerControl) {
   });
 }
 
-function get_base_map(container, options = {}) {
 
-  const config = {
-    'zoom': 5
-  };
-
-  let settings = {...config, ...options};
-
-  var osmUrl    = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  var osmAttrib = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-  var osm       = L.tileLayer(osmUrl, {maxZoom: 18, attribution: osmAttrib});
-  var map_position = {lat: -6, lng: 35, zoom: settings.zoom};
-
-  var map = L.map(container, {
-    preferCanvas: true,
-    loadingControl: true
-  }).setView([map_position.lat, map_position.lng], map_position.zoom).addLayer(osm);
-
-  L.control.scale({imperial: false}).addTo(map);
-
-  return map;
-}
 
 
 /**

@@ -1,3 +1,24 @@
+/* overwrite large Bootstrap headings */
+h1 {
+    font-size: 2rem;
+}
+h2 {
+    font-size: 1.75rem;
+}
+h3 {
+    font-size: 1.5rem;
+}
+h4 {
+    font-size: 1.25rem;
+}
+h5 {
+    font-size: 1.125rem;
+}
+h6 {
+    font-size: 1rem;
+}
+
+
 .footer-copy {
     border-top: 1px solid var(--bs-gray-200);
   }

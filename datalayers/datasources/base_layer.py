@@ -21,6 +21,11 @@ class BaseLayer(Datalayer):
         self.rows = []
         self.df = None
 
+        # How many decimal digits should be displayed?
+        # Only used in UI for human on the web, API and CSV data are never rounded
+        self.precision = 3
+
+
     def download(self):
         """ Automatic download of data source files. """
         raise NotImplementedError
@@ -33,7 +38,7 @@ class BaseLayer(Datalayer):
     def get_data_path(self) -> Path:
         """ Path to where to store the data of the layer. """
         return Path(f"./data/datalayers/{self.layer.key}/")
-    
+
 
     def save(self):
         if self.df is None:

@@ -58,9 +58,7 @@ class TiffLayer(BaseLayer):
                 if nodata is None:
                     raise ValueError(f"No NoData value for GeoTiff {file}")
 
-                for shape in shapes[:1]:
-                    print(shape)
-                    
+                for shape in shapes:
                     #self.logger.debug("loading shape: %s", shape['name'])
                     if isinstance(shape, Shape):
 
@@ -76,7 +74,7 @@ class TiffLayer(BaseLayer):
                             mask = [feature["geometry"] for feature in shapefile]
                     else:
                         raise ValueError("No geometry found for given shape.")
-                    
+
                     out_image, _ = rasterio.mask.mask(src, mask, crop=True, nodata=nodata)
                     band1 = out_image[0]
 

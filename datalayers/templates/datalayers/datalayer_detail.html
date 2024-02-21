@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ datalayer.name }}{% endblock %}
+
+{% block content %}
+
+
+<div class="d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+
+	<div class="mb-2 mb-md-0">
+	  <div class="btn-group">
+		  <a class="btn btn-sm btn-outline-primary" href="#">Download all data (CSV)</a>
+
+		  <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+			  <span class="visually-hidden">Toggle Dropdown</span>
+		  </button>
+
+		  <ul class="dropdown-menu">
+			  <li><a class="dropdown-item" href="#">All (Excel)</a></li>
+			  <li><hr class="dropdown-divider"></li>
+			  {% for type in shape_types %}
+			  <li><a class="dropdown-item" href="#">Download {{ type.name }} (CSV)</a></li>
+			  {% endfor %}
+			  <li><hr class="dropdown-divider"></li>
+			  {% for type in shape_types %}
+			  <li><a class="dropdown-item" href="#">Download {{ type.name }} (Excel)</a></li>
+			  {% endfor %}
+		  </ul>
+	  </div>
+
+	  <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#api">API</button>
+
+	  {% if perms.shapes.change_datalayer %}
+	  <a class="btn btn-sm btn-outline-primary" href="{% url "admin:datalayers_datalayer_change" datalayer.id %}">{% icon "pencil" %}</a>
+	  {% endif %}
+	</div>
+
+  <h1 class="bd-title">{{ datalayer.name }}</h1>
+</div>
+
+<div class="row">
+	<div class="col">
+		<div class="input-group mb-3" style="width: 300px">
+			<span class="input-group-text" id="addon-key">{% translate "Key:" %}</span>
+			<input type="text" class="form-control" value="{{ datalayer.key }}" aria-label="{% translate "Key" %}" aria-describedby="addon-key">
+		</div>
+	</div>
+	<div class="col">
+		<b>{% translate "Category" %}</b>: {{ datalayer.category }}<br>
+	</div>
+	<div class="col">
+		<span class="datalayer-state
+			{% if datalayer.has_class %}datalayer-state--active
+			{% else %}datalayer-state--inactive
+			{% endif %}">
+			{% icon "file-code" %}
+		</span>
+		<span class="datalayer-state
+			{% if datalayer.is_loaded %}datalayer-state--active
+			{% else %}datalayer-state--inactive
+			{% endif %}">
+			{% icon "database" %}
+		</span>
+	</div>
+</div>
+
+<div class="mb-3">
+	{{ datalayer.description }}
+</div>
+
+
+<div class="row">
+	<div class="col-12 col-xl-6 mb-3">
+		<div class="card h-100">
+			<h5 class="card-header">{% translate "Data type and processing information" %}</h5>
+			<div class="card-body">
+				<table class="table table-sm table-meta_data mb-0">
+					<thead>
+						<tr>
+							<th>{% translate "Information" %}</th>
+							<th>{% translate "Description" %}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>{% translate "Necessity" %}</td>
+							<td>{{ datalayer.necessity }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Format" %}</td>
+							<td>{{ datalayer.format }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Operation" %}</td>
+							<td>{{ datalayer.operation }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Original unit" %}</td>
+							<td>{{ datalayer.original_unit }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Database unit" %}</td>
+							<td>{{ datalayer.database_unit }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Spatial details" %}</td>
+							<td>{{ datalayer.details_spatial }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Temporal details" %}</td>
+							<td>{{ datalayer.details_temporal }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Timeframe" %}</td>
+							<td>{{ datalayer.timeframe }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Related Sources" %}</td>
+							<td>{{ datalayer.related_sources }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-xl-6 mb-3">
+		<div class="card h-100">
+			<h5 class="card-header">{% translate "Metadata information" %}</h5>
+			<div class="card-body">
+				<table class="table table-sm table-meta_data mb-0">
+					<thead>
+						<tr>
+							<th>{% translate "Information" %}</th>
+							<th>{% translate "Description" %}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>{% translate "Creator" %}</td>
+							<td>{{ datalayer.creator }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Date included" %}</td>
+							<td>{{ datalayer.included_date }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Type" %}</td>
+							<td>{{ datalayer.type }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Identifier" %}</td>
+							<td>{{ datalayer.identifier }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Source" %}</td>
+							<td>{{ datalayer.source }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Link to Source" %}</td>
+							<td>{{ datalayer.source_link|urlize }}</td>
+						</tr>
+
+						<tr>
+							<td>{% translate "Citation" %}</td>
+							<td>{{ datalayer.citation }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Language" %}</td>
+							<td>{{ datalayer.language }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "License" %}</td>
+							<td>{{ datalayer.license }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Coverage" %}</td>
+							<td>{{ datalayer.coverage }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+{{ "http://google.com http://bing.com"|urlize}}
+
+{% endblock %}

@@ -3,42 +3,29 @@
 {% get_current_language as LANGUAGE_CODE %}
 <!doctype html>
 <html lang="{{ LANGUAGE_CODE }}" class="no-js">
-	<head>
-		<!-- Required meta tags -->
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
-		<!-- Bootstrap CSS -->
-		<link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
-		<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
-		<link rel="stylesheet" href="{% static 'vendor/leaflet.markercluster/MarkerCluster.css' %}">
-		<link rel="stylesheet" href="{% static 'vendor/leaflet.markercluster/MarkerCluster.Default.css' %}">
-		<link rel="stylesheet" href="{% static 'vendor/DataTables/datatables.min.css' %}">
-		<link rel="stylesheet" href="{% static 'vendor/chosen/chosen.min.css' %}">
-		<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+	<link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+	<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+	<link rel="stylesheet" href="{% static 'vendor/leaflet.loading/Control.Loading.css' %}">
+	<link rel="stylesheet" href="{% static 'vendor/DataTables/datatables.min.css' %}">
+	<link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
-		<link rel="stylesheet" href="{% static 'vendor/Highcharts/css/highcharts.css' %}">
-		<link rel="stylesheet" href="{% static 'vendor/apexcharts/apexcharts.css' %}">
-
-		<link rel="stylesheet" href="{% static 'vendor/leaflet.loading/Control.Loading.css' %}">
-
-		<link rel="stylesheet" href="{% static 'vendor/leaflet.loading/Control.Loading.css' %}">
-
-
-		<title>{% block title %}{% endblock %} - {{ datahub_name }}</title>
-		<script>document.documentElement.className = document.documentElement.className.replace("no-js","js");</script>
-		<script>
-			const DATAHUB = {
-				CENTER_X: {{ DATAHUB_CENTER_X }},
-				CENTER_Y: {{ DATAHUB_CENTER_Y }},
-				CENTER_ZOOM: {{ DATAHUB_CENTER_ZOOM }},
-			}
-		</script>
-		{% block head %}{% endblock %}
-	</head>
-	<body>
-
+	<title>{% block title %}{% endblock %} - {{ datahub_name }}</title>
+	<script>document.documentElement.className = document.documentElement.className.replace("no-js","js");</script>
+	<script>
+		const DATAHUB = {
+			CENTER_X: {{ DATAHUB_CENTER_X }},
+			CENTER_Y: {{ DATAHUB_CENTER_Y }},
+			CENTER_ZOOM: {{ DATAHUB_CENTER_ZOOM }},
+		}
+	</script>
+	{% block head %}{% endblock %}
+</head>
+<body>
     <header>
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
@@ -52,7 +39,7 @@
 			{% if not datahub_login_required or user.is_authenticated %}
               <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 {% for st in nav_shape_types %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'shapes:index' st.key %}">{{ st.name }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ st.get_absolute_url }}">{{ st.name }}</a></li>
                 {% endfor %}
 
                 {%comment%}{% for type in shape_types %}
@@ -60,7 +47,26 @@
                 {% endfor %}
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('map') }}">Map</a></li>
                 {%endcomment%}
-                <li class="nav-item"><a class="nav-link" href="{% url 'datalayers:index' %}">Data Layers</a></li>
+
+                <li class="nav-item">
+					<a class="nav-link pe-0" href="{% url 'datalayers:datalayer_index' %}">
+						{% translate "Data Layers" %}
+					</a>
+				</li>
+
+				{% if nav_datalayer_categories %}
+                <li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
+						<span class="visually-hidden-focusable">{% translate "Categories" %}</span>
+					</a>
+
+					<ul class="dropdown-menu dropdown-menu-end">
+						{% for category in nav_datalayer_categories %}
+						<li><a class="dropdown-item" href="{{ category.get_absolute_url }}">{{ category.name }}</a></li>
+						{% endfor %}
+					</ul>
+				</li>
+				{% endif %}
               </ul>
 			{% endif %}
           </div>
@@ -110,7 +116,6 @@
             </ul>
 		</div>
 
-
         {% comment %}
         {% get_available_languages as languages %}
           <div class="dropdown">
@@ -131,86 +136,25 @@
       </nav>
     </header>
 
-
-    {% comment %} <header>
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-          <a class="navbar-brand" href="{{ url_for('index') }}">Data Hub</a>
-
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-              <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <!-- <li class="nav-item"><a class="nav-link" aria-current="page" href="{{ url_for('index') }}">List</a></li> -->
-
-                {% for type in shape_types %}
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('shape_index', shape_type=type) }}">{{ type.title() }}</a></li>
-                {% endfor %}
-
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('map') }}">Map</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('parameters') }}">Data Layers</a></li>
-
-				<li class="nav-item d-none d-lg-block"><span class="nav-link text-body-tertiary">|</span></li>
-
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('signal_index') }}">ESIDA Signals</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('esida_risk_index') }}">ESIDA Risk</a></li>
-              </ul>
-          </div>
-        </div>
-      </nav>
-    </header>  {% endcomment %}
-
     <div class="container my-3">
       {% block content %}{% endblock %}
     </div>
 
+	<footer class="container mb-1">
+		<div class="footer-copy pt-1">
+			<small class="text-muted">
+				<a href="https://github.com/datasnack/datahub">{%translate "Source code" %}</a> · v{VERSION}
+			</small>
+		</div>
+	</footer>
 
-
-    <footer class="container mb-1">
-      <div class="footer-copy pt-1">
-        <small class="text-muted">
-          MIT
-        </small>
-      </div>
-    </footer>
-
-    {% comment %}
-    <script src="{% static 'vendor/leaflet/leaflet.js') }}"></script>
-    <script src="{% static 'vendor/leaflet.markercluster/leaflet.markercluster.js') }}"></script>
-    <script src="{% static 'vendor/leaflet.markercluster.freezable.js') }}"></script>
-
-
-    <script src="{% static 'vendor/jQuery/jquery-3.6.0.min.js') }}"></script>
-    <script src="{% static 'vendor/DataTables/datatables.min.js') }}"></script>
-
-    <script src="{% static 'vendor/chosen/chosen.jquery.min.js') }}"></script>
-
-
-    <script src="{% static 'vendor/Highcharts/highcharts.js') }}"></script>
-
-    <script src="{% static 'vendor/apexcharts/apexcharts.min.js') }}"></script>
-
-    <script src="{% static 'js/map.js') }}"></script>
-    <script src="{% static 'js/app.js') }}"></script>
-
-
-	<script src="{% static 'vendor/plotly-2.20.0.min.js') }}"></script>
-
-  {% endcomment %}
-
-
-    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
+	<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 	<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
 	<script src="{% static 'vendor/leaflet.loading/Control.Loading.js' %}"></script>
-
-    <script src="{% static 'vendor/jQuery/jquery-3.6.0.min.js' %}"></script>
-    <script src="{% static 'vendor/DataTables/datatables.min.js' %}"></script>
-
+	<script src="{% static 'vendor/jQuery/jquery-3.6.0.min.js' %}"></script>
+	<script src="{% static 'vendor/DataTables/datatables.min.js' %}"></script>
 	<script src="{% static 'js/map.js' %}"></script>
 
-    {% block footer %}{% endblock %}
-  </body>
+	{% block footer %}{% endblock %}
+</body>
 </html>

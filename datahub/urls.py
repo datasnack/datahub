@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf.urls.i18n import i18n_patterns
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
-
+from django.conf import settings
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
@@ -32,5 +32,10 @@ urlpatterns += [
     path("datalayers/", include("datalayers.urls")),
     path("shapes/", include("shapes.urls")),
 
-    path("api/", include("shapes.urls_api")),
+    path("api/", include("shapes.api.urls")),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path("__debug__/", include("debug_toolbar.urls")),
+    ]

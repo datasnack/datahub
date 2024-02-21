@@ -20,6 +20,7 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
+    INSTALLED_USER_APPS=(list, []),
     LANGUAGES=(dict, {'en': 'English'}),
     DB_ENGINE=(str, 'django.contrib.gis.db.backends.postgis'),
     DATAHUB_LOGIN_REQUIRED=(bool, True),
@@ -40,7 +41,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY =  env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
@@ -60,15 +61,12 @@ LOGGING = {
         }
     },
     'loggers': {
-        'django.db.backends': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        }
     }
 }
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+INTERNAL_IPS = ['127.0.0.1']
 
 # Application definition
 
@@ -83,9 +81,15 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "datalayers",
     "shapes",
-    "app",
     'rest_framework',
+    "src.datalayer",
 ]
+
+# inject potential user apps that should be able to overwrite templates in app
+INSTALLED_APPS += env('INSTALLED_USER_APPS')
+
+INSTALLED_APPS += ['app']
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -98,6 +102,11 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     'app.middleware.require_login_middleware.RequireLoginMiddleware'
 ]
+
+if DEBUG:
+    # Enable debug toolbar only if DEBUG=True
+    INSTALLED_APPS = INSTALLED_APPS + ['debug_toolbar']
+    MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
 
 ROOT_URLCONF = 'datahub.urls'
 
@@ -113,7 +122,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'app.context_processors.add_datahub_login_required',
-                'shapes.context_processors.add_navigation'
+                'shapes.context_processors.add_navigation',
+                'datalayers.context_processors.add_navigation',
             ],
             'builtins': [
                 'app.templatetags.icon',
@@ -188,6 +198,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
+STATIC_ROOT= BASE_DIR / 'public/static'
+
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
@@ -230,3 +242,6 @@ DATAHUB_CENTER_Y=env('DATAHUB_CENTER_Y')
 # 18 being on the level of a city block. Demonstration of zoom
 # levels: https://leafletjs.com/examples/zoom-levels/
 DATAHUB_CENTER_ZOOM=env('DATAHUB_CENTER_ZOOM')
+
+DATAHUB_DATALAYER_DIR = BASE_DIR / env('DATAHUB_DATALAYER_DIR')
+DATAHUB_DATA_DIR = BASE_DIR / env('DATAHUB_DATALAYER_DIR')

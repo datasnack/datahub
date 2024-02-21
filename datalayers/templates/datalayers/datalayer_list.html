@@ -18,10 +18,10 @@
     </thead>
 
 <tbody>
-{% for dl in datalayer %}
+{% for dl in datalayers %}
     <tr>
         <td class="align-middle">{{ dl.category }}</td>
-        <td class="align-middle"><a href="{% url 'datalayers:detail' dl.id %}">{{ dl.name }}</a></td>
+        <td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
         <td class="align-middle"><code>{{ dl.key }}</code></td>
         <td class="dl-state-pill" data-order="">
             <span class="datalayer-state
@@ -39,7 +39,7 @@
         </td>
         <td>
             <div class="d-flex justify-content-end">
-                <a href="{% url 'datalayers:detail' dl.id %}"  class="btn btn-sm btn-link">{% translate "Details" %}</a>
+                <a href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link">{% translate "Details" %}</a>
             </div>
         </td>
     </tr>
@@ -47,6 +47,18 @@
 </tbody>
 
 </table>
+{% endblock %}
 
-
+{% block footer %}
+<script>
+$(document).ready(function() {
+	$('#shapes').DataTable({
+		pageLength: 25,
+		//order: [[0, 'asc']],
+		columnDefs: [
+		{targets: 'no-sort', orderable: false }
+	]
+	});
+});
+</script>
 {% endblock %}

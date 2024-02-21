@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load i18n %}
 
-{% block title %}Shapes{% endblock %}
+{% block title %}
+{% blocktranslate with name=type.name %}"{{ name }}" shapes{% endblocktranslate %}
+{% endblock %}
 
 {% block content %}
 <h1>{{ type.name }}</h1>
-
-
 
 <div class="row">
 	<div class="col-12 col-md-4 order-md-last">
@@ -17,23 +18,25 @@
 			<table class="table table-sm table-striped" id="shapes">
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Area</th>
-						<th class="no-sort text-end">Actions</th>
+						<th>{% translate "Name" %}</th>
+						<th>{% translate "Area" %}</th>
+						<th class="no-sort text-end">{% translate "Actions" %}</th>
 					</tr>
 				</thead>
 				<tbody>
 				{% for shape in shapes %}
 					<tr>
 						<td class="align-middle">
-							<a href="{% url 'shapes:detail' shape.id %}">{{ shape.name }}</a>
+							<a href="{{ shape.get_absolute_url }}">{{ shape.name }}</a>
 						</td>
-
 						<td class="align-middle" data-order="{{ shape.area_sqm }}">
-							{{ shape.area_sqkm|floatformat:2|intcomma }} km<sup>2</sup></td>
+							{% blocktranslate with area=shape.area_sqkm|floatformat:2|intcomma %}
+								{{ area }} km<sup>2</sup>
+							{% endblocktranslate %}
+						</td>
 						<td>
 							<div class="d-flex justify-content-end">
-								<a href="{% url 'shapes:detail' shape.id %}"  class="btn btn-sm btn-link">Details</a>
+								<a href="{{ shape.get_absolute_url }}"  class="btn btn-sm btn-link">{% translate "Details" %}</a>
 							</div>
 						</td>
 					</tr>
@@ -50,7 +53,7 @@
 $(document).ready(function() {
     $('#shapes').DataTable({
       pageLength: 25,
-      order: [[1, 'asc']],
+      order: [[0, 'asc']],
       columnDefs: [
         {targets: 'no-sort', orderable: false }
     ]
@@ -59,17 +62,8 @@ $(document).ready(function() {
 </script>
 
 <script>
-  var osmUrl    = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  var osmAttrib = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-  var osm       = L.tileLayer(osmUrl, {maxZoom: 18, attribution: osmAttrib});
-  var map_position = {lat: DATAHUB.CENTER_Y, lng: DATAHUB.CENTER_X, zoom: DATAHUB.CENTER_ZOOM};
-
-  var map = L.map('map', {
-    preferCanvas: true,
-    loadingControl: true
-  }).setView([map_position.lat, map_position.lng], map_position.zoom).addLayer(osm);
-
-  load_shape(map, '{{ type.key }}');
+	var map = get_base_map('map');
+	load_shape(map, {shape_type: '{{ type.key }}'});
 
   function highlightShape(e) {
     map.eachLayer(function (layer) {
