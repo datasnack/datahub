@@ -1,0 +1,2 @@
+# Prevent .sh scripts failing after docker build on Windows
+*.sh text eol=lf
