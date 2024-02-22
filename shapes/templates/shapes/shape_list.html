@@ -7,7 +7,22 @@
 {% endblock %}
 
 {% block content %}
-<h1>{{ type.name }}</h1>
+<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
+
+		<div class="btn-group">
+			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+				{% icon "download" %} {% translate "Shape geometries" %}
+			</button>
+			<ul class="dropdown-menu dropdown-menu-end">
+				<li><a class="dropdown-item" download="{{ type.name|slugify}}.gpkg" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
+				<li><a class="dropdown-item" download="{{ type.name|slugify}}.geojson" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=geojson">{% translate "GeoJSON" %}</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<h1>{{ type.name }}</h1>
+</div>
 
 <div class="row">
 	<div class="col-12 col-md-4 order-md-last">

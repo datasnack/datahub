@@ -26,19 +26,19 @@ function load_shape(map, query) {
 	map.fire('dataloading');
 
 	if (!query.hasOwnProperty('format')) {
-		query['format'] = 'json';
+		query['format'] = 'geojson';
 	}
 	query_string = new URLSearchParams(query).toString();
 
-	$.getJSON(`/api/shapes/geo/?${query_string}`, function(data) {
+	$.getJSON(`/api/shapes/geometry/?${query_string}`, function(data) {
 		var m = L.geoJSON(data, {
 			onEachFeature: function (feature, layer) {
 				const p = feature.properties;
 				layer.bindPopup(`<h5 class="mb-0">${p['name']}</h5>
-				<p class="mt-0">
+				<p class="mt-0 mb-1">
 				<small class="text-muted">${p['type']}</small>
 				</p>
-				<a href="${p['url']}" class="btn btn-link">Details</a>`);
+				<a href="${p['url']}" class="">Details</a>`);
 			}
 		}).addTo(map);
 		map.fitBounds(m.getBounds());

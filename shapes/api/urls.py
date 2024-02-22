@@ -23,6 +23,6 @@ router.register(r'shapes', ShapeViewSet)
 
 
 urlpatterns = [
-    path("shapes/geo/", views.shape_geojson, name="shape_geojson"),
+    path("shapes/geometry/", views.shape_geometry, name="shape_geometry"),
     path('', include(router.urls)),
 ]

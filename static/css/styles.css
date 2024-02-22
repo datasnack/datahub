@@ -1,127 +1,85 @@
 /* overwrite large Bootstrap headings */
 h1 {
-    font-size: 2rem;
+	font-size: min(calc(1.375rem + 1.5vw), 2rem);
 }
 h2 {
-    font-size: 1.75rem;
+	font-size: min(calc(1.325rem + .9vw), 1.75rem);
 }
 h3 {
-    font-size: 1.5rem;
+	font-size: min(calc(1.3rem + .6vw), 1.5rem);
 }
 h4 {
-    font-size: 1.25rem;
+	font-size: min(calc(1.275rem + .3vw), 1.25rem);
 }
 h5 {
-    font-size: 1.125rem;
+	font-size: 1.125rem;
 }
 h6 {
-    font-size: 1rem;
+	font-size: 1rem;
+}
+
+.m-pageheader {
+	border-bottom: 1px solid var(--bs-gray-200);
+	padding-bottom: 0.25rem;
+	margin-bottom: 1rem;
+}
+.m-pageheader h1 {
+	margin-bottom: 0;
 }
 
 
 .footer-copy {
-    border-top: 1px solid var(--bs-gray-200);
-  }
-
-
-  .table-meta_data thead th:first-child {
-    width: 33%;
-  }
-
-
-  .link-subtle {
-    color: currentColor;
-    text-decoration: none;
-  }
-  .link-subtle:hover,
-  .link-subtle:focus {
-    text-decoration: underline;
-  }
-
-
-  /**
-   * Map Control overlay for map.
-   * https://leafletjs.com/examples/choropleth/
-   */
-  .info {
-    padding: 6px 8px;
-    font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    min-width: 150px;
-  }
-  .info h4 {
-    margin: 0 0 5px;
-    color: #777;
-  }
-
-  .legend {
-    line-height: 18px;
-    color: #555;
-  }
-  .legend i {
-    width: 18px;
-    height: 18px;
-    float: left;
-    margin-right: 8px;
-    opacity: 0.7;
-  }
-
-
-  .c-icon {
-    fill: currentColor;
-  }
-
-  .icon-text {
-    fill: currentColor;
-  }
-
-  .m-reasoning {
-    position: relative;
-  }
-
-  .m-reasoning::before {
-    position: absolute;
-    content: "";
-    left: 7px;
-    top: 23px;
-    bottom: 3px;
-    border-left: 1px solid var(--bs-gray-400);
-  }
-
-  .m-reasoning:last-child::before {
-    display: none;
-  }
-
-
-  .dl-state-pill .rounded-pill {
-    --bs-badge-padding-x: 0.35em;
-  }
-
-  .dl-state-pill svg {
-    fill: currentColor;
-  }
-
-
-.datalayer-state {
-  position: relative;
-}
-.datalayer-state--active {
-  color: var(--bs-success);
+	border-top: 1px solid var(--bs-gray-200);
 }
 
-.datalayer-state--inactive {
-  color: var(--bs-gray-400);
+
+.table-meta_data thead th:first-child {
+	width: 33%;
 }
 
-/*.datalayer-state--active::after {
-  position: absolute;
-  content: '';
-  background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBkPSJNMTMuNzggNC4yMmEuNzUuNzUgMCAwIDEgMCAxLjA2bC03LjI1IDcuMjVhLjc1Ljc1IDAgMCAxLTEuMDYgMEwyLjIyIDkuMjhhLjc1MS43NTEgMCAwIDEgLjAxOC0xLjA0Mi43NTEuNzUxIDAgMCAxIDEuMDQyLS4wMThMNiAxMC45NGw2LjcyLTYuNzJhLjc1Ljc1IDAgMCAxIDEuMDYgMFoiLz48L3N2Zz4=');
-  width: 8px;
-  height: 8px;
-  bottom: 0;
-  right: 0;
-}*/
+.link-subtle {
+	color: currentColor;
+	text-decoration: none;
+}
+.link-subtle:hover,
+.link-subtle:focus {
+	text-decoration: underline;
+}
+
+/**
+ * Map Control overlay for map.
+ * https://leafletjs.com/examples/choropleth/
+ */
+.info {
+	padding: 6px 8px;
+	font: 14px/16px Arial, Helvetica, sans-serif;
+	background: white;
+	background: rgba(255,255,255,0.8);
+	box-shadow: 0 0 15px rgba(0,0,0,0.2);
+	border-radius: 5px;
+	min-width: 150px;
+}
+.info h4 {
+	margin: 0 0 5px;
+	color: #777;
+}
+
+.legend {
+	line-height: 18px;
+	color: #555;
+}
+.legend i {
+	width: 18px;
+	height: 18px;
+	float: left;
+	margin-right: 8px;
+	opacity: 0.7;
+}
+
+.c-icon {
+	fill: currentColor;
+}
+
+.icon-text {
+	fill: currentColor;
+}

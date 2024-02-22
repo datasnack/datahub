@@ -17,6 +17,10 @@ max_line_length = 88
 indent_style = tab
 indent_size = 4
 
+[*.css]
+indent_style = tab
+indent_size = 4
+
 # Use tab for the JavaScript files
 [*.js]
 indent_style = tab

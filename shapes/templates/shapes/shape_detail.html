@@ -5,20 +5,19 @@
 {% block title %}{% blocktranslate with name=shape.name type=shape.type.name %}{{ name }} ({{ type}}){% endblocktranslate %}{% endblock %}
 
 {% block content %}
-<div class="d-md-flex flex-md-row-reverse align-items-center justify-content-between">
-
+<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
 	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
 
 		<a class="btn btn-sm btn-outline-primary" href="#">{% translate "Download all data" %}</a>
 
 		<div class="btn-group">
 			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-				{% translate "Download shape" %}
+				{% icon "download" %} {% translate "Shape geometry" %}
 			</button>
 
 			<ul class="dropdown-menu dropdown-menu-end">
-				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.geojson" href="#">GeoJSON</a></li>
-				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.wkt" href="#">WKT</a></li>
+				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.gpkg" href="{% url 'shape_geometry' %}?shape_id={{ shape.id }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
+				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.geojson" href="{% url 'shape_geometry' %}?shape_id={{ shape.id }}&format=geojson">{% translate "GeoJSON" %}</a></li>
 			</ul>
 		</div>
 
@@ -27,11 +26,8 @@
 		{% endif %}
 	</div>
 
-	<h1 class="h2">{{ shape.name }}</h1>
-
+	<h1>{{ shape.name }}</h1>
 </div>
-
-
 
 <div class="row">
     <div class="col-12 col-lg-6">
