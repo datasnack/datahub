@@ -13,7 +13,8 @@ def icon(name, size=16):
     if key in icon_cache:
         return mark_safe(icon_cache[key])
 
-    file_name = f"{settings.BASE_DIR}/static/vendor/icons/{name}-{size}.svg"
+    # todo: the name to the app this templatetag is inside (app) is hardcoded
+    file_name = f"{settings.BASE_DIR}/app/static/vendor/icons/{name}-{size}.svg"
     with open(file_name, 'r',  encoding="utf-8") as f:
         svg = f.read()
         svg = svg[:5] + 'class="c-icon" ' + svg[5:]
