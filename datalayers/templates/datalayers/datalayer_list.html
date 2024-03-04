@@ -29,7 +29,7 @@
         <td class="align-middle">{{ dl.category }}</td>
         <td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
         <td class="align-middle"><code>{{ dl.key }}</code></td>
-        <td class="dl-state-pill" data-order="">
+        <td class="dl-state-pill" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
             <span class="datalayer-state
                 {% if dl.has_class %}datalayer-state--active
                 {% else %}datalayer-state--inactive

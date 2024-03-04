@@ -4,73 +4,162 @@
 
 {% block content %}
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
-
 	<div class="mb-2 mb-md-0">
-	  <div class="btn-group">
-		  <a class="btn btn-sm btn-outline-primary" href="#">Download all data (CSV)</a>
+		<div class="btn-group">
+			<a class="btn btn-sm btn-outline-primary" href="#">Download all data (CSV)</a>
 
-		  <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-			  <span class="visually-hidden">Toggle Dropdown</span>
-		  </button>
+			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+				<span class="visually-hidden">Toggle Dropdown</span>
+			</button>
 
-		  <ul class="dropdown-menu">
-			  <li><a class="dropdown-item" href="#">All (Excel)</a></li>
-			  <li><hr class="dropdown-divider"></li>
-			  {% for type in shape_types %}
-			  <li><a class="dropdown-item" href="#">Download {{ type.name }} (CSV)</a></li>
-			  {% endfor %}
-			  <li><hr class="dropdown-divider"></li>
-			  {% for type in shape_types %}
-			  <li><a class="dropdown-item" href="#">Download {{ type.name }} (Excel)</a></li>
-			  {% endfor %}
-		  </ul>
-	  </div>
-
-	  <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#api">API</button>
-
-	  {% if perms.shapes.change_datalayer %}
-	  <a class="btn btn-sm btn-outline-primary" href="{% url "admin:datalayers_datalayer_change" datalayer.id %}">{% icon "pencil" %}</a>
-	  {% endif %}
-	</div>
-
-  <h1>{{ datalayer.name }}</h1>
-</div>
-
-<div class="row">
-	<div class="col">
-		<div class="input-group mb-3" style="width: 300px">
-			<span class="input-group-text" id="addon-key">{% translate "Key:" %}</span>
-			<input type="text" class="form-control" value="{{ datalayer.key }}" aria-label="{% translate "Key" %}" aria-describedby="addon-key">
+			<ul class="dropdown-menu">
+				<li><a class="dropdown-item" href="#">All (Excel)</a></li>
+				<li><hr class="dropdown-divider"></li>
+				{% for type in shape_types %}
+				<li><a class="dropdown-item" href="#">Download {{ type.name }} (CSV)</a></li>
+				{% endfor %}
+				<li><hr class="dropdown-divider"></li>
+				{% for type in shape_types %}
+				<li><a class="dropdown-item" href="#">Download {{ type.name }} (Excel)</a></li>
+				{% endfor %}
+			</ul>
 		</div>
+
+		<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#api">API</button>
+
+		{% if perms.shapes.change_datalayer %}
+			<a class="btn btn-sm btn-outline-primary" href="{% url "admin:datalayers_datalayer_change" datalayer.id %}">{% icon "pencil" %}</a>
+		{% endif %}
 	</div>
-	<div class="col">
-		<b>{% translate "Category" %}</b>: {{ datalayer.category }}<br>
-	</div>
-	<div class="col">
-		<span class="datalayer-state
-			{% if datalayer.has_class %}datalayer-state--active
-			{% else %}datalayer-state--inactive
-			{% endif %}">
-			{% icon "file-code" %}
-		</span>
-		<span class="datalayer-state
-			{% if datalayer.is_loaded %}datalayer-state--active
-			{% else %}datalayer-state--inactive
-			{% endif %}">
-			{% icon "database" %}
-		</span>
-	</div>
+
+	<h1>{{ datalayer.name }}</h1>
 </div>
 
-<div class="mb-3">
-	{{ datalayer.description }}
+<div class="row mb-3">
+	<div class="col-12 col-md-6">
+
+		<div class="mb-3 small text-muted">
+			{% translate "Key" %}: <code>{{ datalayer.key }}</code> |
+			{% translate "Category" %}: <a href="{{ datalayer.category.get_absolute_url }}">{{ datalayer.category }}</a> |
+			#tags
+		</div>
+
+		<div class="mb-3">
+			{{ datalayer.description }}
+		</div>
+
+	</div>
+
+	<div class="col-12 col-md-3">
+		<table class="table table-sm small">
+			<tbdoy>
+				<tr>
+					<th class="fw-normal">{% translate "Value type" %}</th>
+					<td>{{ datalayer.value_type|default_if_none:"-" }}</td>
+				</tr>
+				<tr>
+					<th class="fw-normal">{% translate "Temporal resolution" %}</th>
+					<td>{{ datalayer.temporal_resolution|default_if_none:"-" }}</td>
+				</tr>
+				<tr>
+					<th class="fw-normal">{% translate "Shape types" %}</th>
+					<td>
+						{% for type in datalayer.get_available_shape_types %}
+							<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
+						{% endfor %}
+
+					</td>
+				</tr>
+				<tr>
+					<th class="fw-normal">{% translate "first/last/total value count" %}</th>
+					<td>NOP</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="col-12 col-md-3">
+
+		<div class="mb-3">
+			<span class="datalayer-state
+				{% if datalayer.has_class %}datalayer-state--active
+				{% else %}datalayer-state--inactive
+				{% endif %}">
+				{% icon "file-code" %}
+			</span> <span class="small text-secondary">{% translate "Source file available " %}</span> <br>
+
+			<span class="datalayer-state
+				{% if datalayer.has_files %}datalayer-state--active
+				{% else %}datalayer-state--inactive
+				{% endif %}">
+				{% icon "file-directory" %}
+			</span> <span class="small text-secondary">{% translate "Data is available local" %}</span> <br>
+
+			<span class="datalayer-state
+				{% if datalayer.is_loaded %}datalayer-state--active
+				{% else %}datalayer-state--inactive
+				{% endif %}">
+				{% icon "database" %}
+			</span> <span class="small text-secondary">{% translate "Loaded into database" %}</span>
+		</div>
+
+		<div class="text-muted">
+			<a class="small" href="{% url "datalayers:datalayer_log" datalayer.id %}">{%translate "Log" %}</a> |
+			<a class="small" href="#">{%translate "Files" %}</a>
+		</div>
+
+	</div>
 </div>
 
 
 <div class="row">
-	<div class="col-12 col-xl-6 mb-3">
-		<div class="card h-100">
-			<h5 class="card-header">{% translate "Data type and processing information" %}</h5>
+
+	<div class="col-12 col-xl-8">
+
+		<div>
+			<div class="input-group input-group-sm mb-3" style="max-width: 500px">
+				<select class="form-select js-map-shape_type" id="js-shape_type">
+				{% for type in datalayer.get_available_shape_types %}
+				<option value="{{ type.key }}">{{ type.name }}</option>
+				{% endfor %}
+				</select>
+
+				{% if datalayer.temporal_resolution_str == 'year' %}
+				<select class="form-select" id="js-map-date">
+					{% for year in datalayer.get_available_years %}
+					<option value="{{ year }}">{{ year }}</option>
+					{% endfor %}
+				</select>
+				{% else %}
+				{% endif %}
+
+				<select class="form-select" id="js-map-mode">
+					<option value="min_max">[min, max]</option>
+
+					{% if datalayer.value_type_str == 'percentage' %}
+					<option value="0_1">[0, 1]</option>
+					{% endif %}
+				</select>
+
+
+				<button id="js-add-to-map" class="btn btn-outline-secondary btn-sm">Load map</button>
+			</div>
+
+
+		</div>
+		<div class="mb-3" id="map" style="height: 350px; width: 100%"></div>
+		<div id="legend"></div>
+
+		<hr>
+
+		<div class="mb-3">
+			<div id="chart"></div>
+		</div>
+
+	</div>
+	<div class="col-12 col-xl-4">
+		<div class="card mb-3">
+			<h5 class="card-header">{% translate "Data type and processing" %}</h5>
 			<div class="card-body">
 				<table class="table table-sm table-meta_data mb-0">
 					<thead>
@@ -120,9 +209,8 @@
 				</table>
 			</div>
 		</div>
-	</div>
-	<div class="col-12 col-xl-6 mb-3">
-		<div class="card h-100">
+
+		<div class="card mb-3">
 			<h5 class="card-header">{% translate "Metadata information" %}</h5>
 			<div class="card-body">
 				<table class="table table-sm table-meta_data mb-0">
@@ -178,7 +266,186 @@
 				</table>
 			</div>
 		</div>
+
+		{% comment %}
+		<div class="card mb-3">
+			<h5 class="card-header">{% translate "DataCite" %}</h5>
+			<div class="card-body">
+				<a href="https://doi.org/{{ datalayer.doi}}">{{ datalayer.doi}}</a>
+
+				<a href="{% url 'datalayers:datalayer_datacite' datalayer.id %}">DataCite</a>
+			</div>
+		</div>
+		{% endcomment %}
+
 	</div>
 </div>
+{% endblock %}
+
+
+{% block footer %}
+<script>
+	var map = get_base_map('map');
+
+$('#js-add-to-map').on('click', async function() {
+	map.fire('dataloading');
+
+	let shape_type = $('#js-shape_type').val()
+    let date = $('#js-map-date').val();
+    if (!date) {
+        alert("Please select a date first.")
+        return;
+    }
+
+	//load_shape(map, {shape_type: shape_type});
+
+
+
+
+	let obj = {
+		datalayer_id: {{ datalayer.id}},
+		shape_type: shape_type,
+		start_date: date,
+		end_date: date
+	};
+	const url = new URL('/api/datalayers/data/', window.location.origin);
+	url.search = new URLSearchParams(obj);
+	const response = await d3.json(url);
+	const valuemap = new Map(response.data.map(d => [d.shape_id, d.copernicus_forest]));
+
+
+	//const color = d3.scaleLinear(d3.extent(valuemap.values()), ['blue', 'red']);
+	//const color = d3.scaleLinear([0, 1], d3.interpolateViridis);
+
+	let mode = $('#js-map-mode').val();
+	let color;
+
+	if (mode == "min_max") {
+		color = d3.scaleSequential(d3.extent(valuemap.values()), d3.interpolateYlGnBu);
+	} else {
+		color = d3.scaleSequential([0, 1], d3.interpolateYlGnBu);
+	}
+
+
+	function style(feature) {
+		let shape_id = feature.properties.id;
+
+		return {
+			fillColor: color(valuemap.get(shape_id)),
+			weight: 0.5,
+			opacity: 1,
+			color: 'white',
+			dashArray: '3',
+			fillOpacity: 1
+		};
+	}
+
+
+	let query ={
+		format: 'geojson',
+		shape_type: shape_type,
+	};
+	query_string = new URLSearchParams(query).toString();
+
+
+
+	$.getJSON(`/api/shapes/geometry/?${query_string}`, function(data) {
+		var m = L.geoJSON(data, {
+			style: style,
+			onEachFeature: function (feature, layer) {
+				const p = feature.properties;
+				layer.bindPopup(`<h5 class="mb-0">${p['name']}</h5>
+				<p class="mt-0 mb-1">
+				<small class="text-muted">${p['type']}</small>
+				</p>
+				Value: ${valuemap.get(p.id)}<br>
+				<a href="${p['url']}" class="">Details</a>`);
+			}
+		}).addTo(map);
+		map.fitBounds(m.getBounds());
+
+
+
+		let legend = Legend(color, {
+			title: '{{ datalayer.name}}',
+			tickFormat: "%"
+		});
+		document.getElementById('legend').innerHTML = "";
+		document.getElementById('legend').appendChild(legend);
+
+
+		map.fire('dataload');
+	}).fail(function(data) {
+		alert("Something went wrong during loading the geometry of the shape.");
+		map.fire('dataload');
+	});
+
+
+
+	map.fire('dataloading');
+});
+</script>
+
+
+<script>
+var data = [
+{% for type in datalayer.get_available_shape_types %}
+	{
+		x: [],
+		y: [],
+		mode: 'lines+markers',
+		name: '{{ type.name}} (mean)'
+	},
+{% endfor %}
+];
+
+var layout = {
+	title: '{{ datalayer.name }}',
+	xaxis: {
+		title: 'Year',
+		type: 'category'
+	},
+	yaxis: {
+		title: 'Value',
+		automargin: true, // prevent tick labels from beeing cut off
+		tickformat: ',.2%',
+		range: [0,1]
+	},
+	showlegend: true,
+	legend: {
+		orientation: "h",
+		x: 0,
+    	y: -0.2
+	},
+	margin: {
+		l: 50,
+		r: 10,
+		b: 100,
+		t: 50,
+		pad: 4
+	},
+};
+
+var config = {
+	toImageButtonOptions: {
+		filename: "{{ datalayer.name|slugify}}",
+	},
+	responsive: true
+};
+
+var chart = document.getElementById('chart')
+
+Plotly.newPlot(chart, data, layout, config).then(function() {
+{% for type in datalayer.get_available_shape_types %}
+$.getJSON('/api/datalayers/plotly?datalayer_id={{datalayer.id}}&shape_type={{ type.key}}', function(response) {
+	// inject lyout for the update as well. The xaxis.type seetings get's lost otherwise
+	Plotly.update(chart, {
+		x: [response.x],
+		y: [response.y],
+	}, layout, [{{ forloop.counter0 }}]);
+});
+{% endfor %}
+});
+</script>
 
 {% endblock %}

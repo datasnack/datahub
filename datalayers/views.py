@@ -14,7 +14,7 @@ class DatalayerListView(ListView):
     # todo: get_object_or_404() hit's the database twice!
     # https://stackoverflow.com/q/73241907
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().prefetch_related('category')
 
         if 'category_id' in self.kwargs:
             c = get_object_or_404(Category, pk=self.kwargs['category_id'])
@@ -32,3 +32,14 @@ class DatalayerListView(ListView):
 class DatalayerDetailView(DetailView):
     model = Datalayer
     context_object_name = "datalayer"
+
+
+class DatalayerLogView(DetailView):
+    model = Datalayer
+    context_object_name = "datalayer"
+    template_name = "datalayers/datalayer_log.html"
+
+class DatalayerDataCiteView(DetailView):
+    model = Datalayer
+    context_object_name = "datalayer"
+    template_name = "datalayers/datalayer_datacite.html"

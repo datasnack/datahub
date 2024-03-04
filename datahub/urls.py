@@ -33,6 +33,7 @@ urlpatterns += [
     path("shapes/", include("shapes.urls")),
 
     path("api/", include("shapes.api.urls")),
+    path("api/", include("datalayers.api.urls")),
 ]
 
 if settings.DEBUG:

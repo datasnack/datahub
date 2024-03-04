@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 
 from datalayers.datasources.tiff_layer import TiffLayer
+from datalayers.datasources.base_layer import LayerValueType
 
 class CopernicusLayer(TiffLayer):
     """ Extends TiffParameter class for Copernicus consumption. """
@@ -12,7 +13,7 @@ class CopernicusLayer(TiffLayer):
     def __init__(self):
         super().__init__()
 
-        self.is_percent = True
+        self.value_type = LayerValueType.PERCENTAGE
 
         self.area_of_interest = []
 

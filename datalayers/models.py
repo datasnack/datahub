@@ -1,10 +1,15 @@
 import importlib.util
 import sys
+from timeit import default_timer as timer
+from typing import List
 
-from django.conf import settings
 from django.db import models, connection
 from django.urls import reverse
+from django.utils.functional import cached_property
 
+from .datasources.base_layer import LayerTimeResolution, LayerValueType
+
+from shapes.models import Type
 
 # Create your models here.
 
@@ -46,6 +51,10 @@ class Datalayer(models.Model):
     )
     description = models.TextField(blank=True)
 
+    doi      = models.CharField(max_length=255, blank=True, null=True)
+    datacite = models.JSONField(null=True)
+    datacite_fetched_at = models.DateTimeField(null=True)
+
     # Data type and processing
     necessity        = models.CharField(max_length=255, blank=True)
     format           = models.CharField(max_length=255, blank=True)
@@ -76,16 +85,115 @@ class Datalayer(models.Model):
     def get_absolute_url(self):
         return reverse("datalayers:datalayer_detail", kwargs={'pk': self.id})
 
+    # --
+
+    @property
+    def temporal_resolution(self) -> LayerTimeResolution | None:
+        if self.has_class():
+            return self._get_class().time_col
+        else:
+            return None
+
+    @property
+    def temporal_resolution_str(self) -> str | None:
+        """ Return Enum type of layer as string so we can compare it in
+        Django templates. Probably there is a better way... """
+        if self.has_class():
+            return str(self._get_class().time_col)
+        else:
+            return None
+
+    @property
+    def value_type(self) -> LayerValueType | None:
+        if self.has_class():
+            return self._get_class().value_type
+        else:
+            return None
+
+    @property
+    def value_type_str(self) -> str | None:
+        if self.has_class():
+            return str(self._get_class().value_type)
+        else:
+            return None
+
+
+
+    def log(self, level, message, context=None):
+        if context is None:
+            context = {}
+
+        entry = DatalayerLogEntry(datalayer=self, level=level, message=message, context=context)
+        entry.save()
+
+    def info(self, message, context=None):
+        self.log(DatalayerLogEntry.INFORMATIONAL, message, context=context)
+
+    def warning(self, message, context=None):
+        self.log(DatalayerLogEntry.WARNING, message, context=context)
+
+
+    @cached_property
+    def get_available_shape_types(self) -> List[Type]:
+        """ Determines all shape types the datalayer has values for. """
+
+        if not self.is_loaded():
+            return []
+
+        with connection.cursor() as c:
+            sql = f"SELECT DISTINCT t.id FROM {self.key} AS dl \
+                JOIN shapes_shape as s ON s.id = dl.shape_id  \
+                JOIN shapes_type as t ON t.id = s.type_id"
+
+            c.execute(sql)
+            results = c.fetchall()
+
+        type_ids = []
+        for row in results:
+            type_ids.append(row[0])
+
+        return Type.objects.filter(id__in=type_ids).order_by('position')
+
+    @cached_property
+    def get_available_years(self) -> List[int]:
+        """ Finds all years for which data are available. In case of data layers
+        with a more detailed time resolution, like month or date, it loads the
+        affected years. """
+
+        if not self.is_loaded():
+            #self.logger.warning("Peek of data requested but not loaded for shape_id=%s", shape_id)
+            return []
+
+        match self.temporal_resolution:
+            case LayerTimeResolution.YEAR:
+                sql = f"SELECT DISTINCT year FROM {self.key} ORDER BY year DESC"
+            case LayerTimeResolution.DAY:
+                sql = f"SELECT DATE_PART('year', date ::date) AS year \
+                FROM {self.key} WHERE date is not NULL GROUP BY year ORDER BY year DESC"
+            case _:
+                raise ValueError(f"Unknown time_col={self.temporal_resolution}")
+
+        with connection.cursor() as c:
+            c.execute(sql)
+            results = c.fetchall()
+
+        years = []
+        for row in results:
+            years.append(row[0])
+
+        return years
+
+
+
     def _get_class(self):
         #spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
-
 
         mod = __import__(f'src.datalayer.{self.key}', fromlist=[camel(self.key)])
         cls = getattr(mod, camel(self.key))()
         cls.layer = self
         return cls
 
-    def has_class(self):
+    def has_class(self) -> bool:
         """ Check if there is a corresponding class with details for
         downloading and processing the data source. """
         try:
@@ -96,23 +204,86 @@ class Datalayer(models.Model):
             # class is not found
             return False
 
-    def is_loaded(self):
+    @cached_property
+    def _database_tables(self):
+        """ this caches the query at least per instance but not yet per request
+        for alls instances. """
+        return connection.introspection.table_names()
+
+    def is_loaded(self) -> bool:
         """ Check if the data has been processed and are stored in the
         database. """
 
         # todo: this runs a database query each time the method is called.
         # we need to run/cache this once per request.
-        return self.key in connection.introspection.table_names()
+        return self.key in self._database_tables
+
+    def has_files(self) -> bool:
+        """ Check if for the specified download directory of the datalayer files
+        are present. """
+        if self.has_class():
+            return self._get_class().get_data_path().exists()
+        else:
+            return False
+
+    # ---
 
     def download(self):
         """ Automatic download of data source files. """
 
+        start = timer()
+        self.info("Starting download")
         cls = self._get_class()
         cls.download()
-
+        end = timer()
+        self.info("Finished download", {'end': end, 'duration': end-start})
 
     def process(self):
         """ Consume/calculate data to insert into the database. """
 
+        start = timer()
+        self.info("Starting processing")
+
         cls = self._get_class()
         cls.process()
+
+        end = timer()
+        self.info("Finished processing", {'duration': end-start})
+
+
+class DatalayerLogEntry(models.Model):
+
+    # levels based on Syslog https://datatracker.ietf.org/doc/html/rfc5424
+    EMERGENCY     = 'emerg'
+    ALERT         = 'alert'
+    CRITICAL      = 'crit'
+    ERROR         = 'err'
+    WARNING       = 'warning'
+    NOTICE        = 'notice'
+    INFORMATIONAL = 'info'
+    DEBUG         = 'debug'
+
+    SEVERITY_CHOICES = [
+        (DEBUG, 'Debug'),
+        (INFORMATIONAL, 'Informational'),
+        (NOTICE, 'Notice'),
+        (WARNING, 'Warning'),
+        (ERROR, 'Error'),
+        (CRITICAL, 'Critical'),
+        (ALERT, 'Alert'),
+        (EMERGENCY, 'Emergency')
+    ]
+
+    datetime  = models.DateTimeField(auto_now_add=True)
+    # updated_at is no really necessary for an read-only log
+
+    # this might be more ore less the channel of the log statement
+    datalayer = models.ForeignKey(
+        Datalayer,
+        on_delete=models.RESTRICT,
+        related_name='logentries',
+    )
+
+    level = models.CharField(max_length=10, choices=SEVERITY_CHOICES)
+    message = models.TextField()
+    context = models.JSONField(default=list)

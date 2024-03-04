@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ datalayer.name }}{% endblock %}
+
+{% block content %}
+<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+	<div class="mb-2 mb-md-0">
+
+	</div>
+
+	<h1>
+		<a href="{{ datalayer.get_absolute_url }}">{% icon "arrow-left" size=24 %}</a>
+		{% blocktranslate with datalayer=datalayer.name %}
+			Log for <i>{{ datalayer }}</i>
+		{% endblocktranslate %}
+
+
+	</h1>
+</div>
+
+<div class="row mb-3">
+	<div class="col-12">
+		<table class="table table-sm small">
+			<thead>
+				<tr>
+					<th>{% translate "Datetime" %}</th>
+					<th>{% translate "Level" %}</th>
+					<th style="width: 200px">{% translate "Message" %}</th>
+					<th>{% translate "Context" %}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for log in datalayer.logentries.all %}
+					<tr>
+						<td class="font-monospace text-nowrap">{{ log.datetime|date:"c" }}</td>
+						<td>{{ log.level }}</td>
+						<td>{{ log.message }}</td>
+						<td>{{ log.context }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}

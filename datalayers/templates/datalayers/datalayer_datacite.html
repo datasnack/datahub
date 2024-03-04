@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ datalayer.name }}{% endblock %}
+
+{% block content %}
+<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+	<div class="mb-2 mb-md-0">
+
+	</div>
+
+	<h1>
+		<a href="{{ datalayer.get_absolute_url }}">{% icon "arrow-left" size=24 %}</a>
+		{% blocktranslate with datalayer=datalayer.name %}
+			DataCite for <i>{{ datalayer }}</i>
+		{% endblocktranslate %}
+
+
+	</h1>
+</div>
+
+<div class="row">
+	<div class="col-12">
+		<div class="card mb-3">
+			<h5 class="card-header">{% translate "Creators" %}</h5>
+			<div class="card-body">
+				<ul class="mb-0">
+				{% for creator in datalayer.datacite.creators %}
+
+					<li>
+						{{ creator.name}}
+
+						{% for id in creator.nameIdentifiers %}
+							<a href="{{ id.nameIdentifier }}">{{ id.nameIdentifierScheme }}</a>
+						{% endfor %}
+
+					</li>
+
+				{%endfor%}
+				</ul>
+			</div>
+		</div>
+
+		<pre><code>{{ datalayer.datacite|pprint }}</code></pre>
+
+	</div>
+</div>
+{% endblock %}

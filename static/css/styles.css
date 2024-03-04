@@ -83,3 +83,13 @@ h6 {
 .icon-text {
 	fill: currentColor;
 }
+
+.datalayer-state {
+	position: relative;
+}
+.datalayer-state--active {
+	color: var(--bs-success);
+}
+.datalayer-state--inactive {
+	color: var(--bs-gray-400);
+}
