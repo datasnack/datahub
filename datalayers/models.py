@@ -1,7 +1,6 @@
-import importlib.util
-import sys
+import datetime as dt
 from timeit import default_timer as timer
-from typing import List
+from typing import List, Optional
 
 from django.db import models, connection
 from django.urls import reverse
@@ -9,7 +8,7 @@ from django.utils.functional import cached_property
 
 from .datasources.base_layer import LayerTimeResolution, LayerValueType
 
-from shapes.models import Type
+from shapes.models import Shape, Type
 
 # Create your models here.
 
@@ -225,6 +224,110 @@ class Datalayer(models.Model):
             return self._get_class().get_data_path().exists()
         else:
             return False
+
+    def value_coverage(self, shape_type: Optional[Type] = None) -> float:
+
+        if not self.is_loaded():
+            return None
+
+        expected = self.expected_value_count(shape_type)
+        actual   = self.count_values(shape_type)
+        return actual / expected
+
+    def expected_value_count(self, shape_type: Optional[Type] = None) -> int:
+
+        if not self.is_loaded():
+            return None
+
+        first = self.first_time(shape_type)
+        last  = self.last_time(shape_type)
+
+        if shape_type is None:
+            type_multiplier = Shape.objects.count()
+        else:
+            type_multiplier = Shape.objects.filter(type=shape_type).count()
+
+        match self.temporal_resolution:
+            case LayerTimeResolution.YEAR:
+                dt_first = dt.datetime(int(first), 1, 1)
+                dt_last  = dt.datetime(int(last), 1, 1)
+                return (dt_last.year - dt_first.year + 1) * type_multiplier
+            case LayerTimeResolution.DAY:
+                raise NotImplementedError
+            case _:
+                raise ValueError(f"Unknown time_col={self.temporal_resolution}")
+
+    def count_values(self, shape_type: Optional[Type] = None):
+        if not self.is_loaded():
+            return None
+
+        params = {}
+        sql = f"SELECT COUNT(*) AS count FROM {self.key} AS dl "
+
+        if shape_type is not None:
+            sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
+            sql += "WHERE s.type_id = %(type_id)s "
+            params['type_id'] = shape_type.id
+
+        with connection.cursor() as c:
+            c.execute(sql, params)
+            result = c.fetchone()
+
+        return result[0]
+
+    def first_time(self, shape_type: Optional[Type] = None):
+        """ Determines the first point in time a value is available. """
+        if not self.is_loaded():
+            return None
+
+        params = {}
+        match self.temporal_resolution:
+            case LayerTimeResolution.YEAR:
+                sql = f"SELECT dl.year FROM {self.key} AS dl "
+            case LayerTimeResolution.DAY:
+                sql = f"SELECT dl.date FROM {self.key} AS dl "
+            case _:
+                raise ValueError(f"Unknown time_col={self.temporal_resolution}")
+
+        if shape_type is not None:
+            sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
+            sql += "WHERE s.type_id = %(type_id)s "
+            params['type_id'] = shape_type.id
+
+        sql += "ORDER BY year ASC LIMIT 1"
+
+        with connection.cursor() as c:
+            c.execute(sql, params)
+            result = c.fetchone()
+
+        return result[0]
+
+    def last_time(self, shape_type: Optional[Type] = None):
+        """ Determines the first point in time a value is available. """
+        if not self.is_loaded():
+            return None
+
+        params = {}
+        match self.temporal_resolution:
+            case LayerTimeResolution.YEAR:
+                sql = f"SELECT dl.year FROM {self.key} AS dl "
+            case LayerTimeResolution.DAY:
+                sql = f"SELECT dl.date FROM {self.key} AS dl "
+            case _:
+                raise ValueError(f"Unknown time_col={self.temporal_resolution}")
+
+        if shape_type is not None:
+            sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
+            sql += "WHERE s.type_id = %(type_id)s "
+            params['type_id'] = shape_type.id
+
+        sql += "ORDER BY year DESC LIMIT 1"
+        with connection.cursor() as c:
+            c.execute(sql, params)
+            result = c.fetchone()
+
+        return result[0]
+
 
     # ---
 

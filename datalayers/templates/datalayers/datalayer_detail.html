@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load percentageformat %}
+{% load coverage %}
 {% block title %}{{ datalayer.name }}{% endblock %}
 
 {% block content %}
@@ -62,17 +64,41 @@
 					<td>{{ datalayer.temporal_resolution|default_if_none:"-" }}</td>
 				</tr>
 				<tr>
-					<th class="fw-normal">{% translate "Shape types" %}</th>
+					<th class="fw-normal">{% translate "First/Last" %}</th>
 					<td>
-						{% for type in datalayer.get_available_shape_types %}
-							<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
-						{% endfor %}
-
+						{{ datalayer.first_time }}
+						/
+						{{ datalayer.last_time }}
+						({{ datalayer.value_coverage|percentageformat }})
 					</td>
 				</tr>
 				<tr>
-					<th class="fw-normal">{% translate "first/last/total value count" %}</th>
-					<td>NOP</td>
+					<td colspan="2">
+
+						<table class="table table-sm small mb-0">
+							<thead>
+								<tr>
+									<th class="fw-normal">{% translate "Shape type" %}</th>
+									<th class="fw-normal">{% translate "Coverage" %}</th>
+								</tr>
+							</thead>
+							<tbody>
+							{% for type in datalayer.get_available_shape_types %}
+								<tr>
+									<td>
+										<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
+									</td>
+									<td>
+										{{ datalayer|coverage:type|percentageformat }}
+									</td>
+
+								</tr>
+
+							{% endfor %}
+							</tbody>
+						</table>
+
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -297,11 +323,6 @@ $('#js-add-to-map').on('click', async function() {
         return;
     }
 
-	//load_shape(map, {shape_type: shape_type});
-
-
-
-
 	let obj = {
 		datalayer_id: {{ datalayer.id}},
 		shape_type: shape_type,
@@ -313,9 +334,6 @@ $('#js-add-to-map').on('click', async function() {
 	const response = await d3.json(url);
 	const valuemap = new Map(response.data.map(d => [d.shape_id, d.copernicus_forest]));
 
-
-	//const color = d3.scaleLinear(d3.extent(valuemap.values()), ['blue', 'red']);
-	//const color = d3.scaleLinear([0, 1], d3.interpolateViridis);
 
 	let mode = $('#js-map-mode').val();
 	let color;
@@ -379,8 +397,6 @@ $('#js-add-to-map').on('click', async function() {
 		alert("Something went wrong during loading the geometry of the shape.");
 		map.fire('dataload');
 	});
-
-
 
 	map.fire('dataloading');
 });
