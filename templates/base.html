@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load l10n %}
 {% get_current_language as LANGUAGE_CODE %}
 <!doctype html>
 <html lang="{{ LANGUAGE_CODE }}" class="no-js">
@@ -16,13 +17,15 @@
 
 	<title>{% block title %}{% endblock %} - {{ datahub_name }}</title>
 	<script>document.documentElement.className = document.documentElement.className.replace("no-js","js");</script>
+	{% localize off %}
 	<script>
 		const DATAHUB = {
 			CENTER_X: {{ DATAHUB_CENTER_X }},
 			CENTER_Y: {{ DATAHUB_CENTER_Y }},
 			CENTER_ZOOM: {{ DATAHUB_CENTER_ZOOM }},
-		}
+		};
 	</script>
+	{% endlocalize %}
 	{% block head %}{% endblock %}
 </head>
 <body>
