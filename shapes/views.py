@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import ListView, DetailView
 
+from datalayers.models import Datalayer
 from .models import Shape, Type
+
 
 
 # Create your views here.
@@ -40,6 +42,19 @@ class ShapeListView(ListView):
 class ShapeDetailView(DetailView):
     model = Shape
     context_object_name = "shape"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        all_layers = Datalayer.objects.all()
+        context['datalayers'] = []
+        for l in all_layers:
+            if l.is_loaded():
+                context['datalayers'].append(l)
+
+
+        return context
+
 
 
 def tree(request):

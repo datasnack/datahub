@@ -14,6 +14,7 @@ class CopernicusLayer(TiffLayer):
         super().__init__()
 
         self.value_type = LayerValueType.PERCENTAGE
+        self.precision = 2
 
         self.area_of_interest = []
 

@@ -10,7 +10,7 @@ from django.utils.functional import cached_property
 
 
 from shapes.models import Shape, Type
-from datalayers.utils import get_engine
+from datalayers.utils import get_engine, dictfetchone
 from .datasources.base_layer import LayerTimeResolution, LayerValueType
 
 # Create your models here.
@@ -37,6 +37,39 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         return reverse("datalayers:datalayer_index_category", kwargs={'category_id': self.id})
+
+
+class DatalayerValue():
+
+    def __init__(self, datalayer, row):
+        self.result = row
+        self.dl = datalayer
+
+        self.value  = None
+        self.time   = None
+
+        if "value" in row:
+            self.value = row['value']
+
+
+    def date(self):
+
+        match self.dl.temporal_resolution:
+            case LayerTimeResolution.YEAR:
+                if "year" in self.result:
+                    return self.result['year']
+                return None
+            case LayerTimeResolution.DAY:
+                if "date" in self.result:
+                    return self.result['date'].strftime('%Y-%m-%d')
+                return None
+            case _:
+                raise ValueError(f"Unknown time_col={self.dl.temporal_resolution}")
+
+
+    def __str__(self):
+        return self.value
+
 
 
 class Datalayer(models.Model):
@@ -120,6 +153,17 @@ class Datalayer(models.Model):
         else:
             return None
 
+    def format_precision(self) -> int | None:
+        if self.has_class():
+            return self._get_class().precision
+        else:
+            return None
+
+    def format_suffix(self) -> str | None:
+        if self.has_class():
+            return self._get_class().format_suffix
+        else:
+            return None
 
 
     def log(self, level, message, context=None):
@@ -238,6 +282,65 @@ class Datalayer(models.Model):
 
     # --
 
+    def str_format(self, value):
+
+        if self.has_class():
+            return self._get_class().str_format(value)
+
+        return value
+
+    def value(self,
+        shape: Optional[Shape] = None,
+        when: Optional[dt.datetime] = None,
+        fallback_parent=False,
+        mode='down'):
+
+        if not self.is_loaded():
+            return None
+
+        # get the wanted compare operator
+        modes = {
+            'exact': '=',  # needs to be exactly the given date
+            'up':    '>=', # same or next
+            'down':  '<='  # same or previous
+        }
+        if mode not in modes:
+            raise ValueError(f"Unknown mode={mode}")
+
+        params = {}
+        sql = f"SELECT dl.* FROM {self.key} AS dl "
+        sql += "WHERE dl.shape_id = %(shape_id)s "
+        params['shape_id'] = shape.id
+
+        if when is not None:
+            operator = modes[mode]
+            if self.temporal_resolution == LayerTimeResolution.YEAR:
+                sql += f"AND dl.year {operator} %(when)s "
+                params['when'] = when
+            elif self.temporal_resolution == LayerTimeResolution.DAY:
+                sql += f"AND dl.date {operator} %(when)s "
+                params['when'] = when
+            else:
+                raise ValueError(f"Unknown time_col={self.temporal_resolution}")
+
+        sort_operator = 'DESC'
+        if mode == 'up':
+            sort_operator = 'ASC'
+
+        sql += f"ORDER BY dl.{self.temporal_resolution} {sort_operator} LIMIT 1"
+
+        with connection.cursor() as c:
+            c.execute(sql, params)
+            #result = c.fetchone()
+            result = dictfetchone(c)
+
+        print(result)
+
+        dlv = DatalayerValue(self, result)
+        return dlv
+
+
+
     def data(self,
         shape: Optional[Shape] = None,
         when: Optional[dt.datetime] = None,
@@ -255,7 +358,7 @@ class Datalayer(models.Model):
             FROM {self.key} "
 
         # JOIN
-        if shape_type:
+        if shape_type or shape:
             sql += f"JOIN shapes_shape s ON s.id = {self.key}.shape_id "
 
 
@@ -269,6 +372,10 @@ class Datalayer(models.Model):
         if end_date:
             sql += f"AND {self.temporal_resolution} <= %(end_date)s "
             params['end_date'] = end_date
+
+        if shape:
+            sql += "AND s.id = %(shape_id)s"
+            params['shape_id'] = shape.id
 
         if shape_type:
             sql += "AND s.type_id = %(type)s"

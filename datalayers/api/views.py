@@ -25,6 +25,12 @@ def data(request):
     datalayer = get_object_or_404(Datalayer, pk=datalayer_id)
     name = datalayer.key
 
+    shape_id = request.GET.get('shape_id', None)
+    shape = None
+    if shape_id is not None:
+        shape = get_object_or_404(Shape, pk=shape_id)
+        name = f"{name}_{slugify(shape.name)}"
+
     shape_type_key = request.GET.get('shape_type', None)
     shape_type = None
     if shape_type_key is not None:
@@ -37,6 +43,7 @@ def data(request):
     df = datalayer.data(
         start_date = start_date,
         end_date   = end_date,
+        shape      = shape,
         shape_type = shape_type
     )
 

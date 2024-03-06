@@ -384,8 +384,10 @@ $('#js-add-to-map').on('click', async function() {
 
 
 		let legend = Legend(color, {
-			title: '{{ datalayer.name}}',
-			//tickFormat: "%"
+			title: '{{ datalayer.name}}{% if datalayer.format_suffix %} ({{ datalayer.format_suffix }}){% endif %}',
+			{% if datalayer.value_type_str == 'percentage' %}
+			tickFormat: '%'
+			{%endif%}
 		});
 		document.getElementById('legend').innerHTML = "";
 		document.getElementById('legend').appendChild(legend);
@@ -417,20 +419,28 @@ var data = [
 var layout = {
 	title: '{{ datalayer.name }}',
 	xaxis: {
+		{% if datalayer.temporal_resolution_str == 'year' %}
 		title: 'Year',
-		//type: 'category'
+		type: 'category' // prevent extrapolating ticks between the years
+		{% elif datalayer.temporal_resolution_str == 'date'  %}
+		title: 'Date',
+		{% else %}
+		title: '{{ datalayer.temporal_resolution_str }}'
+		{%endif %}
 	},
 	yaxis: {
 		title: 'Value',
 		automargin: true, // prevent tick labels from beeing cut off
 		{# plotly tickformat is based on: https://d3js.org/d3-format #}
 		{% if datalayer.value_type_str == 'percentage' %}
-		tickformat: ',.2%',
+		tickformat: ',.{{ datalayer.format_precision }}%',
 		range: [0,1]
 		{% elif datalayer.value_type_str == 'value'  %}
-		tickformat: ',.2f',
-		ticksuffix: '°C',
-		{% else %}
+		tickformat: ',.{{ datalayer.format_precision }}f',
+
+		{% if datalayer.format_suffix %}
+		ticksuffix: '{{ datalayer.format_suffix }}',
+		{% endif %}
 
 		{%endif %}
 	},

@@ -40,6 +40,9 @@ class BaseLayer():
         # Only used in UI for human on the web, API and CSV data are never rounded
         self.precision = 3
 
+        # Optional suffix for formatting human readable values
+        self.format_suffix = None
+
 
     def download(self):
         """ Automatic download of data source files. """
@@ -54,6 +57,18 @@ class BaseLayer():
         """ Path to where to store the data of the layer. """
         return Path(f"./data/datalayers/{self.layer.key}/")
 
+    def str_format(self, value) -> str:
+
+        match self.value_type:
+            case LayerValueType.PERCENTAGE:
+                return f"{round(value * 100, self.precision)} %"
+            case LayerValueType.VALUE:
+                fmt = str(round(value, self.precision))
+                if self.format_suffix:
+                    fmt += f" {self.format_suffix}"
+                return fmt
+            case _:
+                return value
 
     def save(self):
         if self.df is None:

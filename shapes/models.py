@@ -2,6 +2,8 @@ from django.db import models as djmodels
 from django.contrib.gis.db import models
 from django.urls import reverse
 
+#from datalayers.models import Datalayer
+
 class Type(djmodels.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
@@ -70,3 +72,11 @@ class Shape(models.Model):
 
     def get_absolute_url(self):
         return reverse("shapes:shape_detail", kwargs={'pk': self.id})
+
+
+    def datalayer_value(self, dl):
+
+        # todo: fallback to parent shape
+        value = dl.value(self)
+
+        return value
