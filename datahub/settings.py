@@ -15,6 +15,7 @@ from pathlib import Path
 import environ
 from django.utils.translation import gettext_lazy as _
 
+from . import __version__
 
 env = environ.Env(
     # set casting, default value
@@ -229,6 +230,8 @@ LOGIN_REQUIRED_URLS_EXCEPTIONS = (
     r'/admin(.*)$',
     r'/accounts/login(.*)$',
 )
+
+DATAHUB_VERSION = __version__
 
 DATAHUB_LOGIN_REQUIRED = env('DATAHUB_LOGIN_REQUIRED')
 DATAHUB_NAME = env('DATAHUB_NAME')
