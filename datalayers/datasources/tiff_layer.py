@@ -36,7 +36,6 @@ class TiffLayer(BaseLayer):
 
         if shapes is None:
             shapes = Shape.objects.all()
-            #shapes = self._get_shapes_from_db()
 
         file_count = len(files)
         i = 1

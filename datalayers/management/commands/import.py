@@ -3,13 +3,10 @@ import re
 import time
 
 import pandas as pd
-from sqlalchemy import create_engine
 from datacite import DataCiteRESTClient
 from datacite.errors import DataCiteNotFoundError
 
-from django.core.management.base import BaseCommand, CommandError
-from django.db import connection
-from django.conf import settings
+from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
 from datalayers.models import Datalayer, Category
@@ -39,21 +36,17 @@ class Command(BaseCommand):
             dl['category'] = categories[dl['category']]
             d = Datalayer(**dl)
 
-            match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', dl['identifier'], re.IGNORECASE)
-
-            if match:
-                d.doi = match.group()
-
-                print(d.doi)
-
-                try:
-                    d.datacite = dc.get_metadata(d.doi)
-                    d.datacite_fetched_at = now()
-                except DataCiteNotFoundError:
-                    print("> no data")
-                    pass
-
-                time.sleep(1)
+            # todo: not yet clear how this should work. definitely needs 1:n relation
+            #match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', dl['identifier'], re.IGNORECASE)
+            #if match:
+            #    d.doi = match.group()
+            #    try:
+            #        d.datacite = dc.get_metadata(d.doi)
+            #        d.datacite_fetched_at = now()
+            #    except DataCiteNotFoundError:
+            #        print("> no data")
+            #        pass
+            #    time.sleep(1) # don't get banned on the api?
 
 
             d.save()

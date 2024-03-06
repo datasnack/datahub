@@ -6,7 +6,7 @@ from shapely import wkt
 import numpy as np
 
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest, FileResponse
 from django.utils.text import slugify
 
 from shapes.models import Shape, Type
@@ -18,50 +18,50 @@ from datalayers.utils import get_engine
 
 def data(request):
 
+    format = request.GET.get('format', 'json')
+
+    # determine filters
     datalayer_id = request.GET.get('datalayer_id', None)
     datalayer = get_object_or_404(Datalayer, pk=datalayer_id)
+    name = datalayer.key
+
     shape_type_key = request.GET.get('shape_type', None)
     shape_type = None
+    if shape_type_key is not None:
+        shape_type = get_object_or_404(Type, key=shape_type_key)
 
     start_date = request.GET.get('start_date', None)
     end_date = request.GET.get('end_date', None)
 
+    # get data
+    df = datalayer.data(
+        start_date = start_date,
+        end_date   = end_date,
+        shape_type = shape_type
+    )
 
-    params = {}
-
-    if shape_type_key is not None:
-        shape_type = get_object_or_404(Type, key=shape_type_key)
-
-    sql = f"SELECT {datalayer.key} as {datalayer.key}, shape_id, {datalayer.temporal_resolution} \
-        FROM {datalayer.key} "
-
-    # JOIN
-    if shape_type:
-        sql += f"JOIN shapes_shape s ON s.id = {datalayer.key}.shape_id "
-
-
-    # WHERE
-    sql += "WHERE 1=1 "
-
-    if start_date:
-        sql += f"AND {datalayer.temporal_resolution} >= %(start_date)s "
-        params['start_date'] = start_date
-
-    if end_date:
-        sql += f"AND {datalayer.temporal_resolution} <= %(end_date)s "
-        params['end_date'] = end_date
-
-    if shape_type:
-        sql += "AND s.type_id = %(type)s"
-        params['type'] = shape_type.id
-
-    print(sql)
-
-    df = pd.read_sql(sql, con=get_engine(), params=params)
-
-    return JsonResponse({
-        'data': df.fillna(np.nan).replace([np.nan], [None]).to_dict('records'),
-    })
+    # return data according to format
+    match format:
+        case 'csv':
+            file = BytesIO()
+            df.to_csv(file, index=False)
+            file.seek(0)
+            response = FileResponse(file, as_attachment=False, filename=f'{name}.csv')
+            response['Content-Type'] = 'text/csv'
+            return response
+        case 'excel':
+            file = BytesIO()
+            df.to_excel(file, index=False)
+            file.seek(0)
+            response = FileResponse(file, as_attachment=False, filename=f'{name}.xlsx')
+            response['Content-Type'] = 'application/vnd.ms-excel'
+            return response
+        case 'json':
+            return JsonResponse({
+                'data': df.fillna(np.nan).replace([np.nan], [None]).to_dict('records'),
+            })
+        case _:
+            return HttpResponseBadRequest("Invalid format")
 
 
 def plotly(request):
@@ -89,7 +89,7 @@ def plotly(request):
     datalayer = get_object_or_404(Datalayer, pk=datalayer_id)
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
-    sql = f"SELECT {datalayer.temporal_resolution}, AVG({datalayer.key}) as {datalayer.key} \
+    sql = f"SELECT {datalayer.temporal_resolution}, AVG(value) AS value \
         FROM {datalayer.key} \
         JOIN shapes_shape s ON s.id = {datalayer.key}.shape_id \
         WHERE s.type_id = %(type)s \
@@ -101,7 +101,7 @@ def plotly(request):
 
     json_data = {
         'x': df[str(datalayer.temporal_resolution)].tolist(),
-        'y': df[datalayer.key].tolist(),
+        'y': df['value'].tolist(),
     }
 
     return JsonResponse(json_data)

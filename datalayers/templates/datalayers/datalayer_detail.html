@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load percentageformat %}
+{% load l10n %}
 {% load coverage %}
 {% block title %}{{ datalayer.name }}{% endblock %}
 
@@ -8,22 +9,12 @@
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
 	<div class="mb-2 mb-md-0">
 		<div class="btn-group">
-			<a class="btn btn-sm btn-outline-primary" href="#">Download all data (CSV)</a>
-
-			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-				<span class="visually-hidden">Toggle Dropdown</span>
+			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+				{% icon "download" %} {% translate "Processed data" %}
 			</button>
-
 			<ul class="dropdown-menu">
-				<li><a class="dropdown-item" href="#">All (Excel)</a></li>
-				<li><hr class="dropdown-divider"></li>
-				{% for type in shape_types %}
-				<li><a class="dropdown-item" href="#">Download {{ type.name }} (CSV)</a></li>
-				{% endfor %}
-				<li><hr class="dropdown-divider"></li>
-				{% for type in shape_types %}
-				<li><a class="dropdown-item" href="#">Download {{ type.name }} (Excel)</a></li>
-				{% endfor %}
+				<li><a class="dropdown-item" href="{% url 'datalayer_data' %}?datalayer_id={{ datalayer.id}}&format=csv">{% translate "CSV" %}</a></li>
+				<li><a class="dropdown-item" href="{% url 'datalayer_data' %}?datalayer_id={{ datalayer.id}}&format=excel">{% translate "Excel" %}</a></li>
 			</ul>
 		</div>
 
@@ -91,9 +82,7 @@
 									<td>
 										{{ datalayer|coverage:type|percentageformat }}
 									</td>
-
 								</tr>
-
 							{% endfor %}
 							</tbody>
 						</table>
@@ -156,7 +145,8 @@
 					<option value="{{ year }}">{{ year }}</option>
 					{% endfor %}
 				</select>
-				{% else %}
+				{% elif datalayer.temporal_resolution_str == 'date' %}
+				<input type="date" class="form-control" id="js-map-date" min="{{ datalayer.first_time|date:"Y-m-d" }}" max="{{ datalayer.last_time|date:"Y-m-d" }}">
 				{% endif %}
 
 				<select class="form-select" id="js-map-mode">
@@ -332,7 +322,7 @@ $('#js-add-to-map').on('click', async function() {
 	const url = new URL('/api/datalayers/data/', window.location.origin);
 	url.search = new URLSearchParams(obj);
 	const response = await d3.json(url);
-	const valuemap = new Map(response.data.map(d => [d.shape_id, d.copernicus_forest]));
+	const valuemap = new Map(response.data.map(d => [d.shape_id, d.value]));
 
 
 	let mode = $('#js-map-mode').val();
@@ -348,14 +338,23 @@ $('#js-add-to-map').on('click', async function() {
 	function style(feature) {
 		let shape_id = feature.properties.id;
 
-		return {
-			fillColor: color(valuemap.get(shape_id)),
+		let value = valuemap.get(shape_id)
+		let style = {
 			weight: 0.5,
 			opacity: 1,
 			color: 'white',
 			dashArray: '3',
 			fillOpacity: 1
 		};
+
+		if (value) {
+			style['fillColor'] = color(value);
+		} else {
+			style['fillColor'] = '#000000';
+			style['fillOpacity'] = 0.1;
+		}
+
+		return style;
 	}
 
 
@@ -386,7 +385,7 @@ $('#js-add-to-map').on('click', async function() {
 
 		let legend = Legend(color, {
 			title: '{{ datalayer.name}}',
-			tickFormat: "%"
+			//tickFormat: "%"
 		});
 		document.getElementById('legend').innerHTML = "";
 		document.getElementById('legend').appendChild(legend);
@@ -419,13 +418,21 @@ var layout = {
 	title: '{{ datalayer.name }}',
 	xaxis: {
 		title: 'Year',
-		type: 'category'
+		//type: 'category'
 	},
 	yaxis: {
 		title: 'Value',
 		automargin: true, // prevent tick labels from beeing cut off
+		{# plotly tickformat is based on: https://d3js.org/d3-format #}
+		{% if datalayer.value_type_str == 'percentage' %}
 		tickformat: ',.2%',
 		range: [0,1]
+		{% elif datalayer.value_type_str == 'value'  %}
+		tickformat: ',.2f',
+		ticksuffix: '°C',
+		{% else %}
+
+		{%endif %}
 	},
 	showlegend: true,
 	legend: {

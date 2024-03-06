@@ -12,7 +12,7 @@ from datalayers.utils import get_engine
 class LayerTimeResolution(Enum):
     YEAR = 'year'
     MONTH = 'month'
-    DAY = 'day'
+    DAY = 'date'
 
     def __str__(self):
         return str(self.value)

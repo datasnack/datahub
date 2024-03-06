@@ -157,5 +157,5 @@ class CopernicusLayer(TiffLayer):
         self.rows.append({
             'year': year,
             'shape_id': shape.id,
-            f'{self.layer.key}': aoi_cells / total_cells,
+            'value': aoi_cells / total_cells,
         })

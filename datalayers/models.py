@@ -2,13 +2,16 @@ import datetime as dt
 from timeit import default_timer as timer
 from typing import List, Optional
 
+import pandas as pd
+
 from django.db import models, connection
 from django.urls import reverse
 from django.utils.functional import cached_property
 
-from .datasources.base_layer import LayerTimeResolution, LayerValueType
 
 from shapes.models import Shape, Type
+from datalayers.utils import get_engine
+from .datasources.base_layer import LayerTimeResolution, LayerValueType
 
 # Create your models here.
 
@@ -50,9 +53,10 @@ class Datalayer(models.Model):
     )
     description = models.TextField(blank=True)
 
-    doi      = models.CharField(max_length=255, blank=True, null=True)
-    datacite = models.JSONField(null=True)
-    datacite_fetched_at = models.DateTimeField(null=True)
+    # todo: we need a 1:n relationship
+    #doi      = models.CharField(max_length=255, blank=True, null=True)
+    #datacite = models.JSONField(null=True)
+    #datacite_fetched_at = models.DateTimeField(null=True)
 
     # Data type and processing
     necessity        = models.CharField(max_length=255, blank=True)
@@ -131,6 +135,9 @@ class Datalayer(models.Model):
     def warning(self, message, context=None):
         self.log(DatalayerLogEntry.WARNING, message, context=context)
 
+    def debug(self, message, context=None):
+        self.log(DatalayerLogEntry.DEBUG, message, context=context)
+
 
     @cached_property
     def get_available_shape_types(self) -> List[Type]:
@@ -201,6 +208,9 @@ class Datalayer(models.Model):
         except ModuleNotFoundError:
             # todo: this will also return false if a dependency loaded by the
             # class is not found
+
+            #raise
+
             return False
 
     @cached_property
@@ -225,6 +235,49 @@ class Datalayer(models.Model):
         else:
             return False
 
+
+    # --
+
+    def data(self,
+        shape: Optional[Shape] = None,
+        when: Optional[dt.datetime] = None,
+        start_date: Optional[dt.datetime] = None,
+        end_date: Optional[dt.datetime] = None,
+        shape_type: Optional[Type] = None,
+        select_shape_name=True,
+        fallback_previous=False) -> pd.DataFrame:
+        """ Aggregates the specified data of the data layer. """
+
+
+        params = {}
+
+        sql = f"SELECT value, shape_id, {self.temporal_resolution} \
+            FROM {self.key} "
+
+        # JOIN
+        if shape_type:
+            sql += f"JOIN shapes_shape s ON s.id = {self.key}.shape_id "
+
+
+        # WHERE
+        sql += "WHERE 1=1 "
+
+        if start_date:
+            sql += f"AND {self.temporal_resolution} >= %(start_date)s "
+            params['start_date'] = start_date
+
+        if end_date:
+            sql += f"AND {self.temporal_resolution} <= %(end_date)s "
+            params['end_date'] = end_date
+
+        if shape_type:
+            sql += "AND s.type_id = %(type)s"
+            params['type'] = shape_type.id
+
+        df = pd.read_sql(sql, con=get_engine(), params=params)
+
+        return df
+
     def value_coverage(self, shape_type: Optional[Type] = None) -> float:
 
         if not self.is_loaded():
@@ -232,6 +285,9 @@ class Datalayer(models.Model):
 
         expected = self.expected_value_count(shape_type)
         actual   = self.count_values(shape_type)
+
+        print(expected, actual, actual / expected)
+
         return actual / expected
 
     def expected_value_count(self, shape_type: Optional[Type] = None) -> int:
@@ -253,7 +309,7 @@ class Datalayer(models.Model):
                 dt_last  = dt.datetime(int(last), 1, 1)
                 return (dt_last.year - dt_first.year + 1) * type_multiplier
             case LayerTimeResolution.DAY:
-                raise NotImplementedError
+                return (last - first).days * type_multiplier
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -284,8 +340,10 @@ class Datalayer(models.Model):
         match self.temporal_resolution:
             case LayerTimeResolution.YEAR:
                 sql = f"SELECT dl.year FROM {self.key} AS dl "
+                sql_order = "ORDER BY year ASC LIMIT 1"
             case LayerTimeResolution.DAY:
                 sql = f"SELECT dl.date FROM {self.key} AS dl "
+                sql_order = "ORDER BY date ASC LIMIT 1"
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -294,7 +352,7 @@ class Datalayer(models.Model):
             sql += "WHERE s.type_id = %(type_id)s "
             params['type_id'] = shape_type.id
 
-        sql += "ORDER BY year ASC LIMIT 1"
+        sql += sql_order
 
         with connection.cursor() as c:
             c.execute(sql, params)
@@ -311,8 +369,10 @@ class Datalayer(models.Model):
         match self.temporal_resolution:
             case LayerTimeResolution.YEAR:
                 sql = f"SELECT dl.year FROM {self.key} AS dl "
+                sql_order = "ORDER BY year DESC LIMIT 1"
             case LayerTimeResolution.DAY:
                 sql = f"SELECT dl.date FROM {self.key} AS dl "
+                sql_order = "ORDER BY date DESC LIMIT 1"
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -321,7 +381,7 @@ class Datalayer(models.Model):
             sql += "WHERE s.type_id = %(type_id)s "
             params['type_id'] = shape_type.id
 
-        sql += "ORDER BY year DESC LIMIT 1"
+        sql += sql_order
         with connection.cursor() as c:
             c.execute(sql, params)
             result = c.fetchone()
