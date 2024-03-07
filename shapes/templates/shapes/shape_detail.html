@@ -133,7 +133,7 @@
 
 					{% with dlv=shape|datalayer_value:dl %}
 					<td class="align-middle">{{ dlv.date }}</td>
-					<td class="align-middle js-value"
+					<td class="align-middle js-value" data-order="{{ dlv.value }}"
 					  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
 					  data-value-raw="{{ dlv.value }}">
 						{{ dlv.value|datalayerformat:dl }}
@@ -142,6 +142,11 @@
 
 					<td>
 						<div class="d-flex justify-content-end">
+							<button
+							data-datalayer-id="{{ dl.id }}"
+							data-shape-id="{{shape.id}}"
+							data-datalayer-name="{{ dl.name }}"
+							title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-link js-add-datalayer-chart">{% icon "graph" %}</button>
 							<a title="{% translate "Download processed data for this shape and Data Layer" %}" href="{% url "datalayer_data" %}?datalayer_id={{ dl.id}}&shape_id={{shape.id}}&format=csv" class="btn btn-sm btn-link">{% icon "download" %}</a>
 							<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link">{% icon "arrow-right" %}</a>
 						</div>
@@ -150,6 +155,12 @@
 			{% endfor %}
 			</tbody>
 		</table>
+
+		<div id="charts" class="mb-3">
+
+
+		</div>
+
 	</div>
 </div>
 
@@ -163,7 +174,6 @@
 
 <script>
 $(document).ready(function() {
-
 	$('#js-show-raw-data').on('change', function() {
 		var show_raw_values = $(this).is(':checked');
 		$('.js-value').each(function() {
@@ -185,4 +195,69 @@ $(document).ready(function() {
 	});
 });
 </script>
+
+<script>
+
+
+var charts = document.getElementById('charts');
+$('.js-add-datalayer-chart').on('click', function() {
+
+	var $this = $(this)
+
+	var shape_id       = $this.attr('data-shape-id');
+	var datalayer_id   = $this.attr('data-datalayer-id');
+	var datalayer_name = $this.attr('data-datalayer-name');
+
+	var traces = [{
+		x: [],
+		y: [],
+		mode: 'lines+markers',
+		name: datalayer_name,
+	}];
+	var layout = {
+		title: datalayer_name,
+		xaxis: {
+			title: 'Time',
+		},
+		yaxis: {
+			title: 'Value',
+			automargin: true, // prevent tick labels from beeing cut off
+		},
+		showlegend: true,
+		legend: {
+			orientation: "h",
+			x: 0,
+			y: -0.2
+		},
+		margin: {
+			l: 50,
+			r: 10,
+			b: 100,
+			t: 50,
+			pad: 4
+		},
+	};
+
+	var config = {
+		responsive: true
+	};
+
+	var chart = document.createElement("div");
+	charts.insertBefore(chart, charts.firstChild);
+
+	Plotly.newPlot(chart, traces, layout, config).then(function() {
+		$.getJSON(`/api/datalayers/data?datalayer_id=${datalayer_id}&shape_id=${shape_id}&format=plotly`, function(response) {
+			// inject lyout for the update as well. The xaxis.type seetings get's lost otherwise
+			Plotly.update(chart, {
+				x: [response.x],
+				y: [response.y],
+			}, layout, [0]);
+		});
+	});
+
+});
+
+
+</script>
+
 {% endblock %}

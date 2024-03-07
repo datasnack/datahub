@@ -67,6 +67,12 @@ def data(request):
             return JsonResponse({
                 'data': df.fillna(np.nan).replace([np.nan], [None]).to_dict('records'),
             })
+        case 'plotly':
+            json_data = {
+                'x': df[str(datalayer.temporal_resolution)].tolist(),
+                'y': df['value'].tolist(),
+            }
+            return JsonResponse(json_data)
         case _:
             return HttpResponseBadRequest("Invalid format")
 
