@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
 
+import geopandas
 import pandas as pd
 
 from django.db import connection
@@ -129,6 +130,28 @@ class BaseLayer():
             #self.logger.warning("Could not download file: %s, %s", url, error.stderr)
 
         return False
+
+    def _get_convex_hull_from_db(self):
+        """ Creates the convex hull of all loaded shapes and returns it.
+
+        Be aware that, the convex hull will include MORE area than the actual
+        shapes. Nevertheless it is much faster than UNION/Dissolve of existing
+        shapes. Since the function is usually called for extracting from a source
+        and in the loading stage an individual mapping for shape/AOI is performed
+        , this is not an issue.
+        """
+
+        sql = "SELECT ST_ConvexHull(ST_Collect(shape.geometry)) as geometry FROM shapes_shape AS shape"
+
+        gdf = geopandas.GeoDataFrame.from_postgis(
+            sql,
+            get_engine(), geom_col='geometry')
+
+        if len(gdf) == 0:
+            raise ValueError("No shapes found in database.")
+
+        return gdf.at[0, 'geometry']
+
 
     def vector_data_map(self):
 

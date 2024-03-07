@@ -8,9 +8,10 @@ import rasterio.mask
 import fiona
 from shapely import wkt
 
+from shapes.models import Shape
 from .base_layer import BaseLayer
 
-from shapes.models import Shape
+
 
 class TiffLayer(BaseLayer):
     """ Extends BaseParameter class for GeoTiff consumption. """
