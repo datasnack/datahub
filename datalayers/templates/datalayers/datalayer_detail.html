@@ -131,8 +131,8 @@
 
 	<div class="col-12 col-xl-8">
 
-		<div>
-			<div class="input-group input-group-sm mb-3" style="max-width: 500px">
+		<div class="btn-toolbar justify-content-between mb-3">
+			<div class="input-group input-group-sm" style="max-width: 500px">
 				<select class="form-select js-map-shape_type" id="js-shape_type">
 				{% for type in datalayer.get_available_shape_types %}
 				<option value="{{ type.key }}">{{ type.name }}</option>
@@ -161,10 +161,21 @@
 				<button id="js-add-to-map" class="btn btn-outline-secondary btn-sm">Load map</button>
 			</div>
 
+			{% if datalayer.has_vector_data %}
+
+			<div class="btn-group ms-5">
+				<button class="btn btn-outline-secondary btn-sm" id="js-load-data">Load raw data</button>
+			</div>
+			{% endif %}
+
 
 		</div>
-		<div class="mb-3" id="map" style="height: 350px; width: 100%"></div>
+
+		<div class="mb-3" id="map" style="height: 400px; width: 100%"></div>
+
 		<div id="legend"></div>
+
+
 
 		<hr>
 
@@ -301,7 +312,14 @@
 
 {% block footer %}
 <script>
-	var map = get_base_map('map');
+var map = get_base_map('map');
+
+$('#js-load-data').on('click', function(e) {
+	load_data_for_layer(map, {
+		datalayer_id: {{ datalayer.id}},
+		datalayer_key: '{{datalayer.key}}'
+	});
+});
 
 $('#js-add-to-map').on('click', async function() {
 	map.fire('dataloading');

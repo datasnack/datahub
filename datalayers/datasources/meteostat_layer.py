@@ -22,6 +22,9 @@ class MeteostatLayer(BaseLayer):
         self.value_type = LayerValueType.VALUE
 
         self.table_name = 'meteostat_stations'
+        self.raw_vector_data_table = 'meteostat_stations'
+
+
 
         # Meteostat layer specifics
         self.meteo_mode = 'daily' # do we need daily or hourly data?

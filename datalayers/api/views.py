@@ -6,7 +6,7 @@ from shapely import wkt
 import numpy as np
 
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponseBadRequest, FileResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseBadRequest, FileResponse
 from django.utils.text import slugify
 
 from shapes.models import Shape, Type
@@ -69,6 +69,16 @@ def data(request):
             })
         case _:
             return HttpResponseBadRequest("Invalid format")
+
+def vector(request):
+    datalayer_id = request.GET.get('datalayer_id', None)
+    datalayer = get_object_or_404(Datalayer, pk=datalayer_id)
+
+    if not datalayer.has_vector_data():
+        return HttpResponseNotFound("Data Layer has no raw vector data")
+
+    geojson = datalayer._get_class().vector_data_map()
+    return JsonResponse(geojson)
 
 
 def plotly(request):

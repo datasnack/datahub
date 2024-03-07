@@ -257,6 +257,13 @@ class Datalayer(models.Model):
 
             return False
 
+    def has_vector_data(self) -> bool:
+        if self.has_class():
+            return self._get_class().raw_vector_data_table is not None
+        else:
+            return False
+
+
     @cached_property
     def _database_tables(self):
         """ this caches the query at least per instance but not yet per request

@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
+from django.db import connection
 from datalayers.utils import get_engine
 
 
@@ -35,6 +36,12 @@ class BaseLayer():
 
         self.time_col : LayerTimeResolution = LayerTimeResolution.YEAR
         self.value_type : LayerValueType = LayerValueType.VALUE
+
+        # Set this to a table name, in that the download method stores raw
+        # data, it's expected that those raw data contain a geometry column
+        # with some sort of geometry (POINT, POLYGON, ...)
+        # Should have the prefix data_
+        self.raw_vector_data_table = None
 
         # How many decimal digits should be displayed?
         # Only used in UI for human on the web, API and CSV data are never rounded
@@ -122,3 +129,36 @@ class BaseLayer():
             #self.logger.warning("Could not download file: %s, %s", url, error.stderr)
 
         return False
+
+    def vector_data_map(self):
+
+        if self.raw_vector_data_table is None:
+            return None
+
+        # This query uses ST_AsGeoJSON(t.*) to select a single row of a postgis
+        # table as GeoJSON geometry. with the `*` all columns that are not the
+        # geometry are read into the GeoJSONs properties.
+        # With json_build_object() we aggregate the single Features from the rows
+        # into a feature collection which we can directly use on a map, i.e.
+        sql = f"""
+        WITH data AS (
+            SELECT ST_AsGeoJSON(t.*)::json as feature FROM {self.raw_vector_data_table} as t
+        )
+        SELECT
+        json_build_object(
+            'type', 'FeatureCollection',
+            'features', json_agg(
+            feature
+            )
+        ) AS geojson
+        FROM data
+        """
+
+        with connection.cursor() as c:
+            c.execute(sql)
+            result = c.fetchone()
+
+        if result:
+            return result[0]
+        else:
+            return None
