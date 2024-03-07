@@ -381,12 +381,14 @@ class Datalayer(models.Model):
             params['end_date'] = end_date
 
         if shape:
-            sql += "AND s.id = %(shape_id)s"
+            sql += "AND s.id = %(shape_id)s "
             params['shape_id'] = shape.id
 
         if shape_type:
-            sql += "AND s.type_id = %(type)s"
+            sql += "AND s.type_id = %(type)s "
             params['type'] = shape_type.id
+
+        sql += f"ORDER BY {self.temporal_resolution} ASC"
 
         df = pd.read_sql(sql, con=get_engine(), params=params)
 
