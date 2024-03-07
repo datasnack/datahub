@@ -21,8 +21,14 @@ class Command(BaseCommand):
 
         match options['action']:
             case 'download':
-                dl.download()
+                try:
+                    dl.download()
+                except NotImplementedError as e:
+                    raise CommandError("This Data Layer has no defined download() method.") from e
             case 'process':
-                dl.process()
+                try:
+                    dl.process()
+                except NotImplementedError as e:
+                    raise CommandError("This Data Layer has no defined process() method.") from e
             case _:
                 raise CommandError('Unknown action "%s" to perform on Data Layer' % options['action'])
