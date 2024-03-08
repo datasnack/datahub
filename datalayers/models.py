@@ -48,11 +48,14 @@ class DatalayerValue():
         self.value  = None
         self.time   = None
 
-        if "value" in row:
+        if row is not None and "value" in row:
             self.value = row['value']
 
 
     def date(self):
+
+        if self.result is None:
+            return None
 
         match self.dl.temporal_resolution:
             case LayerTimeResolution.YEAR:
@@ -68,6 +71,10 @@ class DatalayerValue():
 
 
     def __str__(self):
+
+        if self.result is None:
+            return None
+
         return self.value
 
 
