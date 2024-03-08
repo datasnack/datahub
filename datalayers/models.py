@@ -402,8 +402,6 @@ class Datalayer(models.Model):
         expected = self.expected_value_count(shape_type)
         actual   = self.count_values(shape_type)
 
-        print(expected, actual, actual / expected)
-
         return actual / expected
 
     def expected_value_count(self, shape_type: Optional[Type] = None) -> int:
@@ -425,7 +423,7 @@ class Datalayer(models.Model):
                 dt_last  = dt.datetime(int(last), 1, 1)
                 return (dt_last.year - dt_first.year + 1) * type_multiplier
             case LayerTimeResolution.DAY:
-                return (last - first).days * type_multiplier
+                return ((last - first).days + 1) * type_multiplier
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
