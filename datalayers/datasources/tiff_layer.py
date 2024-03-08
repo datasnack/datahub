@@ -88,6 +88,15 @@ class TiffLayer(BaseLayer):
 
                     band1[band1==nodata] = np.nan
 
+                    # Check if the mask has identified any cells
+                    if np.count_nonzero(~np.isnan(band1)) == 0:
+                        self.layer.warning("For shape %s (id=%s) no cells could be identified inside the mask for file %s", {
+                            'shape': shape.name,
+                            'shape_id': shape.id,
+                            'file': file,
+                        })
+                        continue
+
                     self.consume(file, band1, shape)
 
         self.save()
