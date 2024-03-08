@@ -8,4 +8,8 @@ register = template.Library()
 # with a parameter from inside a template. Is there a better way?
 @register.filter
 def datalayerformat(value, datalayer: Datalayer):
+
+    if value is None:
+        return 'n/a'
+
     return datalayer.str_format(value)
