@@ -8,6 +8,11 @@ do
   sleep $SLEEP_TIME;
 done
 
+# Merge/copy local saved data into actual data directory.
+# Some data sources are stored locally in the git repo due to complicated/
+# unreliable downloads of the source.
+# trailing slash is required!
+rsync -a data/datalayers.local/ data/datalayers/
 
 python manage.py collectstatic --clear --noinput
 python manage.py migrate
