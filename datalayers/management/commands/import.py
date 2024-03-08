@@ -24,14 +24,30 @@ class Command(BaseCommand):
         df = df.fillna('')
 
         categories = {}
+
+        # Check for already created categories in the Hub
+        known_cats = Category.objects.all()
+        for c in known_cats:
+            categories[c.name] = c
+
+        # Check if the import contains new categories
         for cat in df['category'].unique():
+            if cat in categories.keys():
+                continue
             c = Category(name=cat)
             c.save()
             categories[cat] = c
 
         dc = DataCiteRESTClient(None, None, None)
 
+        # get allready important layer, don't re-import known layers
+        known_layers = Datalayer.objects.values_list('key', flat=True)
+
         for _, dl in df.iterrows():
+
+            if dl['key'] in known_layers:
+                self.stdout.write(self.style.WARNING(f"Skipping {dl['key']}, already exists"))
+                continue
 
             dl['category'] = categories[dl['category']]
             d = Datalayer(**dl)
