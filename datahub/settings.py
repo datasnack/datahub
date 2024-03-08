@@ -91,6 +91,7 @@ INSTALLED_APPS += env('INSTALLED_USER_APPS')
 
 INSTALLED_APPS += ['app']
 
+INSTALLED_USER_APPS = env('INSTALLED_USER_APPS')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

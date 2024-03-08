@@ -19,6 +19,7 @@ from django.conf.urls.i18n import i18n_patterns
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
 from django.conf import settings
+from django.conf import settings
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
@@ -35,6 +36,17 @@ urlpatterns += [
     path("api/", include("shapes.api.urls")),
     path("api/", include("datalayers.api.urls")),
 ]
+
+# check if user apps have urls
+for app in settings.INSTALLED_USER_APPS:
+    try:
+        urlpatterns += [
+            path("", include(f'{app}.urls'))
+        ]
+    except ModuleNotFoundError:
+        # todo: error logging
+        pass
+
 
 if settings.DEBUG:
     urlpatterns += [
