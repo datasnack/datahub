@@ -46,7 +46,7 @@ class BaseLayer():
 
         # How many decimal digits should be displayed?
         # Only used in UI for human on the web, API and CSV data are never rounded
-        self.precision = 3
+        self.precision = 2
 
         # Optional suffix for formatting human readable values
         self.format_suffix = None
