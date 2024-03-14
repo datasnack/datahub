@@ -74,9 +74,10 @@ class Shape(models.Model):
         return reverse("shapes:shape_detail", kwargs={'pk': self.id})
 
 
-    def datalayer_value(self, dl):
+
+    def datalayer_value(self, dl, mode="down"):
 
         # todo: fallback to parent shape
-        value = dl.value(self)
+        value = dl.value(self, mode=mode)
 
         return value

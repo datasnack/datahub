@@ -117,9 +117,10 @@
 				<tr>
 					<th>{% translate "Category" %}</th>
 					<th>{% translate "Data Layer" %}</th>
-					<th>{% translate "Date" %}</th>
+					<th>{% translate "First" %}</th>
+					<th>{% translate "Last" %}</th>
 					<th>
-						{% translate "Value" %}
+						{% translate "Latest value" %}
 					</th>
 					<th class="no-sort text-end">{% translate "Actions" %}</th>
 				</tr>
@@ -130,6 +131,10 @@
 				<tr>
 					<td class="align-middle">{{ dl.category }}</td>
 					<td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
+
+					{% with dlv=shape|datalayer_first_value:dl %}
+					<td class="align-middle">{{ dlv.date }}</td>
+					{% endwith %}
 
 					{% with dlv=shape|datalayer_value:dl %}
 					<td class="align-middle">{{ dlv.date }}</td>
