@@ -81,4 +81,10 @@ def shape_geometry(request):
         file.seek(0)
         return FileResponse(file, as_attachment=True, filename=f'{name}.shp')
 
+    if fmt == 'csv':
+        file = BytesIO()
+        gdf.to_csv(file, index=False)
+        file.seek(0)
+        return FileResponse(file, as_attachment=True, filename=f'{name}.csv')
+
     return HttpResponseBadRequest("Invalid format")
