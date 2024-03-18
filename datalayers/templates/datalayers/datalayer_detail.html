@@ -448,7 +448,11 @@ var layout = {
 		{%endif %}
 	},
 	yaxis: {
+		{% if datalayer.format_suffix %}
+		title: 'Value [{{ datalayer.format_suffix }}]',
+		{% else %}
 		title: 'Value',
+		{% endif %}
 		automargin: true, // prevent tick labels from beeing cut off
 		{# plotly tickformat is based on: https://d3js.org/d3-format #}
 		{% if datalayer.value_type_str == 'percentage' %}
@@ -456,12 +460,9 @@ var layout = {
 		range: [0,1]
 		{% elif datalayer.value_type_str == 'value'  %}
 		tickformat: ',.{{ datalayer.format_precision }}f',
-
-		{% if datalayer.format_suffix %}
-		ticksuffix: '{{ datalayer.format_suffix }}',
-		{% endif %}
-
 		{%endif %}
+
+
 	},
 	showlegend: true,
 	legend: {
