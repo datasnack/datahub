@@ -8,6 +8,8 @@ import numpy as np
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseBadRequest, FileResponse
 from django.utils.text import slugify
+from django.forms.models import model_to_dict
+
 
 from shapes.models import Shape, Type
 from datalayers.models import Datalayer
@@ -15,6 +17,39 @@ from datalayers.utils import get_engine
 
 
 # Create your views here.
+
+
+def datalayer(request):
+    fmt = request.GET.get('format', 'json')
+    datalayers = Datalayer.objects.all()
+    rows = []
+    name = "datalayers"
+
+    for d in datalayers:
+        r = model_to_dict(d)
+        r['category'] = d.category.name
+        rows.append(r)
+    df = pd.DataFrame(rows)
+
+    # return data according to format
+    match fmt:
+        case 'csv':
+            file = BytesIO()
+            df.to_csv(file, index=False)
+            file.seek(0)
+            response = FileResponse(file, as_attachment=False, filename=f'{name}.csv')
+            response['Content-Type'] = 'text/csv'
+            return response
+        case 'excel':
+            file = BytesIO()
+            df.to_excel(file, index=False)
+            file.seek(0)
+            response = FileResponse(file, as_attachment=False, filename=f'{name}.xlsx')
+            response['Content-Type'] = 'application/vnd.ms-excel'
+            return response
+        case _:
+            return HttpResponseBadRequest("Invalid format")
+
 
 def data(request):
 

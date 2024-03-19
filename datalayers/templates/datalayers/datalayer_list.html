@@ -7,6 +7,15 @@
 
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
 	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
+		<div class="btn-group">
+			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+				{% icon "download" %} {% translate "Data Layer metadata" %}
+			</button>
+			<ul class="dropdown-menu dropdown-menu-end">
+				<li><a class="dropdown-item" href="{% url 'datalayer_datalayer' %}?format=csv">{% translate "CSV" %}</a></li>
+				<li><a class="dropdown-item" href="{% url 'datalayer_datalayer' %}?format=excel">{% translate "Excel" %}</a></li>
+			</ul>
+		</div>
 	</div>
 
 	<h1>{% translate "Data Layers" %}</h1>
