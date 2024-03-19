@@ -45,7 +45,7 @@ class MeteostatLayer(BaseLayer):
 
         stations = stations.region('GH')
         start = dt.datetime(2015, 1, 1)
-        end   = dt.datetime(2016, 12, 31)
+        end   = dt.datetime(2024, 2, 29)
 
         df = stations.fetch()
 
