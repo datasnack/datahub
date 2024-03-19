@@ -45,7 +45,15 @@ class DatalayerAdmin(admin.ModelAdmin):
                 "classes": ["collapse"],
                 "fields": [
                     "creator",
-                    "included_date"
+                    "included_date",
+                    "type",
+                    "identifier",
+                    "source",
+                    "source_link",
+                    "citation",
+                    "language",
+                    "license",
+                    "coverage"
                 ],
             },
         ),
