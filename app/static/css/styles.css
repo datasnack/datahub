@@ -84,12 +84,19 @@ h6 {
 	fill: currentColor;
 }
 
+
+.datalayer-states--inline .datalayer-state {
+	display: inline-block;
+}
+
 .datalayer-state {
 	position: relative;
+	font-size: .875em;
+	color: rgba(var(--bs-secondary-rgb),1);
 }
-.datalayer-state--active {
+.datalayer-state--active .datalayer-state-icon {
 	color: var(--bs-success);
 }
-.datalayer-state--inactive {
+.datalayer-state--inactive .datalayer-state-icon {
 	color: var(--bs-gray-400);
 }

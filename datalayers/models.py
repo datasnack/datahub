@@ -264,6 +264,39 @@ class Datalayer(models.Model):
 
             return False
 
+    def has_class_label(self) -> str:
+        if self.has_class():
+            return _('Source file is available')
+        else:
+            return _('Source file is not available')
+
+    def has_files_label(self) -> str:
+        if self.has_class():
+            return _('Data is available local')
+        else:
+            return _('Data is not available local')
+
+    def is_loaded_label(self) -> str:
+        if self.has_class():
+            return _('Data is loaded into the database')
+        else:
+            return _('Data is not loaded into the database')
+
+    def get_class_path(self):
+        return Path(f'src/datalayer/{self.key}.py')
+
+    def get_class_source_code(self):
+        """ Gets the actual file contents of the data layer source file. """
+
+        p = self.get_class_path()
+
+        if p.exists():
+            return p.read_text(encoding="utf-8")
+
+        return None
+
+
+
     def has_vector_data(self) -> bool:
         if self.has_class():
             return self._get_class().raw_vector_data_table is not None

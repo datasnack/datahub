@@ -1,9 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 {% load i18n %}
 {% load percentageformat %}
 {% load l10n %}
 {% load coverage %}
 {% block title %}{{ datalayer.name }}{% endblock %}
+
+{% block head %}
+
+<link rel="stylesheet" href="{% static 'vendor/highlight/styles/github.min.css' %}">
+
+{% endblock %}
 
 {% block content %}
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
@@ -96,26 +103,7 @@
 	<div class="col-12 col-md-3">
 
 		<div class="mb-3">
-			<span class="datalayer-state
-				{% if datalayer.has_class %}datalayer-state--active
-				{% else %}datalayer-state--inactive
-				{% endif %}">
-				{% icon "file-code" %}
-			</span> <span class="small text-secondary">{% translate "Source file available " %}</span> <br>
-
-			<span class="datalayer-state
-				{% if datalayer.has_files %}datalayer-state--active
-				{% else %}datalayer-state--inactive
-				{% endif %}">
-				{% icon "file-directory" %}
-			</span> <span class="small text-secondary">{% translate "Data is available local" %}</span> <br>
-
-			<span class="datalayer-state
-				{% if datalayer.is_loaded %}datalayer-state--active
-				{% else %}datalayer-state--inactive
-				{% endif %}">
-				{% icon "database" %}
-			</span> <span class="small text-secondary">{% translate "Loaded into database" %}</span>
+			{% include "datalayers/datalayer_states.html" with mode="large" datalayer=datalayer %}
 		</div>
 
 		<div class="text-muted">
@@ -499,6 +487,11 @@ $.getJSON('/api/datalayers/plotly?datalayer_id={{datalayer.id}}&shape_type={{ ty
 });
 {% endfor %}
 });
+</script>
+
+<script src="{% static 'vendor/highlight/highlight.min.js' %}"></script>
+<script>
+hljs.highlightAll();
 </script>
 
 {% endblock %}
