@@ -83,7 +83,7 @@ class Datalayer(models.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
 
-    key         = models.CharField(max_length=255, unique=True, blank=False)
+    key         = models.SlugField(max_length=255, null=False, unique=True)
     name        = models.CharField(max_length=255)
     category    = models.ForeignKey(
         Category,
@@ -127,7 +127,7 @@ class Datalayer(models.Model):
         return str(self.name)
 
     def get_absolute_url(self):
-        return reverse("datalayers:datalayer_detail", kwargs={'pk': self.id})
+        return reverse("datalayers:datalayer_detail", kwargs={'key': self.key})
 
     # --
 

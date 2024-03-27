@@ -16,8 +16,8 @@ class DatalayerAdmin(admin.ModelAdmin):
             None,
             {
                 "fields": [
-                    "key",
                     "name",
+                    "key",
                     "category",
                     'tags',
                     "description",

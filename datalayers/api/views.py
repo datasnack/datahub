@@ -18,6 +18,18 @@ from datalayers.utils import get_engine
 
 # Create your views here.
 
+def _get_datalayer_from_request(request) -> Datalayer:
+    """ We can reference a datalayer via ID (datalayer_id) or key (datalayer_key)
+    in the request. This function checks for both, but ID has priority over key."""
+
+    datalayer_id  = request.GET.get('datalayer_id', None)
+    datalayer_key = request.GET.get('datalayer_key', None)
+
+    if datalayer_id:
+        return get_object_or_404(Datalayer, pk=datalayer_id)
+    else:
+        return get_object_or_404(Datalayer, key=datalayer_key)
+
 
 def datalayer(request):
     fmt = request.GET.get('format', 'json')
@@ -56,8 +68,7 @@ def data(request):
     format = request.GET.get('format', 'json')
 
     # determine filters
-    datalayer_id = request.GET.get('datalayer_id', None)
-    datalayer = get_object_or_404(Datalayer, pk=datalayer_id)
+    datalayer = _get_datalayer_from_request(request)
     name = datalayer.key
 
     shape_id = request.GET.get('shape_id', None)
@@ -112,8 +123,7 @@ def data(request):
             return HttpResponseBadRequest("Invalid format")
 
 def vector(request):
-    datalayer_id = request.GET.get('datalayer_id', None)
-    datalayer = get_object_or_404(Datalayer, pk=datalayer_id)
+    datalayer = _get_datalayer_from_request(request)
 
     if not datalayer.has_vector_data():
         return HttpResponseNotFound("Data Layer has no raw vector data")
@@ -141,10 +151,8 @@ def plotly(request):
     preferable anyway.
     """
 
-    datalayer_id = request.GET.get('datalayer_id', None)
     shape_type_key = request.GET.get('shape_type', None)
-
-    datalayer = get_object_or_404(Datalayer, pk=datalayer_id)
+    datalayer = _get_datalayer_from_request(request)
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
     sql = f"SELECT {datalayer.temporal_resolution}, AVG(value) AS value \

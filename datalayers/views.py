@@ -34,15 +34,21 @@ class DatalayerListView(ListView):
 
 class DatalayerDetailView(DetailView):
     model = Datalayer
+    slug_field = 'key'
+    slug_url_kwarg = 'key'
     context_object_name = "datalayer"
 
 
 class DatalayerLogView(DetailView):
     model = Datalayer
+    slug_field = 'key'
+    slug_url_kwarg = 'key'
     context_object_name = "datalayer"
     template_name = "datalayers/datalayer_log.html"
 
 class DatalayerDataCiteView(DetailView):
     model = Datalayer
     context_object_name = "datalayer"
+    slug_field = 'key'
+    slug_url_kwarg = 'key'
     template_name = "datalayers/datalayer_datacite.html"

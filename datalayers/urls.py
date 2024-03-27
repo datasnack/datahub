@@ -8,9 +8,9 @@ urlpatterns = [
     #path("", views.index, name="index"),
 
     path("", views.DatalayerListView.as_view(), name="datalayer_index"),
-    path("<int:pk>/", views.DatalayerDetailView.as_view(), name="datalayer_detail"),
-    path("<int:pk>/log", views.DatalayerLogView.as_view(), name="datalayer_log"),
-    path("<int:pk>/datacite", views.DatalayerDataCiteView.as_view(), name="datalayer_datacite"),
+    path("<slug:key>/", views.DatalayerDetailView.as_view(), name="datalayer_detail"),
+    path("<slug:key>/log", views.DatalayerLogView.as_view(), name="datalayer_log"),
+    path("<slug:key>/datacite", views.DatalayerDataCiteView.as_view(), name="datalayer_datacite"),
 
 
     path("tag/<slug:tag_slug>", views.DatalayerListView.as_view(), name="datalayer_index_tag"),
