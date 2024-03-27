@@ -21,7 +21,7 @@
 	<h1>{% translate "Data Layers" %}</h1>
 </div>
 
-<table class="table table-sm table-striped" id="shapes">
+<table class="table table-sm table-striped" id="datalayers">
     <thead>
         <tr>
             <th>{% translate "Category" %}</th>
@@ -56,7 +56,7 @@
 {% block footer %}
 <script>
 $(document).ready(function() {
-	$('#shapes').DataTable({
+	$('#datalayers').DataTable({
 		pageLength: 25,
 		//order: [[0, 'asc']],
 		columnDefs: [
