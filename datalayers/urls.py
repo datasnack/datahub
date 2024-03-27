@@ -13,5 +13,6 @@ urlpatterns = [
     path("<int:pk>/datacite", views.DatalayerDataCiteView.as_view(), name="datalayer_datacite"),
 
 
+    path("tag/<slug:tag_slug>", views.DatalayerListView.as_view(), name="datalayer_index_tag"),
     path("category/<int:category_id>", views.DatalayerListView.as_view(), name="datalayer_index_category"),
 ]

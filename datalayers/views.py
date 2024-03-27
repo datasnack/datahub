@@ -20,6 +20,9 @@ class DatalayerListView(ListView):
             c = get_object_or_404(Category, pk=self.kwargs['category_id'])
             qs = qs.filter(category=c)
 
+        if 'tag_slug' in self.kwargs:
+            qs = qs.filter(tags__slug__in=[self.kwargs['tag_slug']])
+
         return qs
 
     def get_context_data(self, **kwargs):

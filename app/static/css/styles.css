@@ -85,6 +85,12 @@ h6 {
 }
 
 
+.c-tag {
+	color: rgba(var(--bs-secondary-rgb),1);
+	text-decoration: none;
+	background-color: var(--bs-secondary-bg-subtle);
+}
+
 .datalayer-states--inline .datalayer-state {
 	display: inline-block;
 }

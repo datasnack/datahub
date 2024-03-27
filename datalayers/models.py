@@ -7,7 +7,7 @@ import pandas as pd
 from django.db import models, connection
 from django.urls import reverse
 from django.utils.functional import cached_property
-
+from taggit.managers import TaggableManager
 
 from shapes.models import Shape, Type
 from datalayers.utils import get_engine, dictfetchone
@@ -91,6 +91,7 @@ class Datalayer(models.Model):
         related_name='datalayers',
         blank=True, null=True
     )
+    tags = TaggableManager()
     description = models.TextField(blank=True)
 
     # todo: we need a 1:n relationship

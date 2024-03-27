@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "datalayers",
     "shapes",
+    "taggit",
     'rest_framework',
     "src.datalayer",
 ]
@@ -221,6 +222,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+# tag lookups will be case insensitive. Prevents Test and test of being
+# different tags.
+TAGGIT_CASE_INSENSITIVE = True
 
 LOGIN_REDIRECT_URL  = "app:home"
 LOGOUT_REDIRECT_URL = "app:home"

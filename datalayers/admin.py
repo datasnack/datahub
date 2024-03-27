@@ -19,6 +19,7 @@ class DatalayerAdmin(admin.ModelAdmin):
                     "key",
                     "name",
                     "category",
+                    'tags',
                     "description",
                 ],
             },

@@ -40,8 +40,19 @@
 
 		<div class="mb-3 small text-muted">
 			{% translate "Key" %}: <code>{{ datalayer.key }}</code> |
-			{% translate "Category" %}: <a href="{{ datalayer.category.get_absolute_url }}">{{ datalayer.category }}</a> |
-			#tags
+			{% translate "Category" %}: <a href="{{ datalayer.category.get_absolute_url }}">{{ datalayer.category }}</a>
+
+			{% with tags=datalayer.tags.all %}
+				{% if tags|length %}
+				| <ul class="d-inline list-inline">
+					{% for tag in tags %}
+					<li class="list-inline-item me-0">
+						<a class="badge c-tag" href="{% url "datalayers:datalayer_index_tag" tag.slug %}">#{{tag.name}}</a>
+					</li>
+					{% endfor %}
+				</ul>
+				{% endif %}
+			{% endwith %}
 		</div>
 
 		<div class="mb-3">
