@@ -3,11 +3,18 @@
 <div class="datalayer-states datalayer-states--{{mode}}">
 	<div class="datalayer-state datalayer-state--{% if datalayer.has_class %}active{%else%}inactive{%endif%}">
 
-		<span title="{{ datalayer.has_class_label }}" class="datalayer-state-icon">{% icon "file-code" %}</span>
+		{% if datalayer.has_class %}
+			{% translate "Source file is available" as label %}
+		{% else %}
+			{% translate "Source file is not available" as label %}
+		{% endif %}
+
+		<span title="{{ label }}" class="datalayer-state-icon">{% icon "file-code" %}</span>
 
 		{% if mode == 'large' %}
+			<span class="datalayer-state-label">{{ label }}</span>
+
 			{% if datalayer.has_class %}
-				<span class="datalayer-state-label">{{ datalayer.has_class_label }}</span>
 				(<a href="#" data-bs-toggle="modal" data-bs-target="#modal-sourcecode">{% translate "Show file" %}</a>)
 
 				<div class="modal" tabindex="-1" id="modal-sourcecode">
@@ -15,7 +22,7 @@
 						<div class="modal-content">
 							<div class="modal-header">
 								<h5 class="modal-title">{{ datalayer.get_class_path }}</h5>
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate "Close" %}"></button>
 							</div>
 							<div class="modal-body">
 								<pre><code class="language-python">{{ datalayer.get_class_source_code }}</code></pre>
@@ -23,36 +30,37 @@
 					  	</div>
 					</div>
 				</div>
-
-			{% else %}
-				<span class="datalayer-state-label">{{ datalayer.has_class_label }}</span>
 			{% endif %}
 		{% endif %}
 	</div>
 
 	<div class="datalayer-state datalayer-state--{% if datalayer.has_files %}active{%else%}inactive{%endif%}">
 
-		<span title="{{ datalayer.has_files_label }}" class="datalayer-state-icon">{% icon "file-directory" %}</span>
+		{% if datalayer.has_files %}
+			{% translate "Data is available local" as label %}
+		{% else %}
+			{% translate "Data is not available local" as label %}
+		{% endif %}
+
+		<span title="{{ label }}" class="datalayer-state-icon">{% icon "file-directory" %}</span>
 
 		{% if mode == 'large' %}
-			{% if datalayer.has_files %}
-				<span class="datalayer-state-label">{{ datalayer.has_files_label }}</span>
-			{% else %}
-				<span class="datalayer-state-label">{{ datalayer.has_files_label }}</span>
-			{% endif %}
+			<span class="datalayer-state-label">{{ label }}</span>
 		{% endif %}
 	</div>
 
 	<div class="datalayer-state datalayer-state--{% if datalayer.is_loaded %}active{%else%}inactive{%endif%}">
 
-		<span title="{{ datalayer.is_loaded_label }}" class="datalayer-state-icon">{% icon "database" %}</span>
+		{% if datalayer.is_loaded %}
+			{% translate "Data is loaded into the database" as label %}
+		{% else %}
+			{% translate "Data is not loaded into the database" as label %}
+		{% endif %}
+
+		<span title="{{ label }}" class="datalayer-state-icon">{% icon "database" %}</span>
 
 		{% if mode == 'large' %}
-			{% if datalayer.is_loaded %}
-				<span class="datalayer-state-label">{{ datalayer.is_loaded_label }}</span>
-			{% else %}
-				<span class="datalayer-state-label">{{ datalayer.is_loaded_label }}</span>
-			{% endif %}
+			<span class="datalayer-state-label">{{ label }}</span>
 		{% endif %}
 	</div>
 

@@ -264,24 +264,6 @@ class Datalayer(models.Model):
 
             return False
 
-    def has_class_label(self) -> str:
-        if self.has_class():
-            return _('Source file is available')
-        else:
-            return _('Source file is not available')
-
-    def has_files_label(self) -> str:
-        if self.has_class():
-            return _('Data is available local')
-        else:
-            return _('Data is not available local')
-
-    def is_loaded_label(self) -> str:
-        if self.has_class():
-            return _('Data is loaded into the database')
-        else:
-            return _('Data is not loaded into the database')
-
     def get_class_path(self):
         return Path(f'src/datalayer/{self.key}.py')
 
