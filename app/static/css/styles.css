@@ -86,7 +86,7 @@ h6 {
 
 
 .c-tag {
-	color: rgba(var(--bs-secondary-rgb),1);
+	color: rgba(var(--bs-secondary-rgb), 1);
 	text-decoration: none;
 	background-color: var(--bs-secondary-bg-subtle);
 }
@@ -106,3 +106,39 @@ h6 {
 .datalayer-state--inactive .datalayer-state-icon {
 	color: var(--bs-gray-400);
 }
+
+
+.dt-uninitialized .dt-default-hidden {
+	display: none;
+}
+
+
+.c-pidbadge {
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, .3);
+	--border-radius: 3px;
+
+	color: #fff;
+	font-size: 80%;
+	font-family: "DejaVu Sans", Verdana, Geneva, sans-serif;
+}
+.c-pidbadge-type {
+	border-top-left-radius: var(--border-radius);
+	border-bottom-left-radius: var(--border-radius);
+	background-color: #555;
+	padding: 0 0.3em;
+	text-decoration: none;
+	display: inline-block;
+}
+
+.c-pidbadge-pid {
+	border-top-right-radius: var(--border-radius);
+	border-bottom-right-radius: var(--border-radius);
+	background-color: #007ec6;
+	background-image: linear-gradient(to top,
+    rgba(187, 187, 187, 0.1) 0%,
+    rgba(187, 187, 187, 0.1) 10%);
+	padding: 0 0.3em;
+	text-decoration: none;
+	display: inline-block;
+}
+

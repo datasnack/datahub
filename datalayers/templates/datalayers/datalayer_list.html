@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load get_attr %}
+
 
 {% block title %}{% translate "Data Layers" %}{% endblock %}
 
@@ -21,12 +23,36 @@
 	<h1>{% translate "Data Layers" %}</h1>
 </div>
 
-<table class="table table-sm table-striped" id="datalayers">
+
+<div class="dropdown d-inline-block me-3" id="dt-columns">
+	<button class="btn btn-sm dropdown-toggle fs-6" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+		{% translate "Columns" %}
+	</button>
+	<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+		{% for column in columns %}
+		<li>
+			<span class="dropdown-item">
+				<div class="form-check">
+					<input class="form-check-input js-dt-toggle-col" data-column="{{ forloop.counter0|add:3 }}" type="checkbox" value="" id="dt-col{{ forloop.counter0|add:3 }}">
+					<label class="form-check-label" for="dt-col{{ forloop.counter0|add:3 }}">{{ column }}</label>
+				</div>
+			</span>
+		</li>
+		{% endfor %}
+	</ul>
+</div>
+
+<table class="table table-sm table-striped dt-uninitialized" id="datalayers">
     <thead>
         <tr>
             <th>{% translate "Category" %}</th>
             <th>{% translate "Name" %}</th>
             <th>{% translate "Key" %}</th>
+
+			{% for column in columns %}
+				<th class="dt-default-hidden">{{ column }}</th>
+			{% endfor %}
+
             <th>{% translate "State" %}</th>
             <th class="no-sort text-end">{% translate "Actions" %}</th>
         </tr>
@@ -38,6 +64,11 @@
         <td class="align-middle">{{ dl.category }}</td>
         <td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
         <td class="align-middle"><code>{{ dl.key }}</code></td>
+
+		{% for column in columns %}
+			<td class="dt-default-hidden">{{ dl|get_attr:column }}</td>
+		{% endfor %}
+
         <td class="dl-state-pill" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.has_files|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
 			{% include "datalayers/datalayer_states.html" with mode="inline" datalayer=dl %}
         </td>
@@ -55,14 +86,44 @@
 
 {% block footer %}
 <script>
+
 $(document).ready(function() {
-	$('#datalayers').DataTable({
+	var table = $('#datalayers').DataTable({
 		pageLength: 25,
 		//order: [[0, 'asc']],
 		columnDefs: [
-		{targets: 'no-sort', orderable: false }
-	]
+			{targets: 'no-sort', orderable: false },
+			{ visible: false, targets: [{% for column in columns %}{{ forloop.counter0|add:3 }},{%endfor%}] }
+		],
+		layout: {
+			topEnd: [document.getElementById('dt-columns'), 'search']
+		},
+		initComplete: function() {
+			// apply inline-block style to search so dt-columns and dt-search
+			// or along side each other and not stacked.
+			$('.dt-search').addClass('d-inline-block');
+
+			$('.dt-uninitialized').removeClass('dt-uninitialized');
+		}
+	});
+
+	document.querySelectorAll('input.js-dt-toggle-col').forEach((el) => {
+		el.addEventListener('change', function (e) {
+			e.preventDefault();
+
+			let columnIdx = e.target.getAttribute('data-column');
+			let column = table.column(columnIdx);
+
+			// Toggle the visibility
+			column.visible(!column.visible());
+		});
 	});
 });
+</script>
+
+<script>
+	$('.dropdown-menu').on('click', function(event) {
+		event.stopPropagation();
+	});
 </script>
 {% endblock %}

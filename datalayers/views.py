@@ -28,6 +28,21 @@ class DatalayerListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context['columns'] = [
+            'operation',
+
+            'format',
+            'spatial_details',
+            'spatial_coverage',
+
+            'temporal_details',
+            'temporal_coverage',
+
+            'source',
+            'language',
+            'license'
+        ]
+
         return context
 
 
