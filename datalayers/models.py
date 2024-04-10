@@ -1,4 +1,5 @@
 import datetime as dt
+from pathlib import Path
 from timeit import default_timer as timer
 from typing import List, Optional
 
@@ -7,7 +8,10 @@ import pandas as pd
 from django.db import models, connection
 from django.urls import reverse
 from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
+
 from taggit.managers import TaggableManager
+
 
 from shapes.models import Shape, Type
 from datalayers.utils import get_engine, dictfetchone
@@ -69,6 +73,25 @@ class DatalayerValue():
             case _:
                 raise ValueError(f"Unknown time_col={self.dl.temporal_resolution}")
 
+    def timestamp(self):
+
+        if self.result is None:
+            return None
+
+        match self.dl.temporal_resolution:
+            case LayerTimeResolution.YEAR:
+                if "year" in self.result:
+                    year = dt.datetime(self.result['year'], 0, 0)
+                    return year.timestamp()
+                return None
+            case LayerTimeResolution.DAY:
+                if "date" in self.result:
+                    return self.result['date'].timestamp()
+                return None
+            case _:
+                raise ValueError(f"Unknown time_col={self.dl.temporal_resolution}")
+
+
 
     def __str__(self):
 
@@ -77,54 +100,58 @@ class DatalayerValue():
 
         return self.value
 
-
-
 class Datalayer(models.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
 
-    key         = models.SlugField(max_length=255, null=False, unique=True)
-    name        = models.CharField(max_length=255)
-    category    = models.ForeignKey(
+    key           = models.SlugField(max_length=255, null=False, unique=True)
+    name          = models.CharField(max_length=255)
+    description   = models.TextField(blank=True)
+
+    category      = models.ForeignKey(
         Category,
         on_delete=models.RESTRICT,
         related_name='datalayers',
         blank=True, null=True
     )
-    tags = TaggableManager()
-    description = models.TextField(blank=True)
+    tags          = TaggableManager(blank=True)
+    date_included = models.DateField(blank=True, null=True)
 
-    # todo: we need a 1:n relationship
-    #doi      = models.CharField(max_length=255, blank=True, null=True)
-    #datacite = models.JSONField(null=True)
-    #datacite_fetched_at = models.DateTimeField(null=True)
+    related_to = models.ManyToManyField('self', blank=True)
 
-    # Data type and processing
-    necessity        = models.CharField(max_length=255, blank=True)
-    format           = models.CharField(max_length=255, blank=True)
-    original_unit    = models.CharField(max_length=255, blank=True)
+
+    # Data Layer metadata and processing
+    #original_unit    = models.CharField(max_length=255, blank=True)
     operation        = models.CharField(max_length=255, blank=True)
     database_unit    = models.CharField(max_length=255, blank=True)
-    details_spatial  = models.CharField(max_length=255, blank=True)
-    details_temporal = models.CharField(max_length=255, blank=True)
-    timeframe        = models.CharField(max_length=255, blank=True)
-    related_sources  = models.CharField(max_length=255, blank=True)
 
-    # Metadata
-    creator       = models.CharField(max_length=255, blank=True)
-    included_date = models.DateField(blank=True, null=True)
-    type          = models.CharField(max_length=255, blank=True)
-    identifier    = models.CharField(max_length=255, blank=True)
-    source        = models.TextField(blank=True)
-    source_link   = models.TextField(blank=True)
-    citation      = models.TextField(blank=True)
-    language      = models.CharField(max_length=255, blank=True)
-    license       = models.CharField(max_length=255, blank=True)
-    coverage      = models.CharField(max_length=255, blank=True)
+    # Original data source metadata
+    format             = models.CharField(max_length=255, blank=True)
+    format_description = models.TextField(blank=True)
+    format_unit        = models.CharField(max_length=255, blank=True)
+
+    spatial_details    = models.CharField(max_length=255, blank=True)
+    spatial_coverage   = models.CharField(max_length=255, blank=True)
+
+    temporal_details   = models.CharField(max_length=255, blank=True)
+    temporal_coverage  = models.CharField(max_length=255, blank=True)
+
+    source             = models.TextField(blank=True)
+    source_link        = models.TextField(blank=True)
+    language           = models.CharField(max_length=255, blank=True)
+    license            = models.CharField(max_length=255, blank=True)
+    date_published     = models.TextField(blank=True) # no date field. maybe only a year is known.
+    date_last_accessed = models.DateField(blank=True, null=True)
+    citation           = models.TextField(blank=True)
+
+    #creator       = models.CharField(max_length=255, blank=True)
+    #type          = models.CharField(max_length=255, blank=True)
+    #identifier    = models.CharField(max_length=255, blank=True)
+
 
     # Returns the string representation of the model.
     def __str__(self):
-        return str(self.name)
+        return f"{str(self.name)} ({self.key})"
 
     def get_absolute_url(self):
         return reverse("datalayers:datalayer_detail", kwargs={'key': self.key})
@@ -359,6 +386,9 @@ class Datalayer(models.Model):
 
         sql += f"ORDER BY dl.{self.temporal_resolution} {sort_operator} LIMIT 1"
 
+        print(when)
+        print(sql)
+
         with connection.cursor() as c:
             c.execute(sql, params)
             #result = c.fetchone()
@@ -468,7 +498,8 @@ class Datalayer(models.Model):
 
         return result[0]
 
-    def first_time(self, shape_type: Optional[Type] = None):
+    def first_time(self, shape_type: Optional[Type] = None,
+                   shape: Optional[Shape] = None):
         """ Determines the first point in time a value is available. """
         if not self.is_loaded():
             return None
@@ -484,10 +515,15 @@ class Datalayer(models.Model):
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
+        # todo: are shape_type and shape exclusive?
+        # technical there are not, but it shoud not lea
         if shape_type is not None:
             sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
             sql += "WHERE s.type_id = %(type_id)s "
             params['type_id'] = shape_type.id
+        elif shape is not None:
+            sql += "WHERE s.shape_id = %(shape_id)s "
+            params['shape_id'] = shape.id
 
         sql += sql_order
 
@@ -497,7 +533,8 @@ class Datalayer(models.Model):
 
         return result[0]
 
-    def last_time(self, shape_type: Optional[Type] = None):
+    def last_time(self, shape_type: Optional[Type] = None,
+                   shape: Optional[Shape] = None):
         """ Determines the first point in time a value is available. """
         if not self.is_loaded():
             return None
@@ -517,6 +554,9 @@ class Datalayer(models.Model):
             sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
             sql += "WHERE s.type_id = %(type_id)s "
             params['type_id'] = shape_type.id
+        elif shape is not None:
+            sql += "WHERE s.shape_id = %(shape_id)s "
+            params['shape_id'] = shape.id
 
         sql += sql_order
         with connection.cursor() as c:
@@ -549,6 +589,55 @@ class Datalayer(models.Model):
 
         end = timer()
         self.info("Finished processing", {'duration': end-start})
+
+
+class DatalayerSource(models.Model):
+
+    class SourcePIDType(models.TextChoices):
+        DOI = "DOI", _("DOI")
+        ROR = "ROR", _("ROR")
+        ORCID = "ORCID", _("ORCID")
+
+
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    datalayer   = models.ForeignKey(
+        Datalayer,
+        on_delete=models.RESTRICT,
+        related_name='sources',
+        blank=True, null=True
+    )
+
+    pid_type    = models.CharField(
+        max_length = 255,
+        choices    = SourcePIDType,
+        default    = SourcePIDType.DOI,
+    )
+    pid         = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True, null=True)
+
+    # todo: bibtex field?
+
+    # in case of DOI
+    datacite            = models.JSONField(null=True, blank=True, editable=False)
+    datacite_fetched_at = models.DateTimeField(null=True, blank=True, editable=False)
+
+    def get_pid_url(self):
+
+        match self.pid_type:
+            case DatalayerSource.SourcePIDType.DOI:
+                return f"https://doi.org/{self.pid}"
+
+            case DatalayerSource.SourcePIDType.ROR:
+                return f"https://ror.org/{self.pid}"
+
+            case DatalayerSource.SourcePIDType.DOI:
+                return f"https://orcid.org/{self.pid}"
+
+            case _:
+                return '#'
+
 
 
 class DatalayerLogEntry(models.Model):

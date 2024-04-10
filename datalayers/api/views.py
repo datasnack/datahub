@@ -39,7 +39,29 @@ def datalayer(request):
 
     for d in datalayers:
         r = model_to_dict(d)
+
         r['category'] = d.category.name
+
+        tags = d.tags.all()
+        r['tags'] = []
+        for t in tags:
+            r['tags'].append(t.name)
+        r['tags'] = ",".join(r['tags'])
+
+        related = d.related_to.all()
+        r['related_to'] = []
+        for rl in related:
+            r['related_to'].append(rl.key)
+        r['related_to'] = ",".join(r['related_to'])
+
+        sources = d.sources.all()
+
+        for i, s in enumerate(sources):
+            key = f"source_{i}"
+            r[f'{key}_pid_type']    = s.pid_type
+            r[f'{key}_pid']         = s.pid
+            r[f'{key}_description'] = s.description
+
         rows.append(r)
     df = pd.DataFrame(rows)
 

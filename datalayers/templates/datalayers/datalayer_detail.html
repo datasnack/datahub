@@ -36,7 +36,7 @@
 </div>
 
 <div class="row mb-3">
-	<div class="col-12 col-md-6">
+	<div class="col-12 col-xl-8">
 
 		<div class="mb-3 small text-muted">
 			{% translate "Key" %}: <code>{{ datalayer.key }}</code> |
@@ -59,9 +59,125 @@
 			{{ datalayer.description }}
 		</div>
 
+		{% with related=datalayer.related_to.all %}
+			{% if related|length %}
+			<div class="mb-3">
+				{% translate "Related Data Layers:" %}
+				<ul>
+					{% for reld in related %}
+						<li><a href="{{ reld.get_absolute_url }}">{{ reld.name}} (<code>{{ reld.key}}</code>)</a></li>
+					{% endfor %}
+				</ul>
+			</div>
+			{% endif %}
+		{% endwith %}
+
+		<hr>
+
+		<div class="row">
+			<div class="col-12 col-md-6">
+				<table class="table table-sm small caption-top">
+					<caption>{% translate "Spatial and temporal coverage" %}</caption>
+
+					<thead>
+						<tr>
+							<th>{% translate "Shape type" %}</th>
+							<th>{% translate "First" %}</th>
+							<th>{% translate "Last" %}</th>
+							<th>{% translate "Coverage" %}</th>
+						</tr>
+					</thead>
+					<tbody class="table-group-divider">
+						{% for type in datalayer.get_available_shape_types %}
+						<tr class="small">
+							<td>
+								<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
+							</td>
+							<td></td>
+							<td></td>
+							<td>
+								{{ datalayer|coverage:type|percentageformat }}
+							</td>
+						</tr>
+						{% endfor %}
+						<tr class="table-active">
+							<td>{% translate "Total" %}</td>
+							<td>{{ datalayer.first_time }}</td>
+							<td>{{ datalayer.last_time }}</td>
+							<td>{{ datalayer.value_coverage|percentageformat }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+
+
 	</div>
 
+	<div class="col-12 col-xl-4">
+
+
+
+		<div class="card mb-3">
+			<h5 class="card-header">{% translate "Data Layer information" %}</h5>
+			<div class="card-body">
+
+				<div class="row">
+
+					<div class="col-12 col-sm-12">
+
+
+						<div class="col-12 col-sm-12">
+
+
+							<div class="mb-3">
+								{% include "datalayers/datalayer_states.html" with mode="large" datalayer=datalayer %}
+							</div>
+
+							<div class="text-muted">
+								<a class="small" href="{% url "datalayers:datalayer_log" datalayer.key %}">{%translate "Log" %}</a> |
+								<a class="small" href="#">{%translate "Files" %}</a>
+							</div>
+
+						</div>
+						<table class="table table-sm small mb-0">
+							<tbody>
+								<tr>
+									<td>{% translate "Operation" %}</td>
+									<td>{{ datalayer.operation }}</td>
+								</tr>
+
+								<tr>
+									<td>{% translate "Database unit" %}</td>
+									<td>{{ datalayer.database_unit }}</td>
+								</tr>
+
+								<tr>
+									<th class="fw-normal">{% translate "Value type" %}</th>
+									<td><code>{{ datalayer.value_type|default_if_none:"-" }}</code></td>
+								</tr>
+								<tr>
+									<th class="fw-normal">{% translate "Temporal resolution" %}</th>
+									<td><code>{{ datalayer.temporal_resolution|default_if_none:"-" }}</code></td>
+								</tr>
+							</tbody>
+						</table>
+
+
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	{% comment %}
 	<div class="col-12 col-md-3">
+
+
+
+
 		<table class="table table-sm small">
 			<tbdoy>
 				<tr>
@@ -109,6 +225,8 @@
 				</tr>
 			</tbody>
 		</table>
+
+
 	</div>
 
 	<div class="col-12 col-md-3">
@@ -123,6 +241,8 @@
 		</div>
 
 	</div>
+
+	{% endcomment %}
 </div>
 
 
@@ -184,8 +304,10 @@
 
 	</div>
 	<div class="col-12 col-xl-4">
+
+		{% comment %}
 		<div class="card mb-3">
-			<h5 class="card-header">{% translate "Data type and processing" %}</h5>
+			<h5 class="card-header">{% translate "Data Layer information" %}</h5>
 			<div class="card-body">
 				<table class="table table-sm table-meta_data mb-0">
 					<thead>
@@ -195,14 +317,6 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
-							<td>{% translate "Necessity" %}</td>
-							<td>{{ datalayer.necessity }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Format" %}</td>
-							<td>{{ datalayer.format }}</td>
-						</tr>
 						<tr>
 							<td>{% translate "Operation" %}</td>
 							<td>{{ datalayer.operation }}</td>
@@ -215,31 +329,16 @@
 							<td>{% translate "Database unit" %}</td>
 							<td>{{ datalayer.database_unit }}</td>
 						</tr>
-						<tr>
-							<td>{% translate "Spatial details" %}</td>
-							<td>{{ datalayer.details_spatial }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Temporal details" %}</td>
-							<td>{{ datalayer.details_temporal }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Timeframe" %}</td>
-							<td>{{ datalayer.timeframe }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Related Sources" %}</td>
-							<td>{{ datalayer.related_sources }}</td>
-						</tr>
 					</tbody>
 				</table>
 			</div>
 		</div>
+		{%endcomment %}
 
 		<div class="card mb-3">
-			<h5 class="card-header">{% translate "Metadata information" %}</h5>
+			<h5 class="card-header">{% translate "Original data information" %}</h5>
 			<div class="card-body">
-				<table class="table table-sm table-meta_data mb-0">
+				<table class="table table-sm table-meta_data">
 					<thead>
 						<tr>
 							<th>{% translate "Information" %}</th>
@@ -248,33 +347,61 @@
 					</thead>
 					<tbody>
 						<tr>
-							<td>{% translate "Creator" %}</td>
-							<td>{{ datalayer.creator }}</td>
+							<td>{% translate "Format" %}</td>
+							<td>{{ datalayer.format }}</td>
 						</tr>
 						<tr>
-							<td>{% translate "Date included" %}</td>
-							<td>{{ datalayer.included_date }}</td>
+							<td>{% translate "Format unit" %}</td>
+							<td>{{ datalayer.format_unit }}</td>
+						</tr>
+						{% if datalayer.format_description %}
+						<tr>
+							<td></td>
+							<td>
+								{{ datalayer.format_description}}
+							</td>
+						</tr>
+						{% endif %}
+
+						{# Spatial #}
+						<tr>
+							<td>{% translate "Spatial details" %}</td>
+							<td>{{ datalayer.spatial_details }}</td>
 						</tr>
 						<tr>
-							<td>{% translate "Type" %}</td>
-							<td>{{ datalayer.type }}</td>
+							<td>{% translate "Spatial coverage" %}</td>
+							<td>{{ datalayer.spatial_coverage }}</td>
+						</tr>
+
+						{# Temporal #}
+						<tr>
+							<td>{% translate "Temporal details" %}</td>
+							<td>{{ datalayer.temporal_details }}</td>
 						</tr>
 						<tr>
-							<td>{% translate "Identifier" %}</td>
-							<td>{{ datalayer.identifier }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Source" %}</td>
-							<td>{{ datalayer.source }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Link to Source" %}</td>
-							<td>{{ datalayer.source_link|urlize }}</td>
+							<td>{% translate "Temporal coverage" %}</td>
+							<td>{{ datalayer.temporal_coverage }}</td>
 						</tr>
 
 						<tr>
-							<td>{% translate "Citation" %}</td>
-							<td>{{ datalayer.citation }}</td>
+							<td>{% translate "Source" %}</td>
+							<td>
+								{% if datalayer.source %}
+
+									{% if datalayer.source_link %}
+
+										<a href="{{ datalayer.source_link }}">
+											{{ datalayer.source }}
+										</a>
+
+									{% else %}
+										{{ datalayer.source }}
+									{% endif %}
+
+								{% else %}
+									{{ datalayer.source_link|urlize }}
+								{% endif %}
+							</td>
 						</tr>
 						<tr>
 							<td>{% translate "Language" %}</td>
@@ -284,12 +411,43 @@
 							<td>{% translate "License" %}</td>
 							<td>{{ datalayer.license }}</td>
 						</tr>
+
 						<tr>
-							<td>{% translate "Coverage" %}</td>
-							<td>{{ datalayer.coverage }}</td>
+							<td>{% translate "Date published" %}</td>
+							<td>{{ datalayer.date_published }}</td>
+						</tr>
+						<tr>
+							<td>{% translate "Date last accessed" %}</td>
+							<td>{{ datalayer.date_last_accessed }}</td>
+						</tr>
+
+						<tr>
+							<td>{% translate "Citation" %}</td>
+							<td>{{ datalayer.citation }}</td>
 						</tr>
 					</tbody>
 				</table>
+
+				{% with sources=datalayer.sources.all %}
+				{% if sources|length %}
+					<h4>{% translate "Sources" %}</h4>
+
+					{%for source in sources %}
+
+						<a href="{{ source.get_pid_url }}">
+							<div class="c-pidbadge">
+								<span class="c-pidbadge-type">{{ source.pid_type}}</span><span class="c-pidbadge-pid">{{ source.pid }}</span>
+							</div>
+						</a>
+
+						{{ source.description }}
+
+						<hr>
+					{% endfor %}
+
+				{% endif %}
+				{% endwith %}
+
 			</div>
 		</div>
 

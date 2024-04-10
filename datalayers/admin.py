@@ -1,15 +1,21 @@
 from django.contrib import admin
 
-from .models import Category, Datalayer
+from .models import Category, Datalayer, DatalayerSource
 
 # Register your models here.
 admin.site.register(Category)
 
 
+admin.site.register(DatalayerSource)
 
+class DatalayerSourceAdminInline(admin.TabularInline):
+    model = DatalayerSource
+    classes = ['collapse']
 
 class DatalayerAdmin(admin.ModelAdmin):
     list_display = ["name","key"]
+
+    inlines = (DatalayerSourceAdminInline, )
 
     fieldsets = [
         (
@@ -21,40 +27,35 @@ class DatalayerAdmin(admin.ModelAdmin):
                     "category",
                     'tags',
                     "description",
-                ],
-            },
-        ),
-        (
-            "Data type and processing",
-            {
-                "fields": [
-                    "necessity",
-                    "format",
-                    "original_unit",
                     "operation",
                     "database_unit",
-                    "details_spatial",
-                    "details_temporal",
-                    "timeframe",
-                    "related_sources"
+                    "date_included",
+                    "related_to",
                 ],
             },
         ),
         (
-            "Metadata",
+            "Original data metadata",
             {
                 "classes": ["collapse"],
                 "fields": [
-                    "creator",
-                    "included_date",
-                    "type",
-                    "identifier",
+                    "format",
+                    "format_description",
+                    "format_unit",
+
+                    "spatial_details",
+                    "spatial_coverage",
+
+                    "temporal_details",
+                    "temporal_coverage",
+
                     "source",
                     "source_link",
-                    "citation",
                     "language",
                     "license",
-                    "coverage"
+                    "date_published",
+                    "date_last_accessed",
+                    "citation",
                 ],
             },
         ),
@@ -68,3 +69,4 @@ class DatalayerAdmin(admin.ModelAdmin):
     #        return []
 
 admin.site.register(Datalayer, DatalayerAdmin)
+

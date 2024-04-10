@@ -9,7 +9,7 @@ from datacite.errors import DataCiteNotFoundError
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
-from datalayers.models import Datalayer, Category
+from datalayers.models import Datalayer, Category, DatalayerSource
 
 class Command(BaseCommand):
     help = "Load given CSV file of datalayers"
@@ -38,10 +38,11 @@ class Command(BaseCommand):
             c.save()
             categories[cat] = c
 
-        dc = DataCiteRESTClient(None, None, None)
-
-        # get allready important layer, don't re-import known layers
+        # get already important layer, don't re-import known layers
         known_layers = Datalayer.objects.values_list('key', flat=True)
+
+        # safe relations until all layer are imported
+        relations = []
 
         for _, dl in df.iterrows():
 
@@ -49,10 +50,51 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Skipping {dl['key']}, already exists"))
                 continue
 
+            tags = []
+            if dl['tags']:
+                tags = dl['tags'].split(',')
+            del dl['tags']
+
+
+            if dl['related_to']:
+                related = dl['related_to'].split(',')
+                for r in related:
+                    relations.append((dl['key'], r))
+            del dl['related_to']
+
+            # check for sources
+            sources = []
+            for k, v in dl.items():
+                if pd.isnull(v):
+                    continue
+                m  = re.match(r'source_(\d+)_(\w+)$', k)
+                if not m:
+                    continue
+                if int(m[1])+1 > len(sources):
+                    sources.append({})
+                sources[int(m[1])][m[2]] = v
+                del dl[k]
+
+            # Save Data layer
             dl['category'] = categories[dl['category']]
+
+            if not dl['date_last_accessed']:
+                del dl['date_last_accessed']
+
             d = Datalayer(**dl)
+            d.save()
+
+            if len(tags):
+                print(tags)
+                d.tags.add(**tags)
+
+            for s in sources:
+                ds = DatalayerSource(**s)
+                ds.datalayer = d
+                ds.save()
 
             # todo: not yet clear how this should work. definitely needs 1:n relation
+            #dc = DataCiteRESTClient(None, None, None)
             #match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', dl['identifier'], re.IGNORECASE)
             #if match:
             #    d.doi = match.group()
@@ -64,5 +106,17 @@ class Command(BaseCommand):
             #        pass
             #    time.sleep(1) # don't get banned on the api?
 
+        for rel in relations:
+            print(rel)
+            rel_a = Datalayer.objects.get(key=rel[0])
+            if not rel_a:
+                self.stdout.write(self.style.WARNING(f"Can't create relation ({rel[0]}<->{rel[1]}), {rel[0]} does not exist"))
+                continue
 
-            d.save()
+            rel_b = Datalayer.objects.get(key=rel[1])
+            if not rel_b:
+                self.stdout.write(self.style.WARNING(f"Can't create relation ({rel[0]}<->{rel[1]}), {rel[1]} does not exist"))
+                continue
+
+            rel_a.related_to.add(rel_b)
+
