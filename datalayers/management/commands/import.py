@@ -51,16 +51,18 @@ class Command(BaseCommand):
                 continue
 
             tags = []
-            if dl['tags']:
-                tags = dl['tags'].split(',')
-            del dl['tags']
+            if 'tags' in dl:
+                if dl['tags']:
+                    tags = dl['tags'].split(',')
+                del dl['tags']
 
 
-            if dl['related_to']:
-                related = dl['related_to'].split(',')
-                for r in related:
-                    relations.append((dl['key'], r))
-            del dl['related_to']
+            if 'related_to' in dl:
+                if dl['related_to']:
+                    related = dl['related_to'].split(',')
+                    for r in related:
+                        relations.append((dl['key'], r))
+                del dl['related_to']
 
             # check for sources
             sources = []
@@ -78,8 +80,9 @@ class Command(BaseCommand):
             # Save Data layer
             dl['category'] = categories[dl['category']]
 
-            if not dl['date_last_accessed']:
-                del dl['date_last_accessed']
+            if 'date_last_accessed' in dl:
+                if not dl['date_last_accessed']:
+                    del dl['date_last_accessed']
 
             d = Datalayer(**dl)
             d.save()
@@ -107,7 +110,6 @@ class Command(BaseCommand):
             #    time.sleep(1) # don't get banned on the api?
 
         for rel in relations:
-            print(rel)
             rel_a = Datalayer.objects.get(key=rel[0])
             if not rel_a:
                 self.stdout.write(self.style.WARNING(f"Can't create relation ({rel[0]}<->{rel[1]}), {rel[0]} does not exist"))
