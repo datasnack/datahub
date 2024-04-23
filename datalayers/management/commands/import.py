@@ -67,14 +67,15 @@ class Command(BaseCommand):
             # check for sources
             sources = []
             for k, v in dl.items():
-                if pd.isnull(v):
-                    continue
                 m  = re.match(r'source_(\d+)_(\w+)$', k)
                 if not m:
                     continue
-                if int(m[1])+1 > len(sources):
-                    sources.append({})
-                sources[int(m[1])][m[2]] = v
+
+                if v:
+                    if int(m[1])+1 > len(sources):
+                        sources.append({})
+                    sources[int(m[1])][m[2]] = v
+
                 del dl[k]
 
             # Save Data layer
