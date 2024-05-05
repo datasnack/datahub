@@ -39,8 +39,13 @@
 	<div class="col-12 col-xl-8">
 
 		<div class="mb-3 small text-muted">
-			{% translate "Key" %}: <code>{{ datalayer.key }}</code> |
-			{% translate "Category" %}: <a href="{{ datalayer.category.get_absolute_url }}">{{ datalayer.category }}</a>
+			{% translate "Key" %}: <code>{{ datalayer.key }}</code>
+
+			{% with category=datalayer.category %}
+				{% if category %}
+					| {% translate "Category" %}: <a href="{{ datalayer.category.get_absolute_url }}">{{ datalayer.category }}</a>
+				{% endif %}
+			{% endwith %}
 
 			{% with tags=datalayer.tags.all %}
 				{% if tags|length %}
