@@ -339,6 +339,14 @@ class Datalayer(models.Model):
 
     # --
 
+    def leaflet_popup(self):
+
+        if self.has_class():
+            if hasattr(self._get_class(), 'leaflet_popup') and callable(getattr(self._get_class(), 'leaflet_popup')):
+                return self._get_class().leaflet_popup()
+
+        return None
+
     def str_format(self, value):
 
         if self.has_class():

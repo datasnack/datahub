@@ -299,13 +299,12 @@
 
 		<div id="legend"></div>
 
-
-
+		{% if datalayer.is_loaded %}
 		<hr>
-
 		<div class="mb-3">
 			<div id="chart"></div>
 		</div>
+		{%endif%}
 
 	</div>
 	<div class="col-12 col-xl-4">
@@ -479,7 +478,15 @@ var map = get_base_map('map');
 $('#js-load-data').on('click', function(e) {
 	load_data_for_layer(map, {
 		datalayer_id: {{ datalayer.id}},
-		datalayer_key: '{{datalayer.key}}'
+		datalayer_key: '{{datalayer.key}}',
+
+		{% with callback=datalayer.leaflet_popup %}
+		{% if callback %}
+		{% autoescape off %}
+		format_callback: {{ callback}},
+		{% endautoescape %}
+		{% endif %}
+		{% endwith %}
 	});
 });
 
@@ -585,6 +592,7 @@ $('#js-add-to-map').on('click', async function() {
 </script>
 
 
+{% if datalayer.is_loaded %}
 <script>
 var data = [
 {% for type in datalayer.get_available_shape_types %}
@@ -662,6 +670,7 @@ $.getJSON('/api/datalayers/plotly?datalayer_id={{datalayer.id}}&shape_type={{ ty
 {% endfor %}
 });
 </script>
+{% endif %}
 
 <script src="{% static 'vendor/highlight/highlight.min.js' %}"></script>
 <script>
