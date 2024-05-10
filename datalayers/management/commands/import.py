@@ -81,9 +81,18 @@ class Command(BaseCommand):
             # Save Data layer
             dl['category'] = categories[dl['category']]
 
+            # remove empty fields for data-type columns
             if 'date_last_accessed' in dl:
                 if not dl['date_last_accessed']:
                     del dl['date_last_accessed']
+            if 'date_included' in dl:
+                if not dl['date_included']:
+                    del dl['date_included']
+
+            # we always use a new ID
+            if 'id' in dl:
+                del dl['id']
+
 
             d = Datalayer(**dl)
             d.save()
