@@ -50,6 +50,56 @@ function load_shape(map, query) {
 	});
 }
 
+function load_shape_bbox(map, query) {
+	map.fire('dataloading');
+
+	if (!query.hasOwnProperty('format')) {
+		query['format'] = 'geojson';
+	}
+	query_string = new URLSearchParams(query).toString();
+
+	$.getJSON(`/api/shapes/bbox/?${query_string}`, function(data) {
+		var m = L.geoJSON(data, {
+			onEachFeature: function (feature, layer) {
+				const p = feature.properties;
+				var html = "";
+
+				if (Object.keys(p).length === 0) {
+					return;
+				}
+
+				if (p.hasOwnProperty('name')) {
+					html += `<h4>${p['name']}</h4>`;
+				}
+
+				var table = "";
+				Object.keys(feature.properties).forEach(function(key) {
+					if (key == 'name') {
+						return;
+					}
+					var value = feature.properties[key];
+
+					// ignore empty values (not all properties are set on each feature)
+					// this reduces the visual space needed for the popup!
+					if (value == null) {
+						return;
+					}
+					table += `<tr><th><code>${key}</code></th><td>${value}</td>`;
+				});
+				html += `<table><tbody>${table}</tbody></table>`;
+
+				layer.bindPopup(html);
+			}
+		}).addTo(map);
+		map.fitBounds(m.getBounds());
+
+		map.fire('dataload');
+	}).fail(function(data) {
+		alert("Something went wrong during loading the geometry of the shape.");
+		map.fire('dataload');
+	});
+}
+
 function load_data_for_layer(map, dl, layerControl) {
 	map.fire('dataloading');
 
@@ -60,29 +110,37 @@ function load_data_for_layer(map, dl, layerControl) {
 			},
 			onEachFeature: function (feature, layer) {
 				var html = "";
-				Object.keys(feature.properties).forEach(function(key) {
-					var value = feature.properties[key];
 
-					// ignore empty values (not all properties are set on each feature)
-					// this reduces the visual space needed for the popup!
-					if (value == null) {
-						return;
-					}
+				if (dl.format_callback) {
+					html = dl.format_callback(feature);
+				} else {
 
-					// the values of same special keys can be enhanced with additional formatting
-					if (key == 'wikidata') {
-						value = `<a href="https://www.wikidata.org/wiki/${value}" target="_blank">${value}</a>`;
-					} else if (key == 'nodes') {
-						// usually a long list of OSM ids
-						value = value.substring(0, 20) + "…";
-					} else if (key == 'meteostat_id') {
-						value = `<a href="https://meteostat.net/de/station/${value}" target="_blank">${value}</a>`
-					}
+					Object.keys(feature.properties).forEach(function(key) {
+						var value = feature.properties[key];
 
-					html += `<tr><th><code>${key}</code></th><td>${value}</td>`;
-				});
+						// ignore empty values (not all properties are set on each feature)
+						// this reduces the visual space needed for the popup!
+						if (value == null) {
+							return;
+						}
 
-				layer.bindPopup(`<table><tbody>${html}</tbody></table>`);
+						// the values of same special keys can be enhanced with additional formatting
+						if (key == 'wikidata') {
+							value = `<a href="https://www.wikidata.org/wiki/${value}" target="_blank">${value}</a>`;
+						} else if (key == 'nodes') {
+							// usually a long list of OSM ids
+							value = value.substring(0, 20) + "…";
+						} else if (key == 'meteostat_id') {
+							value = `<a href="https://meteostat.net/de/station/${value}" target="_blank">${value}</a>`
+						}
+
+						html += `<tr><th><code>${key}</code></th><td>${value}</td>`;
+					});
+
+					html = `<table><tbody>${html}</tbody></table>`;
+				}
+
+				layer.bindPopup(html);
 			}
 		});
 

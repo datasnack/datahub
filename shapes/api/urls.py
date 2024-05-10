@@ -24,5 +24,7 @@ router.register(r'shapes', ShapeViewSet)
 
 urlpatterns = [
     path("shapes/geometry/", views.shape_geometry, name="shape_geometry"),
+    path("shapes/bbox/", views.shape_bbox, name="shape_bbox"),
+
     path('', include(router.urls)),
 ]

@@ -1,11 +1,15 @@
 from io import BytesIO
 
 import geopandas
+import shapely
 from shapely import wkt
+import geojson
+from geojson import FeatureCollection, Feature, Point, Polygon
 
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponseNotFound, HttpResponseBadRequest, FileResponse
+from django.http import HttpResponseNotFound, HttpResponseBadRequest, FileResponse, JsonResponse
 from django.utils.text import slugify
+import shapely.geometry
 
 from shapes.models import Shape, Type
 
@@ -88,3 +92,73 @@ def shape_geometry(request):
         return FileResponse(file, as_attachment=True, filename=f'{name}.csv')
 
     return HttpResponseBadRequest("Invalid format")
+
+def shape_bbox(request):
+
+    if shape_id := request.GET.get('shape_id', None):
+        shape = Shape.objects.get(pk=shape_id)
+        name = slugify(shape.name)
+    else:
+        HttpResponseNotFound("No shape found")
+
+    fmt = request.GET.get('format', 'geojson')
+
+
+    geom = wkt.loads(shape.geometry.wkt)
+    envelope = geom.envelope
+    bounds = geom.bounds
+
+    # create GeoJSON struct
+
+
+    # bbox polygon
+    envdict = shapely.geometry.mapping(envelope)
+    p = Polygon(envdict['coordinates'])
+    f = Feature(geometry=p)
+
+    p_nw = Point((bounds[0], bounds[3]))
+    f_nw = Feature(geometry=p_nw, properties={'name': 'North-West', 'lat': bounds[3], 'lng': bounds[0]})
+
+    p_ne = Point((bounds[2], bounds[3]))
+    f_ne = Feature(geometry=p_ne, properties={'name': 'North-East', 'lat': bounds[3], 'lng': bounds[2]})
+
+    p_sw = Point((bounds[0], bounds[1]))
+    f_sw = Feature(geometry=p_sw, properties={'name': 'South-West', 'lat': bounds[1], 'lng': bounds[0]})
+
+    p_se = Point((bounds[2], bounds[1]))
+    f_se = Feature(geometry=p_se, properties={'name': 'South-East', 'lat': bounds[1], 'lng': bounds[2]})
+
+    # Lines
+    p_n = Point((bounds[0] + (bounds[2] - bounds[0]) / 2, bounds[3]))
+    f_n = Feature(geometry=p_n, properties={'name': 'North', 'lat': bounds[3]})
+
+    p_e = Point((bounds[2], bounds[1] + (bounds[3] - bounds[1]) / 2  ))
+    f_e = Feature(geometry=p_e, properties={'name': 'East', 'lng': bounds[2]})
+
+    p_s = Point((bounds[0] + (bounds[2] - bounds[0]) / 2, bounds[1]))
+    f_s = Feature(geometry=p_s, properties={'name': 'South', 'lng': bounds[1]})
+
+    p_w = Point((bounds[0], bounds[1] + (bounds[3] - bounds[1]) / 2  ))
+    f_w = Feature(geometry=p_w, properties={'name': 'West', 'lng': bounds[0]})
+
+    p_c = Point((geom.centroid.x, geom.centroid.y))
+    f_c = Feature(geometry=p_c, properties={'name': 'Centroid',
+                                            '': 'geometric center of the shape',
+                                            'lat': geom.centroid.y,
+                                            'lng': geom.centroid.x})
+
+    fc = FeatureCollection([f, f_nw, f_ne, f_se, f_sw, f_n, f_s, f_e, f_w, f_c])
+
+    if fmt == 'geojson':
+
+        return JsonResponse(fc)
+
+        file = BytesIO()
+        geojson.dumps(fc, file)
+        file.seek(0)
+        response = FileResponse(file, as_attachment=False, filename=f'{name}.geojson')
+        response['Content-Type'] = 'application/geo+json'
+        return response
+
+
+
