@@ -1,8 +1,8 @@
 # Data Hub
 
-The Data Hub is a geographic information system (GIS) with a data fusion engine for harmonizing diverse data sources. Its focus is to harmonize diverse data on temporal and spatial axes, to allow the user to combine and analyze this information.
+The Data Hub is a geographic information system (GIS) featuring a data fusion engine designed for data harmonization, alongside an interactive dashboard for effective data exploration and collaboration. Its key objective is to merge data of multiple formats and sources across temporal and spatial axes, allowing users to combine, analyze, and interpret the data.
 
-See [this repository](https://github.com/datasnack/dh-ghana) for an example of the Data Hub software with a focus data available in Ghana.
+In [this repository](https://github.com/datasnack/dh-ghana) you can explore an example setup of the Data Hub software tailored to data concerning Ghana.
 
 
 ## Installation
@@ -25,6 +25,7 @@ The system is now running and usable at [http://localhost:8000/](http://localhos
 - Import your Shapes with `python manage.py loadshapes <file>`
 - Place your Data Layer source files in `src/datalayers/`
 - Downloaded data will be placed in `data/datalayers/`
+
 
 ## Attributions
 
