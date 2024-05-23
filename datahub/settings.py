@@ -86,7 +86,6 @@ INSTALLED_APPS = [
     "datalayers",
     "shapes",
     "taggit",
-    'rest_framework',
     "src.datalayer",
 ]
 
