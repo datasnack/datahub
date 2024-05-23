@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Data Hub
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jonathan
+    family-names: Ströbele
+    orcid: 'https://orcid.org/0000-0002-9757-8030'
+  - given-names: Juliane
+    family-names: Boenecke
+    orcid: 'https://orcid.org/0000-0002-6327-8152'
+repository-code: 'https://github.com/datasnack/datahub'
+license: MIT
+version: 0.2.0
+date-released: '2024-05-23'
