@@ -149,6 +149,9 @@
 	<footer class="container mb-1">
 		<div class="footer-copy pt-1">
 			<small class="text-muted">
+				{% if INSTANCE_VERSION %}
+				{{ datahub_name }} v{{ INSTANCE_VERSION }} ・
+				{% endif%}
 				<a href="https://github.com/datasnack/datahub">{% translate "Data Hub" %}</a> v{{ DATAHUB_VERSION }}
 			</small>
 		</div>

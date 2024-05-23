@@ -255,3 +255,10 @@ DATAHUB_CENTER_ZOOM=env('DATAHUB_CENTER_ZOOM')
 
 DATAHUB_DATALAYER_DIR = BASE_DIR / env('DATAHUB_DATALAYER_DIR')
 DATAHUB_DATA_DIR = BASE_DIR / env('DATAHUB_DATA_DIR')
+
+INSTANCE_VERSION = False
+try:
+    from src import __version__ as instance_version
+    INSTANCE_VERSION = instance_version
+except:
+    pass
