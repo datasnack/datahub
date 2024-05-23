@@ -28,6 +28,10 @@ coverage.xml
 config.ini
 
 /data/
+/data
+/data.*
 /pgdata/
 /datalayers/datalayers
 /src/
+/src
+/src.*

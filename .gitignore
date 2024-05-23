@@ -234,3 +234,7 @@ cython_debug/
 # Data Hub
 pgdata/
 data/
+/data
+data.*
+src.*
+/src
