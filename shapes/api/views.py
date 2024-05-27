@@ -81,7 +81,7 @@ def shape_geometry(request):
 
     if fmt == 'shp':
         file = BytesIO()
-        gdf.to_file(file)
+        gdf.to_file(file, driver="ESRI Shapefile")
         file.seek(0)
         return FileResponse(file, as_attachment=True, filename=f'{name}.shp')
 
