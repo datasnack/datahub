@@ -1,4 +1,5 @@
 from io import BytesIO
+import tempfile
 
 import geopandas
 import shapely
@@ -80,10 +81,14 @@ def shape_geometry(request):
         return FileResponse(file, as_attachment=True, filename=f'{name}.gpkg')
 
     if fmt == 'shp':
-        file = BytesIO()
-        gdf.to_file(file, driver="ESRI Shapefile")
-        file.seek(0)
-        return FileResponse(file, as_attachment=True, filename=f'{name}.shp')
+        # extension .shp.zip leads to a zipped shp file with the additional
+        # meta data files. Though saving this to BytesIO stream didn't work,
+        # since filename can't be used in conjunction with the file stream.
+        # so we save it to a temp dir instead and then return the tmp file.
+        temp_dir = tempfile.TemporaryDirectory()
+        file_name = f'{temp_dir.name}/{name}.shp.zip'
+        gdf.to_file(filename=file_name, driver="ESRI Shapefile")
+        return FileResponse(open(file_name, 'rb'), as_attachment=True, filename=f'{name}.shp.zip')
 
     if fmt == 'csv':
         file = BytesIO()
