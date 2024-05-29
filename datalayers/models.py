@@ -1,3 +1,4 @@
+import string
 import datetime as dt
 from pathlib import Path
 from timeit import default_timer as timer
@@ -22,7 +23,7 @@ from .datasources.base_layer import LayerTimeResolution, LayerValueType
 def camel(s):
     s = s.replace('_', ' ')
     s = s.replace('-', ' ')
-    return s.title().replace(' ', '')
+    return string.capwords(s).replace(' ', '')
 
 
 class Category(models.Model):
