@@ -5,10 +5,14 @@
 
 {% block content %}
 
+<h1>Welcome to the {{ datahub_name }}</h1>
+<h3>Give me a spin, I'm your Data Hub prototype in action!</h3>
 
-<div class="m-pageheader">
-	<h1>Welcome to the Data Hub</h1>
-</div>
+<p>
+	The <b>Data Hub</b> serves as a dynamic spatio-temporal information platform, tailored to the data practices of researchers.
+	It offers an integrated view of various Data Layers relevant to yout study region, spanning multiple categories such as socio-demographic, environmental, weather, health, and infrastructure.
+	These layers are compiled from user-based and open data sources (with some layers originating from the same source) to support data analysis and decision-making.
+</p>
 
 <p>
     The hub currently holds {{ shapes_count }} shapes, from the following types:
@@ -18,5 +22,29 @@
     <li><a href="{{ type.get_absolute_url }}">{{ type.name }}</a> ({{ type.shapes.all.count }})</li>
 {% endfor %}
 </ul>
+<p>
+	More details and in-depth documentation of each Data Layer can be accessed via its <a href="{% url 'datalayers:datalayer_index' %}">documentation page</a>, including metadata information.
+</p>
+
+<h3>Snack your Data</h3>
+<p>
+	To access the gathered open data sources you can browse them via the above mentiond shape types or the Study Site picker.
+	Upon choosing your area of interest, you can tailor your data selection through our download configurator, which also offers a basic preview (spatial and temporal description) of the data for your convenience.
+</p>
+
+
+<h3>Terms of Use</h3>
+
+<p>
+	The {{ datahub_name }} hosts datasets under a wide range of licenses, ensuring compliance with the intellectual property rights of the various data sources utilized.
+	Some datasets have been processed according to the needs of potential user groups.
+	By accessing datasets through the Data Hub and/or the original source, users implicitly agree to abide by the terms of the applicable license specific to each dataset, as described in the dataset's metadata.
+	This includes that when utilizing any data provided through the Data Hub, the data custodian shall be credited in the manner specified in the respective license and that relevant copyright provisions shall be complied with.
+	In addition, the Data Hub shall be cited as contributing service as follows:
+</p>
+
+<p class="ps-3 text-muted" style="border-left: 3px solid #ccc; font-style: italic;">
+	Ströbele, J., &amp; Boenecke, J. (2024). Data Hub (Version {{ DATAHUB_VERSION }}) [Computer software]. <a href="https://github.com/datasnack/datahub">https://github.com/datasnack/datahub</a>
+</p>
 
 {% endblock %}
