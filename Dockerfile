@@ -36,7 +36,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
 
-EXPOSE 80
+EXPOSE 8000
 
 # parameter for ENTRYPOINT (i.e. docker run <image> <cmd> can be used to overwrite this)
 #CMD ["gunicorn", "--bind", "0.0.0.0:80", "esida:app"]
