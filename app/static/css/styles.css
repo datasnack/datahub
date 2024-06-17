@@ -142,3 +142,46 @@ h6 {
 	display: inline-block;
 }
 
+
+
+.m-searchbutton {
+	border: var(--bs-border-width) solid var(--bs-border-color)
+}
+
+.m-searchbutton-placeholder {
+	padding-right: 0.5em;
+}
+
+.m-searchbutton-keys {
+	border: var(--bs-border-width) solid var(--bs-border-color);
+	border-radius: var(--bs-border-radius);
+	border-color: var(--bs-secondary-border-subtle);
+	white-space: nowrap;
+}
+
+.m-searchbutton-key {
+	background: none;
+	color: var(--bs-secondary-color);
+	color: var(--bs-btn-color);
+
+	transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.m-searchbutton-key:first-child {
+	padding-right: 0;
+}
+.m-searchbutton-key:last-child {
+	padding-left: 0;
+}
+
+
+.m-searchbutton:hover .m-searchbutton-key {
+	color: var(--bs-btn-hover-color);
+}
+
+.m-searchbutton-key--mod::after {
+	content: "Ctrl"
+}
+
+.mac .m-searchbutton-key--mod::after {
+	content: '\2318';
+}
