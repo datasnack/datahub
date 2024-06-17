@@ -133,7 +133,17 @@
 			<tbody>
 			{% for dl in datalayers %}
 				<tr>
-					<td class="align-middle">{{ dl.category }}</td>
+					<td class="align-middle">
+						{% with category=dl.category %}
+							{% if category %}
+								<a class="link-secondary" href="{{ category.get_absolute_url}}">
+									{{ category }}
+								</a>
+							{% else %}
+								-
+							{% endif %}
+						{% endwith %}
+					</td>
 					<td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
 
 					{% with dlv=shape|datalayer_first_value:dl %}
@@ -200,7 +210,7 @@ $(document).ready(function() {
 	});
 
 	$('#datalayers').DataTable({
-		pageLength: 25,
+		pageLength: 10,
 		//order: [[0, 'asc']],
 		columnDefs: [
 			{targets: 'no-sort', orderable: false }
