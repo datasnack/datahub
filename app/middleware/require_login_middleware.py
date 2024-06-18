@@ -6,8 +6,9 @@ from django.contrib.auth.decorators import login_required
 
 class RequireLoginMiddleware:
     """
-    Middleware component that wraps the login_required decorator around
-    matching URL patterns. To use, add the class to MIDDLEWARE_CLASSES and
+    Middleware component that wraps the login_required decorator around matching URL patterns.
+
+    To use, add the class to MIDDLEWARE_CLASSES and
     define LOGIN_REQUIRED_URLS and LOGIN_REQUIRED_URLS_EXCEPTIONS in your
     settings.py. For example:
     ------
@@ -25,10 +26,13 @@ class RequireLoginMiddleware:
     LOGIN_REQUIRED_URLS_EXCEPTIONS is, conversely, where you explicitly
     define any exceptions (like login and logout URLs).
     """
-    def __init__(self, get_response):
+
+    def __init__(self, get_response) -> None:
         self.get_response = get_response
         self.required = tuple(re.compile(url) for url in settings.LOGIN_REQUIRED_URLS)
-        self.exceptions = tuple(re.compile(url) for url in settings.LOGIN_REQUIRED_URLS_EXCEPTIONS)
+        self.exceptions = tuple(
+            re.compile(url) for url in settings.LOGIN_REQUIRED_URLS_EXCEPTIONS
+        )
 
     def __call__(self, request):
         # Code to be executed for each request before
@@ -42,20 +46,17 @@ class RequireLoginMiddleware:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-
         # No need to process URLs if user already logged in
         if request.user.is_authenticated:
             return None
 
         # An exception match should immediately return None
-        print(request.path)
         for url in self.exceptions:
             if url.match(request.path):
                 return None
 
         if settings.DATAHUB_LOGIN_REQUIRED:
             return login_required(view_func)(request, *view_args, **view_kwargs)
-
 
         # Requests matching a restricted URL pattern are returned
         # wrapped with the login_required decorator

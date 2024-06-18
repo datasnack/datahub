@@ -1,8 +1,8 @@
-"""
-URL configuration for datahub project.
+"""URL configuration for datahub project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
+
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -14,12 +14,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+from django.conf import settings
 from django.contrib import admin
-from django.conf.urls.i18n import i18n_patterns
-from django.urls import include, path
 from django.contrib.auth import views as auth_views
-from django.conf import settings
-from django.conf import settings
+from django.urls import include, path
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
@@ -27,12 +26,11 @@ urlpatterns = [
 
 urlpatterns += [
     path("", include("app.urls")),
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/login/", auth_views.LoginView.as_view()),
     path("datalayers/", include("datalayers.urls")),
     path("shapes/", include("shapes.urls")),
-
     path("api/", include("shapes.api.urls")),
     path("api/", include("datalayers.api.urls")),
 ]
@@ -40,9 +38,7 @@ urlpatterns += [
 # check if user apps have urls
 for app in settings.INSTALLED_USER_APPS:
     try:
-        urlpatterns += [
-            path("", include(f'{app}.urls'))
-        ]
+        urlpatterns += [path("", include(f"{app}.urls"))]
     except ModuleNotFoundError:
         # todo: error logging
         pass

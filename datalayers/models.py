@@ -1,161 +1,157 @@
-import string
 import datetime as dt
+import string
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import List, Optional
+from typing import Optional
 
 import pandas as pd
-
-from django.db import models, connection
+from django.db import connection, models
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-
 from taggit.managers import TaggableManager
 
-
+from datalayers.utils import dictfetchone, get_engine
 from shapes.models import Shape, Type
-from datalayers.utils import get_engine, dictfetchone
+
 from .datasources.base_layer import LayerTimeResolution, LayerValueType
 
 # Create your models here.
 
+
 def camel(s):
-    s = s.replace('_', ' ')
-    s = s.replace('-', ' ')
-    return string.capwords(s).replace(' ', '')
+    s = s.replace("_", " ")
+    s = s.replace("-", " ")
+    return string.capwords(s).replace(" ", "")
 
 
 class Category(models.Model):
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    name        = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
 
     class Meta:
         verbose_name_plural = "categories"
 
-    # Returns the string representation of the model.
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.name)
 
     def get_absolute_url(self):
-        return reverse("datalayers:datalayer_index_category", kwargs={'category_id': self.id})
+        return reverse(
+            "datalayers:datalayer_index_category", kwargs={"category_id": self.id}
+        )
 
 
-class DatalayerValue():
-
-    def __init__(self, datalayer, row):
+class DatalayerValue:
+    def __init__(self, datalayer, row) -> None:
         self.result = row
         self.dl = datalayer
 
-        self.value  = None
-        self.time   = None
+        self.value = None
+        self.time = None
 
         if row is not None and "value" in row:
-            self.value = row['value']
-
+            self.value = row["value"]
 
     def date(self):
-
         if self.result is None:
             return None
 
         match self.dl.temporal_resolution:
             case LayerTimeResolution.YEAR:
                 if "year" in self.result:
-                    return self.result['year']
+                    return self.result["year"]
                 return None
             case LayerTimeResolution.DAY:
                 if "date" in self.result:
-                    return self.result['date'].strftime('%Y-%m-%d')
+                    return self.result["date"].strftime("%Y-%m-%d")
                 return None
             case _:
-                raise ValueError(f"Unknown time_col={self.dl.temporal_resolution}")
+                msg = f"Unknown time_col={self.dl.temporal_resolution}"
+                raise ValueError(msg)
 
     def timestamp(self):
-
         if self.result is None:
             return None
 
         match self.dl.temporal_resolution:
             case LayerTimeResolution.YEAR:
                 if "year" in self.result:
-                    year = dt.datetime(self.result['year'], 0, 0)
+                    year = dt.datetime(self.result["year"], 0, 0)
                     return year.timestamp()
                 return None
             case LayerTimeResolution.DAY:
                 if "date" in self.result:
-                    return self.result['date'].timestamp()
+                    return self.result["date"].timestamp()
                 return None
             case _:
-                raise ValueError(f"Unknown time_col={self.dl.temporal_resolution}")
+                msg = f"Unknown time_col={self.dl.temporal_resolution}"
+                raise ValueError(msg)
 
-
-
-    def __str__(self):
-
+    def __str__(self) -> str:
         if self.result is None:
             return None
 
         return self.value
 
+
 class Datalayer(models.Model):
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    key           = models.SlugField(max_length=255, null=False, unique=True)
-    name          = models.CharField(max_length=255)
-    description   = models.TextField(blank=True)
+    key = models.SlugField(max_length=255, null=False, unique=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
 
-    category      = models.ForeignKey(
+    category = models.ForeignKey(
         Category,
         on_delete=models.RESTRICT,
-        related_name='datalayers',
-        blank=True, null=True
+        related_name="datalayers",
+        blank=True,
+        null=True,
     )
-    tags          = TaggableManager(blank=True)
+    tags = TaggableManager(blank=True)
     date_included = models.DateField(blank=True, null=True)
 
-    related_to = models.ManyToManyField('self', blank=True)
-
+    related_to = models.ManyToManyField("self", blank=True)
 
     # Data Layer metadata and processing
-    #original_unit    = models.CharField(max_length=255, blank=True)
-    operation        = models.CharField(max_length=255, blank=True)
-    database_unit    = models.CharField(max_length=255, blank=True)
+    # original_unit    = models.CharField(max_length=255, blank=True)
+    operation = models.CharField(max_length=255, blank=True)
+    database_unit = models.CharField(max_length=255, blank=True)
 
     # Original data source metadata
-    format             = models.CharField(max_length=255, blank=True)
+    format = models.CharField(max_length=255, blank=True)
     format_description = models.TextField(blank=True)
-    format_unit        = models.CharField(max_length=255, blank=True)
+    format_unit = models.CharField(max_length=255, blank=True)
 
-    spatial_details    = models.CharField(max_length=255, blank=True)
-    spatial_coverage   = models.CharField(max_length=255, blank=True)
+    spatial_details = models.CharField(max_length=255, blank=True)
+    spatial_coverage = models.CharField(max_length=255, blank=True)
 
-    temporal_details   = models.CharField(max_length=255, blank=True)
-    temporal_coverage  = models.CharField(max_length=255, blank=True)
+    temporal_details = models.CharField(max_length=255, blank=True)
+    temporal_coverage = models.CharField(max_length=255, blank=True)
 
-    source             = models.TextField(blank=True)
-    source_link        = models.TextField(blank=True)
-    language           = models.CharField(max_length=255, blank=True)
-    license            = models.CharField(max_length=255, blank=True)
-    date_published     = models.TextField(blank=True) # no date field. maybe only a year is known.
+    source = models.TextField(blank=True)
+    source_link = models.TextField(blank=True)
+    language = models.CharField(max_length=255, blank=True)
+    license = models.CharField(max_length=255, blank=True)
+    date_published = models.TextField(
+        blank=True
+    )  # no date field. maybe only a year is known.
     date_last_accessed = models.DateField(blank=True, null=True)
-    citation           = models.TextField(blank=True)
+    citation = models.TextField(blank=True)
 
-    #creator       = models.CharField(max_length=255, blank=True)
-    #type          = models.CharField(max_length=255, blank=True)
-    #identifier    = models.CharField(max_length=255, blank=True)
+    # creator       = models.CharField(max_length=255, blank=True)
+    # type          = models.CharField(max_length=255, blank=True)
+    # identifier    = models.CharField(max_length=255, blank=True)
 
-
-    # Returns the string representation of the model.
-    def __str__(self):
-        return f"{str(self.name)} ({self.key})"
+    def __str__(self) -> str:
+        return f"{self.name} ({self.key})"
 
     def get_absolute_url(self):
-        return reverse("datalayers:datalayer_detail", kwargs={'key': self.key})
+        return reverse("datalayers:datalayer_detail", kwargs={"key": self.key})
 
     # --
 
@@ -168,45 +164,50 @@ class Datalayer(models.Model):
 
     @property
     def temporal_resolution_str(self) -> str | None:
-        """ Return Enum type of layer as string so we can compare it in
-        Django templates. Probably there is a better way... """
+        """
+        Temporal resolution type Enum as string.
+
+        Return Enum type of layer as string so we can compare it in
+        Django templates. Probably there is a better way...
+        """
         if self.has_class():
             return str(self._get_class().time_col)
-        else:
-            return None
+
+        return None
 
     @property
     def value_type(self) -> LayerValueType | None:
         if self.has_class():
             return self._get_class().value_type
-        else:
-            return None
+
+        return None
 
     @property
     def value_type_str(self) -> str | None:
         if self.has_class():
             return str(self._get_class().value_type)
-        else:
-            return None
+
+        return None
 
     def format_precision(self) -> int | None:
         if self.has_class():
             return self._get_class().precision
-        else:
-            return None
+
+        return None
 
     def format_suffix(self) -> str | None:
         if self.has_class():
             return self._get_class().format_suffix
-        else:
-            return None
 
+        return None
 
     def log(self, level, message, context=None):
         if context is None:
             context = {}
 
-        entry = DatalayerLogEntry(datalayer=self, level=level, message=message, context=context)
+        entry = DatalayerLogEntry(
+            datalayer=self, level=level, message=message, context=context
+        )
         entry.save()
 
     def info(self, message, context=None):
@@ -218,11 +219,9 @@ class Datalayer(models.Model):
     def debug(self, message, context=None):
         self.log(DatalayerLogEntry.DEBUG, message, context=context)
 
-
     @cached_property
-    def get_available_shape_types(self) -> List[Type]:
-        """ Determines all shape types the datalayer has values for. """
-
+    def get_available_shape_types(self) -> list[Type]:
+        """Determine all shape types the datalayer has values for."""
         if not self.is_loaded():
             return []
 
@@ -238,16 +237,18 @@ class Datalayer(models.Model):
         for row in results:
             type_ids.append(row[0])
 
-        return Type.objects.filter(id__in=type_ids).order_by('position')
+        return Type.objects.filter(id__in=type_ids).order_by("position")
 
     @cached_property
-    def get_available_years(self) -> List[int]:
-        """ Finds all years for which data are available. In case of data layers
-        with a more detailed time resolution, like month or date, it loads the
-        affected years. """
+    def get_available_years(self) -> list[int]:
+        """
+        Find all years for which data are available.
 
+        In case of data layers with a more detailed time resolution, like month or date,
+        it loads the affected years.
+        """
         if not self.is_loaded():
-            #self.logger.warning("Peek of data requested but not loaded for shape_id=%s", shape_id)
+            # self.logger.warning("Peek of data requested but not loaded for shape_id=%s", shape_id)
             return []
 
         match self.temporal_resolution:
@@ -269,36 +270,34 @@ class Datalayer(models.Model):
 
         return years
 
-
-
     def _get_class(self):
-        #spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
+        # spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
 
-        mod = __import__(f'src.datalayer.{self.key}', fromlist=[camel(self.key)])
+        mod = __import__(f"src.datalayer.{self.key}", fromlist=[camel(self.key)])
         cls = getattr(mod, camel(self.key))()
         cls.layer = self
         return cls
 
     def has_class(self) -> bool:
-        """ Check if there is a corresponding class with details for
-        downloading and processing the data source. """
+        """Check if there is a corresponding class with details for
+        downloading and processing the data source.
+        """
         try:
             self._get_class()
             return True
         except ModuleNotFoundError:
-            # todo: this will also return false if a dependency loaded by the
+            # TODO: this will also return false if a dependency loaded by the
             # class is not found
 
-            #raise
+            # raise
 
             return False
 
     def get_class_path(self):
-        return Path(f'src/datalayer/{self.key}.py')
+        return Path(f"src/datalayer/{self.key}.py")
 
     def get_class_source_code(self):
-        """ Gets the actual file contents of the data layer source file. """
-
+        """Get the actual file contents of the data layer source file."""
         p = self.get_class_path()
 
         if p.exists():
@@ -306,69 +305,67 @@ class Datalayer(models.Model):
 
         return None
 
-
-
     def has_vector_data(self) -> bool:
         if self.has_class():
             return self._get_class().raw_vector_data_table is not None
-        else:
-            return False
 
+        return False
 
     @cached_property
     def _database_tables(self):
-        """ this caches the query at least per instance but not yet per request
-        for alls instances. """
+        """
+        Get all loaded Data Layers (by looking at the database tables).
+
+        This caches the query at least per instance but not yet per request
+        for all instances.
+        """
         return connection.introspection.table_names()
 
     def is_loaded(self) -> bool:
-        """ Check if the data has been processed and are stored in the
-        database. """
-
-        # todo: this runs a database query each time the method is called.
+        """Check if the data has been processed and are stored in the database."""
+        # TODO: this runs a database query each time the method is called.
         # we need to run/cache this once per request.
         return self.key in self._database_tables
 
     def has_files(self) -> bool:
-        """ Check if for the specified download directory of the datalayer files
-        are present. """
+        """Check if data of the Data Layer are downloaded and stored locally."""
         if self.has_class():
             return self._get_class().get_data_path().exists()
-        else:
-            return False
 
+        return False
 
     # --
 
     def leaflet_popup(self):
-
         if self.has_class():
-            if hasattr(self._get_class(), 'leaflet_popup') and callable(getattr(self._get_class(), 'leaflet_popup')):
+            if hasattr(self._get_class(), "leaflet_popup") and callable(
+                getattr(self._get_class(), "leaflet_popup")
+            ):
                 return self._get_class().leaflet_popup()
 
         return None
 
     def str_format(self, value):
-
         if self.has_class():
             return self._get_class().str_format(value)
 
         return value
 
-    def value(self,
+    def value(
+        self,
         shape: Optional[Shape] = None,
         when: Optional[dt.datetime] = None,
         fallback_parent=False,
-        mode='down'):
-
+        mode="down",
+    ):
         if not self.is_loaded():
             return None
 
         # get the wanted compare operator
         modes = {
-            'exact': '=',  # needs to be exactly the given date
-            'up':    '>=', # same or next
-            'down':  '<='  # same or previous
+            "exact": "=",  # needs to be exactly the given date
+            "up": ">=",  # same or next
+            "down": "<=",  # same or previous
         }
         if mode not in modes:
             raise ValueError(f"Unknown mode={mode}")
@@ -376,51 +373,44 @@ class Datalayer(models.Model):
         params = {}
         sql = f"SELECT dl.* FROM {self.key} AS dl "
         sql += "WHERE dl.shape_id = %(shape_id)s "
-        params['shape_id'] = shape.id
+        params["shape_id"] = shape.id
 
         if when is not None:
             operator = modes[mode]
             if self.temporal_resolution == LayerTimeResolution.YEAR:
                 sql += f"AND dl.year {operator} %(when)s "
-                params['when'] = when
+                params["when"] = when
             elif self.temporal_resolution == LayerTimeResolution.DAY:
                 sql += f"AND dl.date {operator} %(when)s "
-                params['when'] = when
+                params["when"] = when
             else:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
-        sort_operator = 'DESC'
-        if mode == 'up':
-            sort_operator = 'ASC'
+        sort_operator = "DESC"
+        if mode == "up":
+            sort_operator = "ASC"
 
         sql += f"ORDER BY dl.{self.temporal_resolution} {sort_operator} LIMIT 1"
 
-        print(when)
-        print(sql)
-
         with connection.cursor() as c:
             c.execute(sql, params)
-            #result = c.fetchone()
+            # result = c.fetchone()
             result = dictfetchone(c)
-
-        print(result)
 
         dlv = DatalayerValue(self, result)
         return dlv
 
-
-
-    def data(self,
+    def data(
+        self,
         shape: Optional[Shape] = None,
         when: Optional[dt.datetime] = None,
         start_date: Optional[dt.datetime] = None,
         end_date: Optional[dt.datetime] = None,
         shape_type: Optional[Type] = None,
         select_shape_name=True,
-        fallback_previous=False) -> pd.DataFrame:
-        """ Aggregates the specified data of the data layer. """
-
-
+        fallback_previous=False,
+    ) -> pd.DataFrame:
+        """Aggregate the specified data of the data layer."""
         params = {}
 
         sql = f"SELECT value, shape_id, {self.temporal_resolution} \
@@ -430,25 +420,24 @@ class Datalayer(models.Model):
         if shape_type or shape:
             sql += f"JOIN shapes_shape s ON s.id = {self.key}.shape_id "
 
-
         # WHERE
         sql += "WHERE 1=1 "
 
         if start_date:
             sql += f"AND {self.temporal_resolution} >= %(start_date)s "
-            params['start_date'] = start_date
+            params["start_date"] = start_date
 
         if end_date:
             sql += f"AND {self.temporal_resolution} <= %(end_date)s "
-            params['end_date'] = end_date
+            params["end_date"] = end_date
 
         if shape:
             sql += "AND s.id = %(shape_id)s "
-            params['shape_id'] = shape.id
+            params["shape_id"] = shape.id
 
         if shape_type:
             sql += "AND s.type_id = %(type)s "
-            params['type'] = shape_type.id
+            params["type"] = shape_type.id
 
         sql += f"ORDER BY {self.temporal_resolution} ASC"
 
@@ -457,22 +446,20 @@ class Datalayer(models.Model):
         return df
 
     def value_coverage(self, shape_type: Optional[Type] = None) -> float:
-
         if not self.is_loaded():
             return None
 
         expected = self.expected_value_count(shape_type)
-        actual   = self.count_values(shape_type)
+        actual = self.count_values(shape_type)
 
         return actual / expected
 
     def expected_value_count(self, shape_type: Optional[Type] = None) -> int:
-
         if not self.is_loaded():
             return None
 
         first = self.first_time(shape_type)
-        last  = self.last_time(shape_type)
+        last = self.last_time(shape_type)
 
         if shape_type is None:
             type_multiplier = Shape.objects.count()
@@ -482,7 +469,7 @@ class Datalayer(models.Model):
         match self.temporal_resolution:
             case LayerTimeResolution.YEAR:
                 dt_first = dt.datetime(int(first), 1, 1)
-                dt_last  = dt.datetime(int(last), 1, 1)
+                dt_last = dt.datetime(int(last), 1, 1)
                 return (dt_last.year - dt_first.year + 1) * type_multiplier
             case LayerTimeResolution.DAY:
                 return ((last - first).days + 1) * type_multiplier
@@ -499,7 +486,7 @@ class Datalayer(models.Model):
         if shape_type is not None:
             sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
             sql += "WHERE s.type_id = %(type_id)s "
-            params['type_id'] = shape_type.id
+            params["type_id"] = shape_type.id
 
         with connection.cursor() as c:
             c.execute(sql, params)
@@ -507,9 +494,10 @@ class Datalayer(models.Model):
 
         return result[0]
 
-    def first_time(self, shape_type: Optional[Type] = None,
-                   shape: Optional[Shape] = None):
-        """ Determines the first point in time a value is available. """
+    def first_time(
+        self, shape_type: Optional[Type] = None, shape: Optional[Shape] = None
+    ):
+        """Determine the first point in time a value is available."""
         if not self.is_loaded():
             return None
 
@@ -524,15 +512,15 @@ class Datalayer(models.Model):
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
-        # todo: are shape_type and shape exclusive?
+        # TODO: are shape_type and shape exclusive?
         # technical there are not, but it shoud not lea
         if shape_type is not None:
             sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
             sql += "WHERE s.type_id = %(type_id)s "
-            params['type_id'] = shape_type.id
+            params["type_id"] = shape_type.id
         elif shape is not None:
             sql += "WHERE s.shape_id = %(shape_id)s "
-            params['shape_id'] = shape.id
+            params["shape_id"] = shape.id
 
         sql += sql_order
 
@@ -542,9 +530,10 @@ class Datalayer(models.Model):
 
         return result[0]
 
-    def last_time(self, shape_type: Optional[Type] = None,
-                   shape: Optional[Shape] = None):
-        """ Determines the first point in time a value is available. """
+    def last_time(
+        self, shape_type: Optional[Type] = None, shape: Optional[Shape] = None
+    ):
+        """Determine the first point in time a value is available."""
         if not self.is_loaded():
             return None
 
@@ -562,10 +551,10 @@ class Datalayer(models.Model):
         if shape_type is not None:
             sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
             sql += "WHERE s.type_id = %(type_id)s "
-            params['type_id'] = shape_type.id
+            params["type_id"] = shape_type.id
         elif shape is not None:
             sql += "WHERE s.shape_id = %(shape_id)s "
-            params['shape_id'] = shape.id
+            params["shape_id"] = shape.id
 
         sql += sql_order
         with connection.cursor() as c:
@@ -574,22 +563,19 @@ class Datalayer(models.Model):
 
         return result[0]
 
-
     # ---
 
     def download(self):
-        """ Automatic download of data source files. """
-
+        """Automatic download of data source files."""
         start = timer()
         self.info("Starting download")
         cls = self._get_class()
         cls.download()
         end = timer()
-        self.info("Finished download", {'end': end, 'duration': end-start})
+        self.info("Finished download", {"end": end, "duration": end - start})
 
     def process(self):
-        """ Consume/calculate data to insert into the database. """
-
+        """Consume/calculate data to insert into the database."""
         start = timer()
         self.info("Starting processing")
 
@@ -597,43 +583,41 @@ class Datalayer(models.Model):
         cls.process()
 
         end = timer()
-        self.info("Finished processing", {'duration': end-start})
+        self.info("Finished processing", {"duration": end - start})
 
 
 class DatalayerSource(models.Model):
-
     class SourcePIDType(models.TextChoices):
         DOI = "DOI", _("DOI")
         ROR = "ROR", _("ROR")
         ORCID = "ORCID", _("ORCID")
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
-
-    datalayer   = models.ForeignKey(
+    datalayer = models.ForeignKey(
         Datalayer,
         on_delete=models.RESTRICT,
-        related_name='sources',
-        blank=True, null=True
+        related_name="sources",
+        blank=True,
+        null=True,
     )
 
-    pid_type    = models.CharField(
-        max_length = 255,
-        choices    = SourcePIDType,
-        default    = SourcePIDType.DOI,
+    pid_type = models.CharField(
+        max_length=255,
+        choices=SourcePIDType,
+        default=SourcePIDType.DOI,
     )
-    pid         = models.CharField(max_length=255, blank=True)
+    pid = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True, null=True)
 
-    # todo: bibtex field?
+    # TODO: bibtex field?
 
     # in case of DOI
-    datacite            = models.JSONField(null=True, blank=True, editable=False)
+    datacite = models.JSONField(null=True, blank=True, editable=False)
     datacite_fetched_at = models.DateTimeField(null=True, blank=True, editable=False)
 
     def get_pid_url(self):
-
         match self.pid_type:
             case DatalayerSource.SourcePIDType.DOI:
                 return f"https://doi.org/{self.pid}"
@@ -645,41 +629,39 @@ class DatalayerSource(models.Model):
                 return f"https://orcid.org/{self.pid}"
 
             case _:
-                return '#'
-
+                return "#"
 
 
 class DatalayerLogEntry(models.Model):
-
     # levels based on Syslog https://datatracker.ietf.org/doc/html/rfc5424
-    EMERGENCY     = 'emerg'
-    ALERT         = 'alert'
-    CRITICAL      = 'crit'
-    ERROR         = 'err'
-    WARNING       = 'warning'
-    NOTICE        = 'notice'
-    INFORMATIONAL = 'info'
-    DEBUG         = 'debug'
+    EMERGENCY = "emerg"
+    ALERT = "alert"
+    CRITICAL = "crit"
+    ERROR = "err"
+    WARNING = "warning"
+    NOTICE = "notice"
+    INFORMATIONAL = "info"
+    DEBUG = "debug"
 
     SEVERITY_CHOICES = [
-        (DEBUG, 'Debug'),
-        (INFORMATIONAL, 'Informational'),
-        (NOTICE, 'Notice'),
-        (WARNING, 'Warning'),
-        (ERROR, 'Error'),
-        (CRITICAL, 'Critical'),
-        (ALERT, 'Alert'),
-        (EMERGENCY, 'Emergency')
+        (DEBUG, "Debug"),
+        (INFORMATIONAL, "Informational"),
+        (NOTICE, "Notice"),
+        (WARNING, "Warning"),
+        (ERROR, "Error"),
+        (CRITICAL, "Critical"),
+        (ALERT, "Alert"),
+        (EMERGENCY, "Emergency"),
     ]
 
-    datetime  = models.DateTimeField(auto_now_add=True)
+    datetime = models.DateTimeField(auto_now_add=True)
     # updated_at is no really necessary for an read-only log
 
     # this might be more ore less the channel of the log statement
     datalayer = models.ForeignKey(
         Datalayer,
         on_delete=models.RESTRICT,
-        related_name='logentries',
+        related_name="logentries",
     )
 
     level = models.CharField(max_length=10, choices=SEVERITY_CHOICES)

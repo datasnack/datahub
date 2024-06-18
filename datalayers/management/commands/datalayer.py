@@ -1,13 +1,7 @@
-import argparse
-
-import geopandas
-from sqlalchemy import create_engine
-
 from django.core.management.base import BaseCommand, CommandError
-from django.db import connection
-from django.conf import settings
 
 from datalayers.models import Datalayer
+
 
 class Command(BaseCommand):
     help = "Load given shapefile structure into the database"
@@ -17,18 +11,24 @@ class Command(BaseCommand):
         parser.add_argument("action", type=str)
 
     def handle(self, *args, **options):
-        dl = Datalayer.objects.get(key=options['key'])
+        dl = Datalayer.objects.get(key=options["key"])
 
-        match options['action']:
-            case 'download':
+        match options["action"]:
+            case "download":
                 try:
                     dl.download()
                 except NotImplementedError as e:
-                    raise CommandError("This Data Layer has no defined download() method.") from e
-            case 'process':
+                    raise CommandError(
+                        "This Data Layer has no defined download() method."
+                    ) from e
+            case "process":
                 try:
                     dl.process()
                 except NotImplementedError as e:
-                    raise CommandError("This Data Layer has no defined process() method.") from e
+                    raise CommandError(
+                        "This Data Layer has no defined process() method."
+                    ) from e
             case _:
-                raise CommandError('Unknown action "%s" to perform on Data Layer' % options['action'])
+                raise CommandError(
+                    'Unknown action "%s" to perform on Data Layer' % options["action"]
+                )

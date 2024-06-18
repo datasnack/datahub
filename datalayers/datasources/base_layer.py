@@ -6,40 +6,41 @@ from urllib.parse import urlparse
 
 import geopandas
 import pandas as pd
-
 from django.db import connection
+
 from datalayers.utils import get_engine
 
 
 class LayerTimeResolution(Enum):
-    YEAR = 'year'
-    MONTH = 'month'
-    DAY = 'date'
+    YEAR = "year"
+    MONTH = "month"
+    DAY = "date"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.value)
+
 
 class LayerValueType(Enum):
-    VALUE = 'value'
-    PERCENTAGE = 'percentage'
-    BINARY = 'binary'
+    VALUE = "value"
+    PERCENTAGE = "percentage"
+    BINARY = "binary"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.value)
 
-class BaseLayer():
 
-    def __init__(self):
+class BaseLayer:
+    def __init__(self) -> None:
         self.layer = None
-        self.output = 'db'
+        self.output = "db"
         self.rows = []
         self.df = None
 
-        self.time_col : LayerTimeResolution = LayerTimeResolution.YEAR
-        self.value_type : LayerValueType = LayerValueType.VALUE
+        self.time_col: LayerTimeResolution = LayerTimeResolution.YEAR
+        self.value_type: LayerValueType = LayerValueType.VALUE
 
         # Set this to a table name, in that the download method stores raw
-        # data, it's expected that those raw data contain a geometry column
+        # data, it's expected that those raw data contain a geometry column
         # with some sort of geometry (POINT, POLYGON, ...)
         # Should have the prefix data_
         self.raw_vector_data_table = None
@@ -51,22 +52,19 @@ class BaseLayer():
         # Optional suffix for formatting human readable values
         self.format_suffix = None
 
-
     def download(self):
-        """ Automatic download of data source files. """
+        """Automatic download of data source files."""
         raise NotImplementedError
 
     def process(self):
-        """ Consume/calculate data to insert into the database. """
+        """Consume/calculate data to insert into the database."""
         raise NotImplementedError
 
-
     def get_data_path(self) -> Path:
-        """ Path to where to store the data of the layer. """
+        """Path to where to store the data of the layer."""
         return Path(f"./data/datalayers/{self.layer.key}/")
 
     def str_format(self, value) -> str:
-
         match self.value_type:
             case LayerValueType.PERCENTAGE:
                 return f"{round(value * 100, self.precision)} %"
@@ -82,15 +80,20 @@ class BaseLayer():
         if self.df is None:
             self.df = pd.DataFrame(self.rows)
 
-        if self.output == 'db':
-            self.df.to_sql(self.layer.key, get_engine(), if_exists='replace')
-        elif self.output == 'fs':
-            self.df.to_csv(self.get_data_path() / f'{self.layer.key}.csv', index=False)
+        if self.output == "db":
+            self.df.to_sql(self.layer.key, get_engine(), if_exists="replace")
+        elif self.output == "fs":
+            self.df.to_csv(self.get_data_path() / f"{self.layer.key}.csv", index=False)
         else:
             raise ValueError(f"Unknown save option {self.output}.")
 
+    def _create_data_dir_if_not_exists(self) -> None:
+        Path(self.get_data_path()).mkdir(parents=True, exist_ok=True)
+
     def _save_url_to_file(self, url, folder=None, file_name=None) -> bool:
-        """ Downloads a URL to be saved on the parameter data directory.
+        """
+        Save file from a URL to local directory.
+
         Checks if file has already been downloaded. Return True in case
         file was downloaded/was already downloaded, otherwise False.
         """
@@ -103,20 +106,25 @@ class BaseLayer():
             folder = self.get_data_path()
 
         if os.path.isfile(folder / file_name):
-            #self.logger.debug("Skipping b/c already downloaded %s", url)
+            # self.logger.debug("Skipping b/c already downloaded %s", url)
             return True
 
         Path(folder).mkdir(parents=True, exist_ok=True)
 
         try:
             # call wget to download file
-            params = ['wget', "-O", folder / file_name, url]
+            params = ["wget", "-O", folder / file_name, url]
             subprocess.check_output(params)
 
             # calculate and log md5 of downloaded file
-            md5_output = subprocess.check_output(['md5sum', folder / file_name], text=True)
-            md5 = md5_output.split(' ', maxsplit=1)[0]
-            self.layer.warning("Downloaded file", {'url': url, 'file': (folder / file_name).as_posix(), 'md5': md5})
+            md5_output = subprocess.check_output(
+                ["md5sum", folder / file_name], text=True
+            )
+            md5 = md5_output.split(" ", maxsplit=1)[0]
+            self.layer.warning(
+                "Downloaded file",
+                {"url": url, "file": (folder / file_name).as_posix(), "md5": md5},
+            )
 
             return True
         except subprocess.CalledProcessError as error:
@@ -125,14 +133,18 @@ class BaseLayer():
             if os.path.exists(folder / file_name):
                 os.remove(folder / file_name)
 
-            self.layer.warning("Could not download file: %s, %s", {'url': url, 'error_msg': error.stderr})
+            self.layer.warning(
+                "Could not download file: %s, %s",
+                {"url": url, "error_msg": error.stderr},
+            )
 
-            #self.logger.warning("Could not download file: %s, %s", url, error.stderr)
+            # self.logger.warning("Could not download file: %s, %s", url, error.stderr)
 
         return False
 
     def _get_convex_hull_from_db(self):
-        """ Creates the convex hull of all loaded shapes and returns it.
+        """
+        Create the convex hull of all loaded shapes and return it.
 
         Be aware that, the convex hull will include MORE area than the actual
         shapes. Nevertheless it is much faster than UNION/Dissolve of existing
@@ -140,21 +152,18 @@ class BaseLayer():
         and in the loading stage an individual mapping for shape/AOI is performed
         , this is not an issue.
         """
-
         sql = "SELECT ST_ConvexHull(ST_Collect(shape.geometry)) as geometry FROM shapes_shape AS shape"
 
         gdf = geopandas.GeoDataFrame.from_postgis(
-            sql,
-            get_engine(), geom_col='geometry')
+            sql, get_engine(), geom_col="geometry"
+        )
 
         if len(gdf) == 0:
             raise ValueError("No shapes found in database.")
 
-        return gdf.at[0, 'geometry']
-
+        return gdf.at[0, "geometry"]
 
     def vector_data_map(self):
-
         if self.raw_vector_data_table is None:
             return None
 
@@ -183,5 +192,5 @@ class BaseLayer():
 
         if result:
             return result[0]
-        else:
-            return None
+
+        return None

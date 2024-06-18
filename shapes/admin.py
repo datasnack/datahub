@@ -6,13 +6,15 @@ from .models import Shape, Type
 
 
 class ShapeAdmin(admin.ModelAdmin):
-    readonly_fields=('area_sqm',)
+    readonly_fields = ("area_sqm",)
+
 
 admin.site.register(Shape, ShapeAdmin)
 
 
 class TypeAdmin(admin.ModelAdmin):
-    ordering=['position']
-    list_display = ["name","show_in_nav","position"]
+    ordering = ["position"]
+    list_display = ["name", "show_in_nav", "position"]
+
 
 admin.site.register(Type, TypeAdmin)

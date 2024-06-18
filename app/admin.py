@@ -1,15 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
+
 from .models import User
 
 # Update translation keys in admin
-admin.site.site_header = _('Data Hub administration')
-admin.site.site_title  = _('Data Hub admin')
+admin.site.site_header = _("Data Hub administration")
+admin.site.site_title = _("Data Hub admin")
 
 
 # Register your models here.
 admin.site.register(User, UserAdmin)
+
 
 class MyAdminSite(admin.AdminSite):
     def get_app_list(self, request):

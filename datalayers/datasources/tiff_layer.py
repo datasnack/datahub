@@ -1,35 +1,39 @@
 import os
 from pathlib import Path
 
+import fiona
 import numpy as np
 import pandas as pd
 import rasterio
 import rasterio.mask
-import fiona
 from shapely import wkt
 
 from shapes.models import Shape
+
 from .base_layer import BaseLayer
 
 
-
 class TiffLayer(BaseLayer):
-    """ Extends BaseParameter class for GeoTiff consumption. """
+    """Extends BaseParameter class for GeoTiff consumption."""
 
     def __init__(self):
         super().__init__()
         self.manual_nodata = None
 
     def consume(self, file, band, shape):
-        """ Derived layer need to implement this method. """
+        """Implement this method in the Derived Data Layer."""
         raise NotImplementedError
 
     def get_tiff_files(self, param_dir):
-        files = sorted([s for s in os.listdir(param_dir) if s.rpartition('.')[2] in ('tiff','tif')])
-        return files
+        return sorted(
+            [
+                s
+                for s in os.listdir(param_dir)
+                if s.rpartition(".")[2] in ("tiff", "tif")
+            ]
+        )
 
     def process(self, shapes=None, save_output=False, param_dir=None):
-
         if param_dir is None:
             param_dir = self.get_data_path()
 
@@ -42,12 +46,12 @@ class TiffLayer(BaseLayer):
         i = 1
 
         for file in files:
-            #self.logger.info("loading file (%s of %s): %s", i, file_count, file)
+            # self.logger.info("loading file (%s of %s): %s", i, file_count, file)
             i += 1
 
             with rasterio.open(param_dir / file) as src:
                 nodata = src.nodata
-                #self.logger.debug("No data is: %s", nodata)
+                # self.logger.debug("No data is: %s", nodata)
 
                 # GeoTiff has NO NoData meta data set, try to use custom
                 # set NoData value
@@ -59,23 +63,23 @@ class TiffLayer(BaseLayer):
                     raise ValueError(f"No NoData value for GeoTiff {file}")
 
                 for shape in shapes:
-                    #self.logger.debug("loading shape: %s", shape['name'])
+                    # self.logger.debug("loading shape: %s", shape['name'])
                     if isinstance(shape, Shape):
-
                         # Shape uses the GeoDjango Model and so has not a shapely geometry
                         # so convert it. amazing right?
 
-
                         mask = [wkt.loads(shape.geometry.wkt)]
                     elif "geometry" in shape:
-                        mask = [shape['geometry']]
+                        mask = [shape["geometry"]]
                     elif "file" in shape:
-                        with fiona.open(shape['file'], "r") as shapefile:
+                        with fiona.open(shape["file"], "r") as shapefile:
                             mask = [feature["geometry"] for feature in shapefile]
                     else:
                         raise ValueError("No geometry found for given shape.")
 
-                    out_image, _ = rasterio.mask.mask(src, mask, crop=True, nodata=nodata)
+                    out_image, _ = rasterio.mask.mask(
+                        src, mask, crop=True, nodata=nodata
+                    )
                     band1 = out_image[0]
 
                     # To mask NoData cells we use np.nan so we can use np.nan*-methods.
@@ -86,15 +90,18 @@ class TiffLayer(BaseLayer):
                     if np.issubdtype(band1.dtype, np.integer):
                         band1 = band1.astype(np.float32)
 
-                    band1[band1==nodata] = np.nan
+                    band1[band1 == nodata] = np.nan
 
                     # Check if the mask has identified any cells
                     if np.count_nonzero(~np.isnan(band1)) == 0:
-                        self.layer.warning("For shape %s (id=%s) no cells could be identified inside the mask for file %s", {
-                            'shape': shape.name,
-                            'shape_id': shape.id,
-                            'file': file,
-                        })
+                        self.layer.warning(
+                            "For shape %s (id=%s) no cells could be identified inside the mask for file %s",
+                            {
+                                "shape": shape.name,
+                                "shape_id": shape.id,
+                                "file": file,
+                            },
+                        )
                         continue
 
                     self.consume(file, band1, shape)

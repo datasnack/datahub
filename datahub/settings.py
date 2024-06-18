@@ -22,66 +22,64 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     INSTALLED_USER_APPS=(list, []),
-    LANGUAGES=(dict, {'en': 'English'}),
-    DB_ENGINE=(str, 'django.contrib.gis.db.backends.postgis'),
+    LANGUAGES=(dict, {"en": "English"}),
+    DB_ENGINE=(str, "django.contrib.gis.db.backends.postgis"),
     DATAHUB_LOGIN_REQUIRED=(bool, True),
-    DATAHUB_NAME=(str, 'Data Hub'),
+    DATAHUB_NAME=(str, "Data Hub"),
     DATAHUB_CENTER_X=(float, 0.0),
     DATAHUB_CENTER_Y=(float, 0.0),
     DATAHUB_CENTER_ZOOM=(int, 0),
-
-    DATAHUB_DATALAYER_DIR=(str, 'src'),
-    DATAHUB_DATA_DIR=(str, 'data')
+    DATAHUB_DATALAYER_DIR=(str, "src"),
+    DATAHUB_DATA_DIR=(str, "data"),
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Take environment variables from .env file
-environ.Env.read_env(BASE_DIR / '.env')
+environ.Env.read_env(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env("DEBUG")
 
 LOGGING = {
-    'version': 1,
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
+    "version": 1,
+    "filters": {
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
         }
     },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
         }
     },
-    'loggers': {
-    }
+    "loggers": {},
 }
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
-INTERNAL_IPS = ['127.0.0.1']
+INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.humanize',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "django.contrib.gis",
     "datalayers",
     "shapes",
@@ -90,67 +88,67 @@ INSTALLED_APPS = [
 ]
 
 # inject potential user apps that should be able to overwrite templates in app
-INSTALLED_APPS += env('INSTALLED_USER_APPS')
+INSTALLED_APPS += env("INSTALLED_USER_APPS")
 
-INSTALLED_APPS += ['app']
+INSTALLED_APPS += ["app"]
 
-INSTALLED_USER_APPS = env('INSTALLED_USER_APPS')
+INSTALLED_USER_APPS = env("INSTALLED_USER_APPS")
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'app.middleware.require_login_middleware.RequireLoginMiddleware'
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "app.middleware.require_login_middleware.RequireLoginMiddleware",
 ]
 
 if DEBUG:
     # Enable debug toolbar only if DEBUG=True
-    INSTALLED_APPS = INSTALLED_APPS + ['debug_toolbar']
-    MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
+    INSTALLED_APPS = [*INSTALLED_APPS, "debug_toolbar"]
+    MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware", *MIDDLEWARE]
 
-ROOT_URLCONF = 'datahub.urls'
+ROOT_URLCONF = "datahub.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates/'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'app.context_processors.add_datahub_login_required',
-                'shapes.context_processors.add_navigation',
-                'datalayers.context_processors.add_navigation',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": ["templates/"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "app.context_processors.add_datahub_login_required",
+                "shapes.context_processors.add_navigation",
+                "datalayers.context_processors.add_navigation",
             ],
-            'builtins': [
-                'app.templatetags.icon',
-            ]
+            "builtins": [
+                "app.templatetags.icon",
+            ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'datahub.wsgi.application'
+WSGI_APPLICATION = "datahub.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE':   env('DB_ENGINE'),
-        'NAME':     env('DB_NAME'),
-        'USER':     env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST':     env('DB_HOST'),
-        'PORT':     env('DB_PORT'),
+    "default": {
+        "ENGINE": env("DB_ENGINE"),
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),
     }
 }
 
@@ -160,27 +158,27 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
-AUTH_USER_MODEL = 'app.User'
+AUTH_USER_MODEL = "app.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -188,14 +186,14 @@ LOCALE_PATHS = [
     "./locale/",
 ]
 
-LANGUAGE_CODE = 'en'
+LANGUAGE_CODE = "en"
 
 LANGUAGES = [
     ("en", _("English")),
     ("de", _("German")),
 ]
 LANGUAGES = []
-for k,v in env('LANGUAGES').items():
+for k, v in env("LANGUAGES").items():
     LANGUAGES.append((k, v))
 
 USE_TZ = True
@@ -203,25 +201,23 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_ROOT= BASE_DIR / 'static'
+STATIC_ROOT = BASE_DIR / "static"
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
-STATICFILES_DIRS = [
-]
+STATICFILES_DIRS = []
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ]
 }
 
@@ -229,36 +225,37 @@ REST_FRAMEWORK = {
 # different tags.
 TAGGIT_CASE_INSENSITIVE = True
 
-LOGIN_REDIRECT_URL  = "app:home"
+LOGIN_REDIRECT_URL = "app:home"
 LOGOUT_REDIRECT_URL = "app:home"
 
 LOGIN_REQUIRED_URLS = ()
 LOGIN_REQUIRED_URLS_EXCEPTIONS = (
-    r'/i18n/setlang/$',
-    r'/admin(.*)$',
-    r'/accounts/login(.*)$',
+    r"/i18n/setlang/$",
+    r"/admin(.*)$",
+    r"/accounts/login(.*)$",
 )
 
 DATAHUB_VERSION = __version__
 
-DATAHUB_LOGIN_REQUIRED = env('DATAHUB_LOGIN_REQUIRED')
-DATAHUB_NAME = env('DATAHUB_NAME')
+DATAHUB_LOGIN_REQUIRED = env("DATAHUB_LOGIN_REQUIRED")
+DATAHUB_NAME = env("DATAHUB_NAME")
 
 # center leaflet maps on the following coordinates:
-DATAHUB_CENTER_X=env('DATAHUB_CENTER_X')
-DATAHUB_CENTER_Y=env('DATAHUB_CENTER_Y')
+DATAHUB_CENTER_X = env("DATAHUB_CENTER_X")
+DATAHUB_CENTER_Y = env("DATAHUB_CENTER_Y")
 
 # Zoom level of the initial map, where 0 shows the whole world and
 # 18 being on the level of a city block. Demonstration of zoom
 # levels: https://leafletjs.com/examples/zoom-levels/
-DATAHUB_CENTER_ZOOM=env('DATAHUB_CENTER_ZOOM')
+DATAHUB_CENTER_ZOOM = env("DATAHUB_CENTER_ZOOM")
 
-DATAHUB_DATALAYER_DIR = BASE_DIR / env('DATAHUB_DATALAYER_DIR')
-DATAHUB_DATA_DIR = BASE_DIR / env('DATAHUB_DATA_DIR')
+DATAHUB_DATALAYER_DIR = BASE_DIR / env("DATAHUB_DATALAYER_DIR")
+DATAHUB_DATA_DIR = BASE_DIR / env("DATAHUB_DATA_DIR")
 
 INSTANCE_VERSION = False
 try:
     from src import __version__ as instance_version
+
     INSTANCE_VERSION = instance_version
-except:
+except:  # noqa: S110, E722 disable for this, we just want to know if a version can be found or not
     pass
