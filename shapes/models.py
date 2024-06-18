@@ -30,13 +30,12 @@ class MyManager(models.Manager):
 
 # Create your models here.
 class Shape(models.Model):
-    # Regular Django fields corresponding to the attributes in the
-    # world borders shapefile.
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     name = models.CharField(max_length=255)
+    attribution_text = models.CharField(blank=True, max_length=255)
+    attribution_url = models.URLField(blank=True, max_length=255)
     type = models.ForeignKey(
         Type,
         on_delete=models.RESTRICT,

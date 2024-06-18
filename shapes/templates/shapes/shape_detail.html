@@ -92,6 +92,28 @@
 					</td>
 				</tr>
 				{% endif %}
+
+				{% if shape.attribution_url %}
+					{% if shape.attribution_text %}
+						<tr class="small">
+							<th>{% translate "Geometry attribution" %}</th>
+							<td><a href="{{ shape.attribution_url }}">{{ shape.attribution_text }}</a></td>
+						</tr>
+					{% else %}
+					<tr class="small">
+						<th>{% translate "Geometry attribution" %}</th>
+						<td><a href="{{ shape.attribution_url }}">{{ shape.attribution_url }}</a></td>
+					</tr>
+					{% endif %}
+				{% else %}
+					{% if shape.attribution_text%}
+					<tr class="small">
+						<th>{% translate "Geometry attribution" %}</th>
+						<td>{{ shape.attribution_url }}</td>
+					</tr>
+					{% endif %}
+				{% endif %}
+
 			</tbody>
 		</table>
 	</div>

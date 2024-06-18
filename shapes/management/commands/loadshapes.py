@@ -29,21 +29,24 @@ class Command(BaseCommand):
         # optional cols, if not set make it empty
         if "properties" not in gdf.columns:
             gdf["properties"] = "{}"
+        if "attribution_text" not in gdf.columns:
+            gdf["attribution_text"] = ""
+        if "attribution_url" not in gdf.columns:
+            gdf["attribution_url"] = ""
 
         # make sure our required columns exist
         for col in required_cols:
             if col not in gdf.columns:
-                msg = f"{col} column inside geo data is required"
-                raise CommandError(msg)
+                raise CommandError(f"{col} column inside geo data is required")
 
         # first create types from strings
-        pos = 1
+        order_position = 1
         type_map = {}
         for t in gdf["type"].unique():
-            tobj = Type(key=t, name=t.title(), position=pos)
+            tobj = Type(key=t, name=t.title(), position=order_position)
             tobj.save()
             type_map[t] = tobj.id
-            pos += 10
+            order_position += 10
 
         def get_type_id(t) -> int:
             return type_map[t]
@@ -68,6 +71,8 @@ class Command(BaseCommand):
                 "updated_at",
                 "id",
                 "name",
+                "attribution_text",
+                "attribution_url",
                 "type_id",
                 "properties",
                 "geometry",
@@ -75,15 +80,18 @@ class Command(BaseCommand):
         ].to_postgis(Shape._meta.db_table, engine, if_exists="append")
 
         gdf_with_parent = gdf[gdf["parent_id"].notna()].copy()
-        gdf_with_parent["parent_id"] = gdf_with_parent["parent_id"].astype(
-            "int"
-        )  # no isna() rows left => cast to int, so SQLAlchemy can write to PostGis
+
+        # no isna() rows left => cast to int, so SQLAlchemy can write to PostGIS
+        gdf_with_parent["parent_id"] = gdf_with_parent["parent_id"].astype("int")
+
         gdf_with_parent[
             [
                 "created_at",
                 "updated_at",
                 "id",
                 "name",
+                "attribution_text",
+                "attribution_url",
                 "type_id",
                 "parent_id",
                 "properties",
