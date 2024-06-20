@@ -50,7 +50,6 @@ def shape_geometry(request):
         t = get_object_or_404(Type, key=shape_type)
 
         shapes = Shape.objects.filter(parent_id=shape_parent_id, type_id=t.id)
-        print("asdasasdadasd")
         name = slugify("siblings")
 
     elif shape_type := request.GET.get("shape_type", None):
