@@ -78,8 +78,8 @@ $(document).ready(function() {
 </script>
 
 <script>
-	var map = get_base_map('map');
-	load_shape(map, {shape_type: '{{ type.key }}'});
+	var map = new MyMap('map');
+	map.load_shape({shape_type: '{{ type.key }}', name: "{{ type.name}}"});
 
   function highlightShape(e) {
     map.eachLayer(function (layer) {

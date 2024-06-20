@@ -123,6 +123,16 @@
 
 		<div class="mb-3">
 			<button id="map-show-bbox" class="btn btn-sm btn-outline-secondary">{% translate "Show BBox" %}</button>
+
+			<div class="btn-group" role="group">
+				{% if shape.parent_id %}
+				<button id="map-show-parent" data-query='{"shape_id": {{shape.parent.id}}, "name": "{% translate "Parent" %}"}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Parent shape" %}</button>
+				{% endif %}
+				<button id="map-show-siblings" data-query='{"shape_type": "{{shape.type.key}}"{% if shape.parent_id %}, "shape_parent_id": {{shape.parent_id}}{% endif %}, "name": "{% translate "Siblings" %}"}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Siblings" %}</button>
+				{% if shape.children.all.count > 0 %}
+				<button id="map-show-children" data-query='{"shape_parent_id": {{shape.id}}, "name": "{% translate "Children" %}"}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Child shapes" %}</button>
+				{% endif %}
+			</div>
 		</div>
 	</div>
 </div>
@@ -209,12 +219,16 @@
 
 {% block footer %}
 <script>
-	var map = get_base_map('map');
-	load_shape(map, {shape_id: '{{ shape.id }}'});
+	var map = new MyMap('map');
+	map.load_shape({shape_id: '{{ shape.id }}', name: "{{ shape.name }}"});
 
 	document.getElementById('map-show-bbox').addEventListener('click', function (event) {
-		load_shape_bbox(map, {shape_id: '{{ shape.id }}'});
+		map.load_shape_bbox({shape_id: '{{ shape.id }}', name: "{{ shape.name }} BBox"});
 	});
+
+	document.querySelectorAll('.js-map-show').forEach(el => el.addEventListener('click', function (event) {
+		map.load_shape(JSON.parse(this.dataset.query));
+	}));
 </script>
 
 <script>

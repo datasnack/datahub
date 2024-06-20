@@ -44,10 +44,23 @@ def shape_geometry(request):
     if shape_id := request.GET.get("shape_id", None):
         shapes = [Shape.objects.get(pk=shape_id)]
         name = slugify(shapes[0].name)
+    elif (shape_type := request.GET.get("shape_type", None)) and (
+        shape_parent_id := request.GET.get("shape_parent_id", None)
+    ):
+        t = get_object_or_404(Type, key=shape_type)
+
+        shapes = Shape.objects.filter(parent_id=shape_parent_id, type_id=t.id)
+        print("asdasasdadasd")
+        name = slugify("siblings")
+
     elif shape_type := request.GET.get("shape_type", None):
         t = get_object_or_404(Type, key=shape_type)
         shapes = t.shapes.all()
         name = slugify(t.name)
+    elif shape_parent_id := request.GET.get("shape_parent_id", None):
+        shape = Shape.objects.get(pk=shape_parent_id)
+        shapes = shape.children.all()
+        name = slugify(f"{shape.name} children")
     else:
         HttpResponseNotFound("No shapes found")
 
