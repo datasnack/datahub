@@ -35,3 +35,5 @@ tzdata==2023.4
 django-debug-toolbar==4.3.0
 django-taggit==5.0.1
 geojson==3.1.0
+cdsapi==0.7.0
+xarray==2024.5.0
