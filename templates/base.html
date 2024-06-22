@@ -291,6 +291,7 @@
 
 		document.addEventListener('keydown', function(event) {
 			if (event.key.toLowerCase() === 'k' && (event.ctrlKey || event.metaKey)) {
+				event.preventDefault(); // prevent focus/popup of Search Bar in Firefox
 				if (document.querySelectorAll('.aa-DetachedOverlay').length > 0) {
 					myautosearch.destroy();
 					myautosearch = null;
