@@ -290,7 +290,7 @@
 		});
 
 		document.addEventListener('keydown', function(event) {
-			if (event.key === 'k' && (event.ctrlKey || event.metaKey)) {
+			if (event.key.toLowerCase() === 'k' && (event.ctrlKey || event.metaKey)) {
 				if (document.querySelectorAll('.aa-DetachedOverlay').length > 0) {
 					myautosearch.destroy();
 					myautosearch = null;
