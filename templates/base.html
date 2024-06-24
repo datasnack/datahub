@@ -48,10 +48,10 @@
 
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-			<button id="open-search" type="button" class="btn btn-sm btn-outline-secondary m-searchbutton" aria-label="Search">
+			<button id="open-search" type="button" class="btn btn-sm btn-outline-secondary m-searchbutton" aria-label="{% translate "Search" %}">
 				<span class="m-searchbutton-label">
 					<span class="m-searchbutton-icon">{% icon "search" %}</span>
-					<span class="m-searchbutton-placeholder">Search</span>
+					<span class="m-searchbutton-placeholder">{% translate "Search" %}</span>
 				</span>
 				<span class="m-searchbutton-keys">
 					<kbd class="m-searchbutton-key m-searchbutton-key--mod"></kbd>
@@ -59,7 +59,7 @@
 				</span>
 			</button>
 			{% comment %}
-			agolia/autcomplete needs a container where it renders the inputfield, since we
+			agolia/autocomplete needs a container where it renders the inputfield, since we
 			have our own button, we hide it. There is no functionalty to hide/provide a
 			custom html for the trigger element, hiding it is actually recommended
 			by the github disussions from the repo. https://github.com/algolia/autocomplete/discussions/1029
