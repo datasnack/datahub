@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+{% load i18n %}
+{% load datalayer_value %}
+{% load datalayerformat %}
+
+
+{% block title %}{% translate "Location picker" %}{% endblock %}
+
+{% block content %}
+
+<h1>{% translate "Location picker" %}</h1>
+
+
+{% if shapes %}
+
+<div class="row">
+<div class="col-12">
+	<p>
+		{% translate "Your point matches is inside the following shapes:" %}
+	</p>
+
+	{% for shape in shapes %}
+	<details id="details{{ forloop.counter0 }}" class="card mb-3">
+        <summary class="card-header">
+            <a href="{{ shape.get_absolute_url }}">{{ shape.name }}</a>
+			<span class="text-muted">(<a href="{{ shape.type.get_absolute_url }}">{{ shape.type.name }}</a>)</span>
+		</summary>
+        <div class="card-body">
+			<div class="row">
+				<div class="col-12 col-lg-8">
+					<table class="table table-sm small table-striped" id="datalayers{{ forloop.counter0 }}">
+						<thead>
+							<tr>
+								<th>{% translate "Category" %}</th>
+								<th>{% translate "Data Layer" %}</th>
+								<th>{% translate "First" %}</th>
+								<th>{% translate "Last" %}</th>
+								<th>
+									{% translate "Latest value" %}
+								</th>
+								<th class="no-sort text-end">{% translate "Actions" %}</th>
+							</tr>
+						</thead>
+						<tbody>
+						{% for dl in datalayers %}
+							<tr>
+								<td class="align-middle">{{ dl.category }}</td>
+								<td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
+
+								{% with dlv=shape|datalayer_first_value:dl %}
+								<td class="align-middle">{{ dlv.date }}</td>
+								{% endwith %}
+
+								{% with dlv=shape|datalayer_value:dl %}
+								<td class="align-middle">{{ dlv.date }}</td>
+								<td class="align-middle js-value" data-order="{{ dlv.value }}"
+								  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
+								  data-value-raw="{{ dlv.value }}">
+									{{ dlv.value|datalayerformat:dl }}
+								</td>
+								{% endwith %}
+
+								<td>
+									<div class="d-flex justify-content-end">
+										<button
+										data-container="charts{{ forloop.parentloop.counter0 }}"
+										data-datalayer-id="{{ dl.id }}"
+										data-shape-id="{{shape.id}}"
+										data-datalayer-name="{{ dl.name }}"
+										title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-link js-add-datalayer-chart">{% icon "graph" %}</button>
+										<a title="{% translate "Download processed data for this shape and Data Layer" %}" href="{% url "datalayer_data" %}?datalayer_id={{ dl.id}}&shape_id={{shape.id}}&format=csv" class="btn btn-sm btn-link">{% icon "download" %}</a>
+										<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link">{% icon "arrow-right" %}</a>
+									</div>
+								</td>
+							</tr>
+						{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				<div class="col-12 col-lg-4">
+					<div id="map{{ forloop.counter0 }}" style="width: 100%; height: 250px"></div>
+				</div>
+
+				<div class="col-12">
+					<div id="charts{{ forloop.counter0 }}"></div>
+				</div>
+			</div>
+		</div>
+	</details>
+	{%endfor%}
+</div>
+</div>
+
+
+<hr>
+{% endif %}
+<p>
+	Shows shapes and known Data Layer values for a given coordinate.
+</p>
+
+<div class="row">
+	<div class="col-md-6">
+
+		<div class="mb-3">
+			{% translate "Provide location of interest:" %}
+		</div>
+
+		<div class="mb-3">
+			<div id="map" style="width: 100%; height: 300px"></div>
+			<div class="form-text">{% translate "Click on the map to set coordinates in the form." %}</div>
+		</div>
+
+		<form action="{% url 'app:tools_picker' %}" method="GET" class="mb-3">
+			<div class="row">
+				<div class="col-6 mb-3">
+					<label for="lat">{% translate "Latitude" %}</label>
+					<input type="number" class="form-control" id="lat" name="lat" step="any"  min="-90" max="90" placeholder="{% translate "Latitude" %}" required>
+				</div>
+				<div class="mb-3 col-6">
+					<label for="lng">{% translate "Longitude" %}</label>
+					<input type="number" class="form-control" id="lng" name="lng" step="any" min="-180" max="180" placeholder="{% translate "Longitude" %}" required>
+				</div>
+			</div>
+
+			<button type="submit" class="btn btn-primary">Submit</button>
+		</form>
+	</div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<script>
+var picker = new MyMap('map');
+
+var marker = false;
+picker.map.on("click", function (event) {
+	if (marker) {
+		picker.map.removeLayer(marker)
+	}
+
+	document.getElementById('lat').value = event.latlng.lat;
+	document.getElementById('lng').value = event.latlng.lng;
+
+	marker = L.marker(event.latlng).addTo(picker.map);
+});
+
+{% if shapes %}
+{% for shape in shapes %}
+var map{{ forloop.counter0 }} = new MyMap('map{{ forloop.counter0 }}');
+map{{ forloop.counter0 }}.load_shape({shape_id: '{{ shape.id }}', name: '{{ shape.name }}'});
+
+var marker{{ forloop.counter0 }} = L.marker([{{ point.y}}, {{point.x}}]).addTo(map{{ forloop.counter0 }}.map);
+
+var $table{{ forloop.counter0 }} = $('#datalayers{{ forloop.counter0 }}').DataTable({
+	pageLength: 10,
+	//order: [[0, 'asc']],
+	columnDefs: [
+		{targets: 'no-sort', orderable: false }
+	]
+});
+
+document.getElementById('details{{ forloop.counter0 }}').addEventListener('toggle', (event) => {
+	console.log("asdasdad");
+	map{{ forloop.counter0 }}.map.invalidateSize();
+	$('#datalayers{{ forloop.counter0 }}').DataTable().responsive.recalc();
+});
+
+{%endfor%}
+{% endif %}
+
+
+
+$('.js-add-datalayer-chart').on('click', function() {
+
+	var $this = $(this)
+
+	var container      = $this.attr('data-container');
+	var shape_id       = $this.attr('data-shape-id');
+	var datalayer_id   = $this.attr('data-datalayer-id');
+	var datalayer_name = $this.attr('data-datalayer-name');
+
+	var traces = [{
+		x: [],
+		y: [],
+		mode: 'lines+markers',
+		name: datalayer_name,
+	}];
+	var layout = {
+		title: datalayer_name,
+		xaxis: {
+			title: 'Time',
+		},
+		yaxis: {
+			title: 'Value',
+			automargin: true, // prevent tick labels from beeing cut off
+		},
+		showlegend: true,
+		legend: {
+			orientation: "h",
+			x: 0,
+			y: -0.2
+		},
+		margin: {
+			l: 50,
+			r: 10,
+			b: 100,
+			t: 50,
+			pad: 4
+		},
+	};
+
+	var config = {
+		responsive: true
+	};
+
+	var charts = document.getElementById(container);
+	var chart = document.createElement("div");
+	charts.insertBefore(chart, charts.firstChild);
+
+	Plotly.newPlot(chart, traces, layout, config).then(function() {
+		$.getJSON(`/api/datalayers/data?datalayer_id=${datalayer_id}&shape_id=${shape_id}&format=plotly`, function(response) {
+			// inject lyout for the update as well. The xaxis.type seetings get's lost otherwise
+			Plotly.update(chart, {
+				x: [response.x],
+				y: [response.y],
+			}, layout, [0]);
+		});
+	});
+});
+
+</script>
+{% endblock %}

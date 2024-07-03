@@ -1,3 +1,4 @@
+from django.contrib.gis.geos import Point
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -20,7 +21,7 @@ def home(request):
 
 def search(request):
     """
-    Simple LIKE search for Data Layers and shapes.
+    Perform LIKE search for Data Layers and shapes.
 
     Returns result in format for agolia/autocomplete-js.
     """
@@ -51,3 +52,32 @@ def search(request):
         )
 
     return JsonResponse({"results": [results]})
+
+
+def tools_picker(request):
+    """View for a location picker that selects all available shapes on the location."""
+    context = {
+        "shapes": None,
+        "datalayers": None,
+        "point": None,
+    }
+
+    lat = request.GET.get("lat")
+    lng = request.GET.get("lng")
+
+    if lat is not None and lng is not None:
+        point = Point(float(lng), float(lat))
+        shapes = Shape.objects.filter(geometry__contains=point).order_by(
+            "type__position"
+        )
+        context["shapes"] = shapes
+
+        context["point"] = point
+
+        all_layers = Datalayer.objects.all()
+        context["datalayers"] = []
+        for layer in all_layers:
+            if layer.is_loaded():
+                context["datalayers"].append(layer)
+
+    return render(request, "tools/picker.html", context)
