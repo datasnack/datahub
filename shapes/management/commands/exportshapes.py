@@ -46,13 +46,14 @@ class Command(BaseCommand):
             )
 
         path = Path("data/") / file
-        shapes = Shape.objects.all().order_by("type__position", "name")
+        shapes = Shape.objects.all().order_by("type__position", "parent_id", "name")
 
         # transform objects into GeoDataFrame
         rows = []
         for s in shapes:
             r = {
                 "id": s.id,
+                "parent": s.parent.name if s.parent is not None else None,
                 "name": s.name,
                 "type": s.type.key,
             }
