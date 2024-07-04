@@ -21,6 +21,7 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
+    USE_X_FORWARDED_HOST=(bool, False),
     INSTALLED_USER_APPS=(list, []),
     LANGUAGES=(dict, {"en": "English"}),
     DB_ENGINE=(str, "django.contrib.gis.db.backends.postgis"),
@@ -67,6 +68,8 @@ LOGGING = {
 }
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+
+USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 INTERNAL_IPS = ["127.0.0.1"]
 
