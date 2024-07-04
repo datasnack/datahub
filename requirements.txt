@@ -8,7 +8,7 @@ cligj==0.7.2
 datacite==1.1.3
 Django==5.0.6
 django-environ==0.11.2
-fiona==1.9.5
+fiona==1.9.6
 GeoAlchemy2==0.14.3
 geopandas==0.14.4
 meteostat==1.6.7
