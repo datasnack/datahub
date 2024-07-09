@@ -4,6 +4,9 @@ from io import BytesIO
 import geopandas
 import shapely
 import shapely.geometry
+from geojson import Feature, FeatureCollection, Point, Polygon
+from shapely import wkt
+
 from django.http import (
     FileResponse,
     HttpResponseBadRequest,
@@ -12,8 +15,6 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
-from geojson import Feature, FeatureCollection, Point, Polygon
-from shapely import wkt
 
 from shapes.models import Shape, Type
 

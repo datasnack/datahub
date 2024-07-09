@@ -1,5 +1,6 @@
-from django.conf import settings
 from sqlalchemy import create_engine
+
+from django.conf import settings
 
 
 def get_engine():

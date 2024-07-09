@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import geopandas
 import pandas as pd
+
 from django.db import connection
 
 from datalayers.utils import get_engine

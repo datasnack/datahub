@@ -3,8 +3,9 @@ from pathlib import Path
 
 import geopandas
 import pandas as pd
-from django.core.management.base import BaseCommand, CommandError
 from shapely import wkt
+
+from django.core.management.base import BaseCommand, CommandError
 
 from shapes.models import Shape
 

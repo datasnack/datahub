@@ -4,8 +4,8 @@ from pathlib import Path
 
 import numpy as np
 
-from datalayers.datasources.tiff_layer import TiffLayer
 from datalayers.datasources.base_layer import LayerValueType
+from datalayers.datasources.tiff_layer import TiffLayer
 
 
 class CopernicusLayer(TiffLayer):

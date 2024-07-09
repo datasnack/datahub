@@ -5,11 +5,12 @@ from timeit import default_timer as timer
 from typing import Optional
 
 import pandas as pd
+from taggit.managers import TaggableManager
+
 from django.db import connection, models
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from taggit.managers import TaggableManager
 
 from datalayers.utils import dictfetchone, get_engine
 from shapes.models import Shape, Type

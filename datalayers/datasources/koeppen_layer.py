@@ -4,8 +4,8 @@ from pathlib import Path
 
 import numpy as np
 
-from datalayers.datasources.tiff_layer import TiffLayer
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
+from datalayers.datasources.tiff_layer import TiffLayer
 
 
 class KoeppenLayer(TiffLayer):

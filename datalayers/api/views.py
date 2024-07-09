@@ -3,6 +3,8 @@ from io import BytesIO
 import geopandas
 import numpy as np
 import pandas as pd
+from shapely import wkt
+
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
@@ -13,7 +15,6 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
-from shapely import wkt
 
 from datalayers.models import Datalayer
 from datalayers.utils import get_engine

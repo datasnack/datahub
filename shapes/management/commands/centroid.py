@@ -1,6 +1,7 @@
+from shapely import wkb
+
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
-from shapely import wkb
 
 from shapes.models import Shape, Type
 

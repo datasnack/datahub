@@ -1,11 +1,12 @@
 import argparse
 
 import geopandas
+from sqlalchemy import create_engine
+
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 from django.utils.timezone import now
-from sqlalchemy import create_engine
 
 from shapes.models import Shape, Type
 
