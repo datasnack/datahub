@@ -60,7 +60,7 @@ geopandas==0.14.4
     # via
     #   datahub (pyproject.toml)
     #   osmnx
-gunicorn==21.2.0
+gunicorn==22.0.0
     # via datahub (pyproject.toml)
 idna==3.7
     # via requests
