@@ -11,6 +11,7 @@ django-environ==0.11.2
 fiona==1.9.6
 GeoAlchemy2==0.14.3
 geopandas==0.14.4
+gunicorn==21.2.0
 meteostat==1.6.7
 numpy==1.26.4
 openpyxl==3.1.2

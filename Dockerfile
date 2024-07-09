@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     rsync \
     wget \
-    # postgresql-client has to match with the used PostgreSQL server, in our case v16.
+    nginx \
+    # postgresql-client has to match with the PostgreSQL server, in our case v16.
     # Ubuntu 24 installs v16 so we are good. It's used for dumping/importing the database
     postgresql-client \
     && apt-get clean \
@@ -25,6 +26,9 @@ COPY ./requirements.txt /app/requirements.txt
 WORKDIR /app
 RUN /opt/datahub/venv/bin/pip install --no-cache-dir -r requirements.txt
 COPY . /app
+
+
+COPY ./nginx.conf /etc/nginx/sites-enabled/default
 
 EXPOSE 8000
 
