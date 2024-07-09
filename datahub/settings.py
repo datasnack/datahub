@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 
 import environ
+
 from django.utils.translation import gettext_lazy as _
 
 from . import __version__
@@ -21,6 +22,7 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
+    CSRF_TRUSTED_ORIGINS=(list, []),
     USE_X_FORWARDED_HOST=(bool, False),
     INSTALLED_USER_APPS=(list, []),
     LANGUAGES=(dict, {"en": "English"}),
@@ -68,7 +70,7 @@ LOGGING = {
 }
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
-
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 INTERNAL_IPS = ["127.0.0.1"]
