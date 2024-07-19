@@ -10,9 +10,9 @@ dependencies = [
     "psycopg[binary]==3.2.1",
     "datacite==1.1.3",
     "django-environ==0.11.2",
-    "geopandas==0.14.4",
+    "geopandas==1.0.1",
     "gunicorn==22.0.0",
-    "meteostat==1.6.7",
+    "meteostat==1.6.8",
     "numpy==1.26.4",
     "openpyxl==3.1.2",
     "osmnx==1.9.3",
@@ -25,6 +25,7 @@ dependencies = [
     "geojson==3.1.0",
     "cdsapi==0.7.0",
     "xarray==2024.5.0",
+    "fiona", # TiffLayer uses fiona for openening mask files, refactor to not depend on it
 ]
 
 [project.optional-dependencies]

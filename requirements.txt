@@ -2,7 +2,7 @@
 #    uv pip compile pyproject.toml -o requirements.txt
 affine==2.4.0
     # via rasterio
-asgiref==3.7.2
+asgiref==3.8.1
     # via django
 attrs==23.2.0
     # via
@@ -15,9 +15,10 @@ cads-api-client==1.1.0
     # via cdsapi
 cdsapi==0.7.0
     # via datahub (pyproject.toml)
-certifi==2023.11.17
+certifi==2024.7.4
     # via
     #   fiona
+    #   pyogrio
     #   pyproj
     #   rasterio
     #   requests
@@ -39,7 +40,7 @@ cligj==0.7.2
     #   rasterio
 datacite==1.1.3
     # via datahub (pyproject.toml)
-django==5.0.6
+django==5.0.7
     # via
     #   datahub (pyproject.toml)
     #   django-debug-toolbar
@@ -53,10 +54,10 @@ django-taggit==5.0.1
 et-xmlfile==1.1.0
     # via openpyxl
 fiona==1.9.6
-    # via geopandas
+    # via datahub (pyproject.toml)
 geojson==3.1.0
     # via datahub (pyproject.toml)
-geopandas==0.14.4
+geopandas==1.0.1
     # via
     #   datahub (pyproject.toml)
     #   osmnx
@@ -74,7 +75,7 @@ jsonschema-specifications==2023.12.1
     # via jsonschema
 lxml==5.2.2
     # via datacite
-meteostat==1.6.7
+meteostat==1.6.8
     # via datahub (pyproject.toml)
 multiurl==0.3.1
     # via cads-api-client
@@ -87,6 +88,7 @@ numpy==1.26.4
     #   meteostat
     #   osmnx
     #   pandas
+    #   pyogrio
     #   rasterio
     #   shapely
     #   snuggs
@@ -95,10 +97,11 @@ openpyxl==3.1.2
     # via datahub (pyproject.toml)
 osmnx==1.9.3
     # via datahub (pyproject.toml)
-packaging==23.2
+packaging==24.1
     # via
     #   geopandas
     #   gunicorn
+    #   pyogrio
     #   xarray
 pandas==2.1.4
     # via
@@ -111,15 +114,17 @@ psycopg==3.2.1
     # via datahub (pyproject.toml)
 psycopg-binary==3.2.1
     # via psycopg
-pyparsing==3.1.1
+pyogrio==0.9.0
+    # via geopandas
+pyparsing==3.1.2
     # via snuggs
 pyproj==3.6.1
     # via geopandas
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   multiurl
     #   pandas
-pytz==2023.3.post1
+pytz==2024.1
     # via
     #   meteostat
     #   multiurl
@@ -141,7 +146,7 @@ rpds-py==0.19.0
     # via
     #   jsonschema
     #   referencing
-setuptools==70.2.0
+setuptools==70.3.0
     # via rasterio
 shapely==2.0.4
     # via
@@ -165,12 +170,12 @@ tqdm==4.66.4
     # via
     #   cdsapi
     #   multiurl
-typing-extensions==4.9.0
+typing-extensions==4.12.2
     # via
     #   cads-api-client
     #   psycopg
     #   sqlalchemy
-tzdata==2023.4
+tzdata==2024.1
     # via pandas
 urllib3==2.2.2
     # via requests
