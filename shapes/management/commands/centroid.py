@@ -1,3 +1,4 @@
+from psycopg import sql
 from shapely import wkb
 
 from django.core.management.base import BaseCommand, CommandError
@@ -15,7 +16,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         with connection.cursor() as c:
             c.execute(
-                f"SELECT (ST_Centroid(ST_Union(ST_Centroid(geometry)))) as centroid FROM {Shape._meta.db_table}"
+                sql.SQL(
+                    "SELECT (ST_Centroid(ST_Union(ST_Centroid(geometry)))) as centroid FROM {table}"
+                ).format(table=sql.Identifier(Shape._meta.db_table))
             )
             row = c.fetchone()
 

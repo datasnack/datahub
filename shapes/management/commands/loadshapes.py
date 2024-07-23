@@ -1,6 +1,7 @@
 import argparse
 
 import geopandas
+from psycopg import sql
 from sqlalchemy import create_engine
 
 from django.conf import settings
@@ -105,5 +106,9 @@ class Command(BaseCommand):
         # we need to convert to a meters based system. With utmzone() we identify
         # the resp. used UTM Zone that is m based.
         with connection.cursor() as cursor:
-            cursor.execute(f"UPDATE {Shape._meta.db_table} SET area_sqm = \
-                ST_Area(ST_Transform(geometry, utmzone(ST_Centroid(geometry))))")
+            cursor.execute(
+                sql.SQL(
+                    "UPDATE {table} SET area_sqm = \
+                ST_Area(ST_Transform(geometry, utmzone(ST_Centroid(geometry))))"
+                ).format(table=sql.Identifier(Shape._meta.db_table))
+            )

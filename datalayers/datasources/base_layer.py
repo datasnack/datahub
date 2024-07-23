@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import geopandas
 import pandas as pd
+from psycopg import sql
 
 from django.db import connection
 
@@ -173,9 +174,9 @@ class BaseLayer:
         # geometry are read into the GeoJSONs properties.
         # With json_build_object() we aggregate the single Features from the rows
         # into a feature collection which we can directly use on a map, i.e.
-        sql = f"""
+        query = sql.SQL("""
         WITH data AS (
-            SELECT ST_AsGeoJSON(t.*)::json as feature FROM {self.raw_vector_data_table} as t
+            SELECT ST_AsGeoJSON(t.*)::json as feature FROM {table} as t
         )
         SELECT
         json_build_object(
@@ -185,10 +186,10 @@ class BaseLayer:
             )
         ) AS geojson
         FROM data
-        """
+        """).format(table=sql.Identifier(self.raw_vector_data_table))
 
         with connection.cursor() as c:
-            c.execute(sql)
+            c.execute(query)
             result = c.fetchone()
 
         if result:

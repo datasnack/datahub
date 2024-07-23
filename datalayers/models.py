@@ -5,6 +5,7 @@ from timeit import default_timer as timer
 from typing import Optional
 
 import pandas as pd
+from psycopg import sql
 from taggit.managers import TaggableManager
 
 from django.db import connection, models
@@ -12,7 +13,7 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from datalayers.utils import dictfetchone, get_engine
+from datalayers.utils import dictfetchone
 from shapes.models import Shape, Type
 
 from .datasources.base_layer import LayerTimeResolution, LayerValueType
@@ -227,11 +228,12 @@ class Datalayer(models.Model):
             return []
 
         with connection.cursor() as c:
-            sql = f"SELECT DISTINCT t.id FROM {self.key} AS dl \
+            query = sql.SQL(
+                "SELECT DISTINCT t.id FROM {table} AS dl \
                 JOIN shapes_shape as s ON s.id = dl.shape_id  \
                 JOIN shapes_type as t ON t.id = s.type_id"
-
-            c.execute(sql)
+            ).format(table=sql.Identifier(self.key))
+            c.execute(query)
             results = c.fetchall()
 
         type_ids = []
@@ -254,15 +256,19 @@ class Datalayer(models.Model):
 
         match self.temporal_resolution:
             case LayerTimeResolution.YEAR:
-                sql = f"SELECT DISTINCT year FROM {self.key} ORDER BY year DESC"
+                query = sql.SQL(
+                    "SELECT DISTINCT year FROM {table} ORDER BY year DESC"
+                ).format(table=sql.Identifier(self.key))
             case LayerTimeResolution.DAY:
-                sql = f"SELECT DATE_PART('year', date ::date) AS year \
-                FROM {self.key} WHERE date is not NULL GROUP BY year ORDER BY year DESC"
+                query = sql.SQL(
+                    "SELECT DATE_PART('year', date ::date) AS year \
+                FROM {table} WHERE date is not NULL GROUP BY year ORDER BY year DESC"
+                ).format(table=sql.Identifier(self.key))
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
         with connection.cursor() as c:
-            c.execute(sql)
+            c.execute(query)
             results = c.fetchall()
 
         years = []
@@ -280,9 +286,7 @@ class Datalayer(models.Model):
         return cls
 
     def has_class(self) -> bool:
-        """Check if there is a corresponding class with details for
-        downloading and processing the data source.
-        """
+        """Check if there is a implementation class for the Data Layer."""
         try:
             self._get_class()
             return True
@@ -372,17 +376,18 @@ class Datalayer(models.Model):
             raise ValueError(f"Unknown mode={mode}")
 
         params = {}
-        sql = f"SELECT dl.* FROM {self.key} AS dl "
-        sql += "WHERE dl.shape_id = %(shape_id)s "
+        query = "SELECT dl.* FROM {table} AS dl "
+        query += "WHERE dl.shape_id = %(shape_id)s "
         params["shape_id"] = shape.id
+        operator = ""
 
         if when is not None:
             operator = modes[mode]
             if self.temporal_resolution == LayerTimeResolution.YEAR:
-                sql += f"AND dl.year {operator} %(when)s "
-                params["when"] = when
+                query += "AND dl.year {operator} %(when)s "
+                params["when"] = when.year
             elif self.temporal_resolution == LayerTimeResolution.DAY:
-                sql += f"AND dl.date {operator} %(when)s "
+                query += "AND dl.date {operator} %(when)s "
                 params["when"] = when
             else:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
@@ -391,10 +396,17 @@ class Datalayer(models.Model):
         if mode == "up":
             sort_operator = "ASC"
 
-        sql += f"ORDER BY dl.{self.temporal_resolution} {sort_operator} LIMIT 1"
+        query += "ORDER BY dl.{temporal_column} {sort_operator} LIMIT 1"
+
+        query = sql.SQL(query).format(
+            table=sql.Identifier(self.key),
+            temporal_column=sql.Identifier(str(self.temporal_resolution)),
+            operator=sql.SQL(operator),
+            sort_operator=sql.SQL(sort_operator),
+        )
 
         with connection.cursor() as c:
-            c.execute(sql, params)
+            c.execute(query, params)
             # result = c.fetchone()
             result = dictfetchone(c)
 
@@ -413,38 +425,39 @@ class Datalayer(models.Model):
     ) -> pd.DataFrame:
         """Aggregate the specified data of the data layer."""
         params = {}
-
-        sql = f"SELECT value, shape_id, {self.temporal_resolution} \
-            FROM {self.key} "
+        query = "SELECT value, shape_id, {temporal_column} FROM {table} "
 
         # JOIN
         if shape_type or shape:
-            sql += f"JOIN shapes_shape s ON s.id = {self.key}.shape_id "
+            query += "JOIN shapes_shape s ON s.id = {table}.shape_id "
 
         # WHERE
-        sql += "WHERE 1=1 "
+        query += "WHERE 1=1 "
 
         if start_date:
-            sql += f"AND {self.temporal_resolution} >= %(start_date)s "
+            query += "AND {temporal_column} >= %(start_date)s "
             params["start_date"] = start_date
 
         if end_date:
-            sql += f"AND {self.temporal_resolution} <= %(end_date)s "
+            query += "AND {temporal_column} <= %(end_date)s "
             params["end_date"] = end_date
 
         if shape:
-            sql += "AND s.id = %(shape_id)s "
+            query += "AND s.id = %(shape_id)s "
             params["shape_id"] = shape.id
 
         if shape_type:
-            sql += "AND s.type_id = %(type)s "
+            query += "AND s.type_id = %(type)s "
             params["type"] = shape_type.id
 
-        sql += f"ORDER BY {self.temporal_resolution} ASC"
+        query += "ORDER BY {temporal_column} ASC"
 
-        df = pd.read_sql(sql, con=get_engine(), params=params)
+        query = sql.SQL(query).format(
+            table=sql.Identifier(self.key),
+            temporal_column=sql.Identifier(str(self.temporal_resolution)),
+        )
 
-        return df
+        return pd.read_sql(query.as_string(connection), con=connection, params=params)
 
     def value_coverage(self, shape_type: Optional[Type] = None) -> float:
         if not self.is_loaded():
@@ -482,15 +495,16 @@ class Datalayer(models.Model):
             return None
 
         params = {}
-        sql = f"SELECT COUNT(*) AS count FROM {self.key} AS dl "
+        query = "SELECT COUNT(*) AS count FROM {table} AS dl "
 
         if shape_type is not None:
-            sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
-            sql += "WHERE s.type_id = %(type_id)s "
+            query += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
+            query += "WHERE s.type_id = %(type_id)s "
             params["type_id"] = shape_type.id
 
+        query = sql.SQL(query).format(table=sql.Identifier(self.key))
         with connection.cursor() as c:
-            c.execute(sql, params)
+            c.execute(query, params)
             result = c.fetchone()
 
         return result[0]
@@ -505,28 +519,29 @@ class Datalayer(models.Model):
         params = {}
         match self.temporal_resolution:
             case LayerTimeResolution.YEAR:
-                sql = f"SELECT dl.year FROM {self.key} AS dl "
-                sql_order = "ORDER BY year ASC LIMIT 1"
+                query = "SELECT dl.year FROM {table} AS dl "
+                query_order = "ORDER BY year ASC LIMIT 1"
             case LayerTimeResolution.DAY:
-                sql = f"SELECT dl.date FROM {self.key} AS dl "
-                sql_order = "ORDER BY date ASC LIMIT 1"
+                query = "SELECT dl.date FROM {table} AS dl "
+                query_order = "ORDER BY date ASC LIMIT 1"
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
         # TODO: are shape_type and shape exclusive?
         # technical there are not, but it shoud not lea
         if shape_type is not None:
-            sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
-            sql += "WHERE s.type_id = %(type_id)s "
+            query += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
+            query += "WHERE s.type_id = %(type_id)s "
             params["type_id"] = shape_type.id
         elif shape is not None:
-            sql += "WHERE s.shape_id = %(shape_id)s "
+            query += "WHERE s.shape_id = %(shape_id)s "
             params["shape_id"] = shape.id
 
-        sql += sql_order
+        query += query_order
 
+        query = sql.SQL(query).format(table=sql.Identifier(self.key))
         with connection.cursor() as c:
-            c.execute(sql, params)
+            c.execute(query, params)
             result = c.fetchone()
 
         return result[0]
@@ -541,25 +556,27 @@ class Datalayer(models.Model):
         params = {}
         match self.temporal_resolution:
             case LayerTimeResolution.YEAR:
-                sql = f"SELECT dl.year FROM {self.key} AS dl "
-                sql_order = "ORDER BY year DESC LIMIT 1"
+                query = "SELECT dl.year FROM {table} AS dl "
+                query_order = "ORDER BY year DESC LIMIT 1"
             case LayerTimeResolution.DAY:
-                sql = f"SELECT dl.date FROM {self.key} AS dl "
-                sql_order = "ORDER BY date DESC LIMIT 1"
+                query = "SELECT dl.date FROM {table} AS dl "
+                query_order = "ORDER BY date DESC LIMIT 1"
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
         if shape_type is not None:
-            sql += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
-            sql += "WHERE s.type_id = %(type_id)s "
+            query += "JOIN shapes_shape AS s ON  s.id = dl.shape_id "
+            query += "WHERE s.type_id = %(type_id)s "
             params["type_id"] = shape_type.id
         elif shape is not None:
-            sql += "WHERE s.shape_id = %(shape_id)s "
+            query += "WHERE s.shape_id = %(shape_id)s "
             params["shape_id"] = shape.id
 
-        sql += sql_order
+        query += query_order
+
+        query = sql.SQL(query).format(table=sql.Identifier(self.key))
         with connection.cursor() as c:
-            c.execute(sql, params)
+            c.execute(query, params)
             result = c.fetchone()
 
         return result[0]

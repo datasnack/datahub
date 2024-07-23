@@ -5,10 +5,12 @@ import fiona
 import geopandas
 import pandas as pd
 from meteostat import Daily, Hourly, Stations
+from psycopg import sql
 from shapely import wkt
 
+from django.db import connection
+
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
-from datalayers.utils import get_engine
 from shapes.models import Shape
 
 from .base_layer import BaseLayer
@@ -40,9 +42,15 @@ class MeteostatLayer(BaseLayer):
     def download(self):
         stations = Stations()
 
-        stations = stations.region("GH")
-        start = dt.datetime(2015, 1, 1)
-        end = dt.datetime(2024, 2, 29)
+        # stations = stations.region("GH")
+
+        stations = stations.bounds(
+            (52.675507659705794, 13.088347600424314),
+            (52.338245531668925, 13.761159130580843),
+        )
+
+        start = dt.datetime(2022, 1, 1)
+        end = dt.datetime(2022, 12, 31)
 
         df = stations.fetch()
 
@@ -104,18 +112,22 @@ class MeteostatLayer(BaseLayer):
         gdf = gdf[
             ~gdf["id"].isin(stations_with_no_data)
         ]  # do not write empty stations to database
-        gdf.to_postgis(self.table_name, get_engine(), if_exists="replace")
+        gdf.to_postgis(self.table_name, connection, if_exists="replace")
 
         merged_df = pd.concat(dfs_daily)
-        merged_df.to_sql("meteostat_daily", get_engine(), if_exists="replace")
+        merged_df.to_sql("meteostat_daily", connection, if_exists="replace")
 
         merged_df = pd.concat(dfs_hourly)
-        merged_df.to_sql("meteostat_hourly", get_engine(), if_exists="replace")
+        merged_df.to_sql("meteostat_hourly", connection, if_exists="replace")
 
     def get_station_data_for_shape(self, shape):
         # load all stations
         stations_gdf = geopandas.read_postgis(
-            f"SELECT * FROM {self.table_name}", con=get_engine(), geom_col="geometry"
+            sql.SQL("SELECT * FROM {table}")
+            .format(table=sql.Identifier(self.table_name))
+            .as_string(connection),
+            con=connection,
+            geom_col="geometry",
         )
 
         # get all stations inside shape
@@ -123,11 +135,20 @@ class MeteostatLayer(BaseLayer):
 
         # no station inside shape. find nearest from centroid of shape
         if len(gdfx) == 0:
-            sql = f"SELECT * FROM {self.table_name} ORDER BY st_distance( \
-                ST_SetSRID({self.table_name}.geometry, 4326), \
-                ST_SetSRID(ST_GeomFromText('{str(shape.centroid)}'), 4326) ) ASC LIMIT 1"
+            query = sql.SQL(
+                "SELECT * FROM {table} ORDER BY st_distance( \
+                ST_SetSRID({table}.geometry, 4326), \
+                ST_SetSRID(ST_GeomFromText(%(centroid)s), 4326) ) ASC LIMIT 1"
+            ).format(
+                table=sql.Identifier(self.table_name),
+            )
 
-            gdfx = geopandas.read_postgis(sql, con=get_engine(), geom_col="geometry")
+            gdfx = geopandas.read_postgis(
+                query.as_string(connection),
+                con=connection,
+                params={"centroid": shape.centroid},
+                geom_col="geometry",
+            )
 
         station_ids = list(gdfx["id"].unique())
 
@@ -141,17 +162,18 @@ class MeteostatLayer(BaseLayer):
 
         dfxs = []
         for sid in station_ids:
-            column = "meteostat_daily"
+            table = "meteostat_daily"
             if self.meteo_mode == "hourly":
-                column = "meteostat_hourly"
+                table = "meteostat_hourly"
 
             dfx = pd.read_sql(
-                "SELECT * FROM "
-                + column
-                + " \
-                WHERE meteostat_station_id = "
-                + str(sid),
-                con=get_engine(),
+                sql.SQL(
+                    "SELECT * FROM {table} WHERE meteostat_station_id = %(station_id)s"
+                )
+                .format(table=sql.Identifier(table))
+                .as_string(connection),
+                con=connection,
+                params={"station_id": sid},
             )
             dfxs.append(dfx)
 

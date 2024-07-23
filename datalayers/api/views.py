@@ -3,8 +3,10 @@ from io import BytesIO
 import geopandas
 import numpy as np
 import pandas as pd
+from psycopg import sql
 from shapely import wkt
 
+from django.db import connection
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
@@ -17,14 +19,14 @@ from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 
 from datalayers.models import Datalayer
-from datalayers.utils import get_engine
 from shapes.models import Shape, Type
 
 # Create your views here.
 
 
 def _get_datalayer_from_request(request) -> Datalayer:
-    """Detect Datalayer from request by ID or key.
+    """
+    Detect Datalayer from request by ID or key.
 
     We can reference a datalayer via ID (datalayer_id) or key (datalayer_key)
     in the request. This function checks for both, but ID has priority over key.
@@ -167,14 +169,23 @@ def plotly(request):
     datalayer = _get_datalayer_from_request(request)
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
-    sql = f"SELECT {datalayer.temporal_resolution}, AVG(value) AS value \
-        FROM {datalayer.key} \
-        JOIN shapes_shape s ON s.id = {datalayer.key}.shape_id \
+    query = sql.SQL(
+        "SELECT {temporal_column}, AVG(value) AS value \
+        FROM {table} \
+        JOIN shapes_shape s ON s.id = {table}.shape_id \
         WHERE s.type_id = %(type)s \
-        GROUP BY {datalayer.key}.{datalayer.temporal_resolution} \
-        ORDER BY {datalayer.temporal_resolution}"
+        GROUP BY {table}.{temporal_column} \
+        ORDER BY {temporal_column}"
+    ).format(
+        table=sql.Identifier(datalayer.key),
+        temporal_column=sql.Identifier(str(datalayer.temporal_resolution)),
+    )
 
-    df = pd.read_sql(sql, con=get_engine(), params={"type": shape_type.id})
+    df = pd.read_sql(
+        query.as_string(connection),
+        con=connection,
+        params={"type": shape_type.id},
+    )
 
     # df = df.set_index(str(datalayer.temporal_resolution))
     # df = df.resample('W').mean()
