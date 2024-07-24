@@ -615,7 +615,7 @@ class DatalayerSource(models.Model):
 
     datalayer = models.ForeignKey(
         Datalayer,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="sources",
         blank=True,
         null=True,
