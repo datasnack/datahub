@@ -176,7 +176,7 @@
 							{% endif %}
 						{% endwith %}
 					</td>
-					<td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
+					<td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a><span class="d-none">{{ dl.key }}</span></td>
 
 					{% with dlv=shape|datalayer_first_value:dl %}
 					<td class="align-middle">{{ dlv.date }}</td>
