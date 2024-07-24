@@ -32,6 +32,7 @@ class Category(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     name = models.CharField(max_length=255)
+    key = models.SlugField(max_length=255, null=False, unique=True)
     description = models.TextField(blank=True)
 
     class Meta:

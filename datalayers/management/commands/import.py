@@ -35,7 +35,7 @@ class Command(BaseCommand):
         for cat in df["category"].unique():
             if cat in categories.keys():
                 continue
-            c = Category(name=cat)
+            c = Category(name=cat, key=cat)
             c.save()
             categories[cat] = c
 
