@@ -70,7 +70,6 @@ class DhsLayer(BaseLayer):
     def get_local_df(self, breakdown) -> pd.DataFrame:
         list_of_files = self.get_data_path().glob(f"*{breakdown}*")
         latest_file = max(list_of_files, key=os.path.getctime)
-        print(latest_file)
         return pd.read_csv(latest_file)
 
     def group_per_study_year_region(self, df, shapes, indicators, shape_name_column):
@@ -127,7 +126,11 @@ class DhsLayer(BaseLayer):
                         continue
 
                     sri = sri.reset_index()
-                    x[indicator] = sri.at[0, "Value"]
+
+                    if self.value_type == LayerValueType.PERCENTAGE:
+                        x[indicator] = sri.at[0, "Value"] / 100
+                    else:
+                        x[indicator] = sri.at[0, "Value"]
 
                 all_indicators_null = True
                 for indicator in indicators:
