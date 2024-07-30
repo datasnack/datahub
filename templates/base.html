@@ -37,151 +37,131 @@
 	{% block head %}{% endblock %}
 </head>
 <body>
-    <header>
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-          <a class="navbar-brand" href="{% url 'app:home' %}">{{ datahub_name }}</a>
+	<header>
+		<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<div class="container">
+				<a class="navbar-brand" href="{% url 'app:home' %}">{{ datahub_name }}</a>
 
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
 
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				{% if not datahub_login_required or user.is_authenticated %}
 
-			<button id="open-search" type="button" class="btn btn-sm btn-outline-secondary m-searchbutton" aria-label="{% translate "Search" %}">
-				<span class="m-searchbutton-label">
-					<span class="m-searchbutton-icon">{% icon "search" %}</span>
-					<span class="m-searchbutton-placeholder">{% translate "Search" %}</span>
-				</span>
-				<span class="m-searchbutton-keys">
-					<kbd class="m-searchbutton-key m-searchbutton-key--mod"></kbd>
-					<kbd class="m-searchbutton-key">K</kbd>
-				</span>
-			</button>
-			{% comment %}
-			agolia/autocomplete needs a container where it renders the inputfield, since we
-			have our own button, we hide it. There is no functionalty to hide/provide a
-			custom html for the trigger element, hiding it is actually recommended
-			by the github disussions from the repo. https://github.com/algolia/autocomplete/discussions/1029
-			{% endcomment %}
-			<div style="display: none" id="autocomplete"></div>
+					<button id="open-search" type="button" class="btn btn-sm btn-outline-secondary m-searchbutton" aria-label="{% translate "Search" %}">
+						<span class="m-searchbutton-label">
+							<span class="m-searchbutton-icon">{% icon "search" %}</span>
+							<span class="m-searchbutton-placeholder">{% translate "Search" %}</span>
+						</span>
+						<span class="m-searchbutton-keys">
+							<kbd class="m-searchbutton-key m-searchbutton-key--mod"></kbd>
+							<kbd class="m-searchbutton-key">K</kbd>
+						</span>
+					</button>
+					{% comment %}
+					agolia/autocomplete needs a container where it renders the inputfield, since we
+					have our own button, we hide it. There is no functionalty to hide/provide a
+					custom html for the trigger element, hiding it is actually recommended
+					by the github disussions from the repo. https://github.com/algolia/autocomplete/discussions/1029
+					{% endcomment %}
+					<div style="display: none" id="autocomplete"></div>
 
-			{% if not datahub_login_required or user.is_authenticated %}
-              <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                {% for st in nav_shape_types %}
-                <li class="nav-item"><a class="nav-link" href="{{ st.get_absolute_url }}">{{ st.name }}</a></li>
-                {% endfor %}
-
-                {%comment%}{% for type in shape_types %}
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('shape_index', shape_type=type) }}">{{ type.title() }}</a></li>
-                {% endfor %}
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('map') }}">Map</a></li>
-                {%endcomment%}
-
-                <li class="nav-item">
-					<a class="nav-link pe-0" href="{% url 'datalayers:datalayer_index' %}">
-						{% translate "Data Layers" %}
-					</a>
-				</li>
-
-				{% if nav_datalayer_categories %}
-                <li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
-						<span class="visually-hidden-focusable">{% translate "Categories" %}</span>
-					</a>
-
-					<ul class="dropdown-menu dropdown-menu-end">
-						{% for category in nav_datalayer_categories %}
-						<li><a class="dropdown-item" href="{{ category.get_absolute_url }}">{{ category.name }}</a></li>
+					<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+						{% for st in nav_shape_types %}
+							<li class="nav-item"><a class="nav-link" href="{{ st.get_absolute_url }}">{{ st.name }}</a></li>
 						{% endfor %}
+
+						{%comment%}{% for type in shape_types %}
+						<li class="nav-item"><a class="nav-link" href="{{ url_for('shape_index', shape_type=type) }}">{{ type.title() }}</a></li>
+						{% endfor %}
+						<li class="nav-item"><a class="nav-link" href="{{ url_for('map') }}">Map</a></li>
+						{%endcomment%}
+
+						<li class="nav-item">
+							<a class="nav-link pe-0" href="{% url 'datalayers:datalayer_index' %}">
+								{% translate "Data Layers" %}
+							</a>
+						</li>
+
+						{% if nav_datalayer_categories %}
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
+								<span class="visually-hidden-focusable">{% translate "Categories" %}</span>
+							</a>
+
+							<ul class="dropdown-menu dropdown-menu-end">
+								{% for category in nav_datalayer_categories %}
+								<li><a class="dropdown-item" href="{{ category.get_absolute_url }}">{{ category.name }}</a></li>
+								{% endfor %}
+							</ul>
+						</li>
+						{% endif %}
+
+
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
+								{% translate "Tools" %}
+							</a>
+							<ul class="dropdown-menu dropdown-menu-end">
+								<li><a class="dropdown-item" href="{% url "app:tools_picker" %}">{% translate "Location picker" %}</a></li>
+							</ul>
+						</li>
+
+						{% include 'app/nav.html' %}
+
 					</ul>
-				</li>
+				{% endif %}
+				</div>
+
+				{% get_available_languages as LANGUAGES %}
+				{% if LANGUAGES|length > 1 %}
+				<form style="width: 150px" class="me-2" action="{% url 'set_language' %}" method="post">
+					{% csrf_token %}
+					<input name="next" type="hidden" value="{{ redirect_to }}">
+
+					<div class="input-group">
+						<span class="input-group-text">{% icon "globe" %}</span>
+						<select class="form-select" name="language" onchange="this.form.submit()">
+							{% get_language_info_list for LANGUAGES as languages %}
+							{% for language in languages %}
+								<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+									{{ language.name_local }}
+								</option>
+							{% endfor %}
+						</select>
+						{% comment %}
+						<input class="btn btn-outline-secondary" type="submit" value="Go">
+						{% endcomment %}
+					</div>
+				</form>
 				{% endif %}
 
-
-                <li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
-						{% translate "Tools" %}
-					</a>
+				<div class="dropdown">
+					<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+						{% icon "person" %}
+					</button>
 					<ul class="dropdown-menu dropdown-menu-end">
-						<li><a class="dropdown-item" href="{% url "app:tools_picker" %}">{% translate "Location picker" %}</a></li>
+						{% if user.is_authenticated %}
+						<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
+						<li>
+							<form action="{% url 'logout' %}" method="post">
+								{% csrf_token %}
+								<button class="btn btn-link" type="submit">{% translate "Logout" %}</button>
+							</form>
+						</li>
+						{% else %}
+						<li><a class="dropdown-item" href="{% url "login" %}?next={{ request.path }}">{% translate "Login" %}</a></li>
+						{% endif %}
 					</ul>
-				</li>
-
-				{% include 'app/nav.html' %}
-
-              </ul>
-			{% endif %}
-          </div>
-
-
-
-		  {% get_available_languages as LANGUAGES %}
-		  {% if LANGUAGES|length > 1 %}
-          <form style="width: 150px" class="me-2" action="{% url 'set_language' %}" method="post">
-			{% csrf_token %}
-            <input name="next" type="hidden" value="{{ redirect_to }}">
-
-			<div class="input-group">
-				<span class="input-group-text">{% icon "globe" %}</span>
-				<select class="form-select" name="language" onchange="this.form.submit()">
-					{% get_language_info_list for LANGUAGES as languages %}
-					{% for language in languages %}
-						<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-							{{ language.name_local }}
-						</option>
-					{% endfor %}
-				</select>
-				{% comment %}
-    	        <input class="btn btn-outline-secondary" type="submit" value="Go">
-				{% endcomment %}
+				</div>
 			</div>
-        </form>
-		{% endif %}
+		</nav>
+	</header>
 
-
-		<div class="dropdown">
-            <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {% icon "person" %}
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-				{% if user.is_authenticated %}
-				<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
-                <li>
-					<form action="{% url 'logout' %}" method="post">
-						{% csrf_token %}
-						<button class="btn btn-link" type="submit">{% translate "Logout" %}</button>
-					</form>
-				</li>
-				{% else %}
-                <li><a class="dropdown-item" href="{% url "login" %}?next={{ request.path }}">{% translate "Login" %}</a></li>
-				{% endif %}
-            </ul>
-		</div>
-
-        {% comment %}
-        {% get_available_languages as languages %}
-          <div class="dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {% translate "View this page in:" %}
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-
-              {% for lang_code, lang_name in languages %}
-                {% language lang_code %}
-                <li><a class="dropdown-item" href="#">{{ lang_code|language_name_local }}</a></li>
-                {% endlanguage %}
-              {% endfor %}
-            </ul>
-          </div>
-          {% endcomment %}
-        </div>
-      </nav>
-    </header>
-
-    <div class="container my-3">
-      {% block content %}{% endblock %}
-    </div>
+	<div class="container my-3">
+		{% block content %}{% endblock %}
+	</div>
 
 	<footer class="container mb-1">
 		<div class="footer-copy pt-1">
@@ -286,9 +266,12 @@
 			});
 		}
 
-		document.getElementById('open-search').addEventListener("click", function() {
-			createSearch();
-		});
+		var searchNode = document.getElementById('open-search')
+		if (searchNode) {
+			searchNode.addEventListener("click", function() {
+				createSearch();
+			});
+		}
 
 		document.addEventListener("keydown", ({key}) => {
 			if (key === "Escape") {
