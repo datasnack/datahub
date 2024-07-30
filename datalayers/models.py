@@ -299,7 +299,7 @@ class Datalayer(models.Model):
 
             return False
 
-    def get_class_path(self):
+    def get_class_path(self) -> Path:
         return Path(f"src/datalayer/{self.key}.py")
 
     def get_class_source_code(self):

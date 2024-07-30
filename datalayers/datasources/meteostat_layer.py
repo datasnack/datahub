@@ -10,6 +10,7 @@ from shapely import wkt
 
 from django.db import connection
 
+from datalayers.utils import get_conn_string
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
 from shapes.models import Shape
 
@@ -39,6 +40,15 @@ class MeteostatLayer(BaseLayer):
         """Overwrite parameter_id based input directory."""
         return Path("./data/datalayers/meteostat/")
 
+    def stations(self) -> Stations:
+        raise NotImplementedError
+
+    def start(self) -> dt.datetime:
+        raise NotImplementedError
+
+    def end(self) -> dt.datetime:
+        raise NotImplementedError
+
     def download(self):
         stations = Stations()
 
@@ -49,8 +59,8 @@ class MeteostatLayer(BaseLayer):
             (52.338245531668925, 13.761159130580843),
         )
 
-        start = dt.datetime(2022, 1, 1)
-        end = dt.datetime(2022, 12, 31)
+        start = dt.datetime(2022, 1, 1, tzinfo=dt.UTC)
+        end = dt.datetime(2022, 12, 31, tzinfo=dt.UTC)
 
         df = stations.fetch()
 
@@ -122,12 +132,16 @@ class MeteostatLayer(BaseLayer):
 
     def get_station_data_for_shape(self, shape):
         # load all stations
+        # explicitly set CRS to prevent automatic detection by SQL query for first item
+        # this would call the @lru_cache annotated function https://github.com/geopandas/geopandas/blob/main/geopandas/io/sql.py#L469
+        # with the given connection and the django ConnectionProxy type is not hashable.
         stations_gdf = geopandas.read_postgis(
             sql.SQL("SELECT * FROM {table}")
             .format(table=sql.Identifier(self.table_name))
             .as_string(connection),
-            con=connection,
+            con=get_conn_string(),
             geom_col="geometry",
+            crs="epsg:4326",  # see comment above
         )
 
         # get all stations inside shape
@@ -145,9 +159,10 @@ class MeteostatLayer(BaseLayer):
 
             gdfx = geopandas.read_postgis(
                 query.as_string(connection),
-                con=connection,
-                params={"centroid": shape.centroid},
+                con=get_conn_string(),
+                params={"centroid": str(shape.centroid)},
                 geom_col="geometry",
+                crs="epsg:4326",  # see comment above
             )
 
         station_ids = list(gdfx["id"].unique())
@@ -172,7 +187,7 @@ class MeteostatLayer(BaseLayer):
                 )
                 .format(table=sql.Identifier(table))
                 .as_string(connection),
-                con=connection,
+                con=get_conn_string(),
                 params={"station_id": sid},
             )
             dfxs.append(dfx)
