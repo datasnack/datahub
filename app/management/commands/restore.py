@@ -34,7 +34,7 @@ class Command(BaseCommand):
                 "--clean",
                 "--if-exists",
                 "-d",
-                get_conn_string(),
+                get_conn_string(sqlalchemy=False),
                 file,
             ]
 

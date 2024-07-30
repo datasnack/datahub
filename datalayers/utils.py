@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from django.conf import settings
 
 
-def get_conn_string() -> str:
+def get_conn_string(sqlalchemy=True) -> str:
     """
     Database connection string (used for i.e. Pandas).
 
@@ -25,8 +25,15 @@ def get_conn_string() -> str:
     just install SQLAlchemy for Pandas usage and can't use the global database connection
     provided by Django.
     """
-    # Explicitly use "psycopg" (v3) and NOT "psycopg2" (v2)
-    return f"postgresql+psycopg://{settings.DATABASES['default']['USER']}:{settings.DATABASES['default']['PASSWORD']}@{settings.DATABASES['default']['HOST']}:{settings.DATABASES['default']['PORT']}/{settings.DATABASES['default']['NAME']}"
+    # in the context of python/pandas we need the extra protocol qualifier so SQLAlchem#y
+    # selects psycopg v3 and does not try to load psycopg2 v2 (which is NOT installed).
+    # but in case for other use cases of the connection string restoring/dumping the
+    # database, this extra qualifier would crash the pg_dump/restore commands.
+    proto = ""
+    if sqlalchemy:
+        # Explicitly use "psycopg" (v3) and NOT "psycopg2" (v2)
+        proto = "+psycopg"
+    return f"postgresql{proto}://{settings.DATABASES['default']['USER']}:{settings.DATABASES['default']['PASSWORD']}@{settings.DATABASES['default']['HOST']}:{settings.DATABASES['default']['PORT']}/{settings.DATABASES['default']['NAME']}"
 
 
 def get_engine():

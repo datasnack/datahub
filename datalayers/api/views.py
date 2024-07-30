@@ -19,6 +19,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 
 from datalayers.models import Datalayer
+from datalayers.utils import get_conn_string
 from shapes.models import Shape, Type
 
 # Create your views here.
@@ -183,7 +184,7 @@ def plotly(request):
 
     df = pd.read_sql(
         query.as_string(connection),
-        con=connection,
+        con=get_conn_string(),
         params={"type": shape_type.id},
     )
 

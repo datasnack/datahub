@@ -27,7 +27,13 @@ class Command(BaseCommand):
         path = Path("data/") / file
 
         try:
-            params = ["pg_dump", "-Fc", "-f", f"{path}", get_conn_string()]
+            params = [
+                "pg_dump",
+                "-Fc",
+                "-f",
+                f"{path}",
+                get_conn_string(sqlalchemy=False),
+            ]
 
             # to capture stderr we need to set "stderr=subprocess.STDOUT", to
             # actually get a string and not a byte string (b'..') we need to set
