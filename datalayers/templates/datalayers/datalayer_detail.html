@@ -613,7 +613,8 @@ var layout = {
 	xaxis: {
 		{% if datalayer.temporal_resolution_str == 'year' %}
 		title: 'Year',
-		type: 'category' // prevent extrapolating ticks between the years
+		type: 'date',
+		hoverformat: '%Y',
 		{% elif datalayer.temporal_resolution_str == 'date'  %}
 		title: 'Date',
 		{% else %}
