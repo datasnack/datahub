@@ -20,9 +20,6 @@ class DhsLayer(BaseLayer):
         self.time_col = LayerTimeResolution.YEAR
         self.value_type = LayerValueType.VALUE
 
-        self.table_name = "meteostat_stations"
-        self.raw_vector_data_table = "meteostat_stations"
-
     def get_indicators(self) -> list[str]:
         raise NotImplementedError
 
