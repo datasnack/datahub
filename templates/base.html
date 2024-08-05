@@ -42,13 +42,7 @@
 			<div class="container-xxl">
 				<a class="navbar-brand" href="{% url 'app:home' %}">{{ datahub_name }}</a>
 
-				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-
-				<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				{% if not datahub_login_required or user.is_authenticated %}
-
 					<button id="open-search" type="button" class="btn btn-sm btn-outline-secondary m-searchbutton" aria-label="{% translate "Search" %}">
 						<span class="m-searchbutton-label">
 							<span class="m-searchbutton-icon">{% icon "search" %}</span>
@@ -66,7 +60,14 @@
 					by the github disussions from the repo. https://github.com/algolia/autocomplete/discussions/1029
 					{% endcomment %}
 					<div style="display: none" id="autocomplete"></div>
+				{% endif %}
 
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{% translate "Toggle navigation" %}">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+
+				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+					{% if not datahub_login_required or user.is_authenticated %}
 					<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 						{% for st in nav_shape_types %}
 							<li class="nav-item"><a class="nav-link" href="{{ st.get_absolute_url }}">{{ st.name }}</a></li>
@@ -87,7 +88,7 @@
 						{% if nav_datalayer_categories %}
 						<li class="nav-item dropdown">
 							<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
-								<span class="visually-hidden-focusable">{% translate "Categories" %}</span>
+								<span class="d-auto d-lg-none">{% translate "Categories" %}</span>
 							</a>
 
 							<ul class="dropdown-menu dropdown-menu-end">
@@ -111,50 +112,53 @@
 						{% include 'app/nav.html' %}
 
 					</ul>
-				{% endif %}
-				</div>
+					{% endif %}
 
-				{% get_available_languages as LANGUAGES %}
-				{% if LANGUAGES|length > 1 %}
-				<form style="width: 150px" class="me-2" action="{% url 'set_language' %}" method="post">
-					{% csrf_token %}
-					<input name="next" type="hidden" value="{{ redirect_to }}">
 
-					<div class="input-group">
-						<span class="input-group-text">{% icon "globe" %}</span>
-						<select class="form-select" name="language" onchange="this.form.submit()">
-							{% get_language_info_list for LANGUAGES as languages %}
-							{% for language in languages %}
-								<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-									{{ language.name_local }}
-								</option>
-							{% endfor %}
-						</select>
-						{% comment %}
-						<input class="btn btn-outline-secondary" type="submit" value="Go">
-						{% endcomment %}
+					{% get_available_languages as LANGUAGES %}
+					{% if LANGUAGES|length > 1 %}
+					<form style="width: 150px" class="me-2 mb-2 mb-lg-0" action="{% url 'set_language' %}" method="post">
+						{% csrf_token %}
+						<input name="next" type="hidden" value="{{ redirect_to }}">
+
+						<div class="input-group">
+							<span class="input-group-text">{% icon "globe" %}</span>
+							<select class="form-select" name="language" onchange="this.form.submit()">
+								{% get_language_info_list for LANGUAGES as languages %}
+								{% for language in languages %}
+									<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+										{{ language.name_local }}
+									</option>
+								{% endfor %}
+							</select>
+							{% comment %}
+							<input class="btn btn-outline-secondary" type="submit" value="Go">
+							{% endcomment %}
+						</div>
+					</form>
+					{% endif %}
+
+					<div class="dropdown">
+						<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+							{% icon "person" %}
+						</button>
+						<ul class="dropdown-menu dropdown-menu-lg-end">
+							{% if user.is_authenticated %}
+							<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
+							<li>
+								<form action="{% url 'logout' %}" method="post">
+									{% csrf_token %}
+									<button class="btn btn-link" type="submit">{% translate "Logout" %}</button>
+								</form>
+							</li>
+							{% else %}
+							<li><a class="dropdown-item" href="{% url "login" %}?next={{ request.path }}">{% translate "Login" %}</a></li>
+							{% endif %}
+						</ul>
 					</div>
-				</form>
-				{% endif %}
 
-				<div class="dropdown">
-					<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-						{% icon "person" %}
-					</button>
-					<ul class="dropdown-menu dropdown-menu-end">
-						{% if user.is_authenticated %}
-						<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
-						<li>
-							<form action="{% url 'logout' %}" method="post">
-								{% csrf_token %}
-								<button class="btn btn-link" type="submit">{% translate "Logout" %}</button>
-							</form>
-						</li>
-						{% else %}
-						<li><a class="dropdown-item" href="{% url "login" %}?next={{ request.path }}">{% translate "Login" %}</a></li>
-						{% endif %}
-					</ul>
 				</div>
+
 			</div>
 		</nav>
 	</header>

@@ -159,6 +159,12 @@ h6 {
 	white-space: nowrap;
 }
 
+@media (max-width: 991px) {
+	.m-searchbutton-keys {
+		display: none;
+	}
+}
+
 .m-searchbutton-key {
 	background: none;
 	color: var(--bs-secondary-color);
