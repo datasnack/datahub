@@ -39,7 +39,7 @@
 <body>
 	<header>
 		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<div class="container">
+			<div class="container-xxl">
 				<a class="navbar-brand" href="{% url 'app:home' %}">{{ datahub_name }}</a>
 
 				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -159,11 +159,11 @@
 		</nav>
 	</header>
 
-	<div class="container my-3">
+	<div class="container-xxl my-3">
 		{% block content %}{% endblock %}
 	</div>
 
-	<footer class="container mb-1">
+	<footer class="container-xxl mb-1">
 		<div class="footer-copy pt-1">
 			<small class="text-muted">
 				{% if INSTANCE_VERSION %}
