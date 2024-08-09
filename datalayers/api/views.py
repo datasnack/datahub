@@ -50,7 +50,8 @@ def datalayer(request):
     for d in datalayers:
         r = model_to_dict(d)
 
-        r["category"] = d.category.name
+        # category is not required!
+        r["category"] = d.category.name if d.category else None
 
         tags = d.tags.all()
         r["tags"] = []
