@@ -4,7 +4,7 @@ services:
     env_file:
       - .env
     ports:
-      - ${DATAHUB_PORT:-80}:80
+      - ${DATAHUB_PORT:-8000}:8000
     volumes:
       - ./:/app/
 
