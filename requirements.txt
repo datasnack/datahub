@@ -40,7 +40,7 @@ cligj==0.7.2
     #   rasterio
 datacite==1.1.3
     # via datahub (pyproject.toml)
-django==5.0.7
+django==5.1
     # via
     #   datahub (pyproject.toml)
     #   django-debug-toolbar
