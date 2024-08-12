@@ -1,7 +1,6 @@
 import datetime as dt
 import json
 import os
-from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
@@ -23,8 +22,8 @@ class DhsLayer(BaseLayer):
     def get_indicators(self) -> list[str]:
         raise NotImplementedError
 
-    def get_country(self) -> str:
-        """Country code, i.e. "TZ"."""
+    def get_countries(self) -> list[str]:
+        """ISO-639-1 Country code, i.e. `TZ`."""
         raise NotImplementedError
 
     def get_breakdown(self) -> str:
@@ -34,9 +33,10 @@ class DhsLayer(BaseLayer):
         df["value"] = df[self.get_indicators()[0]]
         return df
 
-    def download(self, breakdown="national"):
+    def download(self):
         self.download_from_dhs("national")
         self.download_from_dhs("subnational")
+        self.download_from_dhs("all")
 
     def process(self, shapes=None, save_output=False, param_dir=None):
         if shapes is None:
@@ -142,14 +142,13 @@ class DhsLayer(BaseLayer):
     def download_from_dhs(self, breakdown):
         # fetch data
         params = {
-            "countryIds": self.get_country(),
+            "countryIds": ",".join(self.get_countries()),
             # give region based level, still shows "zones" (tanzania)
             # we have to filter based on the prepended ".." in
             "breakdown": breakdown,
             "indicatorIds": ",".join(self.get_indicators()),
             "lang": "en",
             "returnGeometry": False,
-            # "surveyYearStart": 2010,
             "f": "json",
         }
         data_url = "https://api.dhsprogram.com/rest/dhs/data/?" + urlencode(params)
@@ -164,6 +163,6 @@ class DhsLayer(BaseLayer):
         data_dir.mkdir(parents=True, exist_ok=True)
 
         now = dt.datetime.now(tz=dt.UTC).strftime("%Y-%m-%d_%H-%M-%S")
-        file = f"{now}_{self.get_breakdown()}_data_{self.layer.key}.csv"
+        file = f"{now}_{breakdown}_data_{self.layer.key}.csv"
 
         df.to_csv(data_dir / file, index=False)
