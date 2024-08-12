@@ -27,29 +27,35 @@ def search(request):
     """
     search_term = request.GET.get("q", "")
 
-    shapes = Shape.objects.filter(name__icontains=search_term)
-    datalayers = Datalayer.objects.filter(
-        Q(name__icontains=search_term) | Q(key__icontains=search_term)
-    )
+    search_filter = request.GET.get("f", "shapes,datalayers").split(",")
 
     results = []
 
-    for s in shapes:
-        results.append(
-            {
-                "url": s.get_absolute_url(),
-                "label": f"{s.name} ({s.type.name})",
-            }
+    if "shapes" in search_filter:
+        shapes = Shape.objects.filter(name__icontains=search_term)
+
+        for s in shapes:
+            results.append(
+                {
+                    "url": s.get_absolute_url(),
+                    "label": f"{s.name} ({s.type.name})",
+                    "objectID": s.id,
+                }
+            )
+
+    if "datalayers" in search_filter:
+        datalayers = Datalayer.objects.filter(
+            Q(name__icontains=search_term) | Q(key__icontains=search_term)
         )
 
-    for d in datalayers:
-        results.append(
-            {
-                "url": d.get_absolute_url(),
-                "label": f"{d.name} ({d.key})",
-                "objectID": d.id,
-            }
-        )
+        for d in datalayers:
+            results.append(
+                {
+                    "url": d.get_absolute_url(),
+                    "label": f"{d.name} ({d.key})",
+                    "objectID": d.id,
+                }
+            )
 
     return JsonResponse({"results": [results]})
 
