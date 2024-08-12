@@ -6,12 +6,6 @@
 {% load coverage %}
 {% block title %}{{ datalayer.name }}{% endblock %}
 
-{% block head %}
-
-<link rel="stylesheet" href="{% static 'vendor/highlight/styles/github.min.css' %}">
-
-{% endblock %}
-
 {% block content %}
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
 	<div class="mb-2 mb-md-0">
@@ -282,13 +276,13 @@
 				</select>
 
 
-				<button id="js-add-to-map" class="btn btn-outline-secondary btn-sm">Load map</button>
+				<button id="js-add-to-map" class="btn btn-outline-secondary btn-sm">{% translate "Load map" %}</button>
 			</div>
 
 			{% if datalayer.has_vector_data %}
 
 			<div class="btn-group ms-5">
-				<button class="btn btn-outline-secondary btn-sm" id="js-load-data">Load raw data</button>
+				<button class="btn btn-outline-secondary btn-sm" id="js-load-data">{% translate "Load raw data" %}</button>
 			</div>
 			{% endif %}
 
@@ -302,7 +296,7 @@
 		{% if datalayer.is_loaded %}
 		<hr>
 		<div class="mb-3">
-			<div id="chart"></div>
+			<dh-chart dl="{{ datalayer.key }}" query='{"shape_type": "{{ datalayer.get_available_shape_types.0.key}}"}'></dh-chart>
 		</div>
 		{%endif%}
 
@@ -472,7 +466,7 @@
 
 
 {% block footer %}
-<script>
+<script type="module">
 
 var map = new MyMap('map');
 
@@ -547,12 +541,11 @@ $('#js-add-to-map').on('click', async function() {
 		return style;
 	}
 
-
 	let query ={
 		format: 'geojson',
 		shape_type: shape_type,
 	};
-	query_string = new URLSearchParams(query).toString();
+	let query_string = new URLSearchParams(query).toString();
 	$.getJSON(`/api/shapes/geometry/?${query_string}`, function(data) {
 		// if there are results from a earlier request deltee them,
 		// so we don't have stacked charts on the map
@@ -594,90 +587,7 @@ $('#js-add-to-map').on('click', async function() {
 });
 </script>
 
-
-{% if datalayer.is_loaded %}
-<script>
-var data = [
-{% for type in datalayer.get_available_shape_types %}
-	{
-		x: [],
-		y: [],
-		mode: 'lines+markers',
-		name: '{{ type.name}} (mean)'
-	},
-{% endfor %}
-];
-
-var layout = {
-	title: '{{ datalayer.name }}',
-	xaxis: {
-		{% if datalayer.temporal_resolution_str == 'year' %}
-		title: 'Year',
-		type: 'date',
-		hoverformat: '%Y',
-		{% elif datalayer.temporal_resolution_str == 'date'  %}
-		title: 'Date',
-		{% else %}
-		title: '{{ datalayer.temporal_resolution_str }}'
-		{%endif %}
-	},
-	yaxis: {
-		{% if datalayer.format_suffix %}
-		title: 'Value [{{ datalayer.format_suffix }}]',
-		{% else %}
-		title: 'Value',
-		{% endif %}
-		automargin: true, // prevent tick labels from beeing cut off
-		{# plotly tickformat is based on: https://d3js.org/d3-format #}
-		{% if datalayer.value_type_str == 'percentage' %}
-		tickformat: ',.{{ datalayer.format_precision }}%',
-		range: [0,1]
-		{% elif datalayer.value_type_str == 'value'  %}
-		tickformat: ',.{{ datalayer.format_precision }}f',
-		{%endif %}
-
-
-	},
-	showlegend: true,
-	legend: {
-		orientation: "h",
-		x: 0,
-    	y: -0.2
-	},
-	margin: {
-		l: 50,
-		r: 10,
-		b: 100,
-		t: 50,
-		pad: 4
-	},
-};
-
-var config = {
-	toImageButtonOptions: {
-		filename: "{{ datalayer.name|slugify}}",
-	},
-	responsive: true
-};
-
-var chart = document.getElementById('chart')
-
-Plotly.newPlot(chart, data, layout, config).then(function() {
-{% for type in datalayer.get_available_shape_types %}
-$.getJSON('/api/datalayers/plotly?datalayer_id={{datalayer.id}}&shape_type={{ type.key}}', function(response) {
-	// inject lyout for the update as well. The xaxis.type seetings get's lost otherwise
-	Plotly.update(chart, {
-		x: [response.x],
-		y: [response.y],
-	}, layout, [{{ forloop.counter0 }}]);
-});
-{% endfor %}
-});
-</script>
-{% endif %}
-
-<script src="{% static 'vendor/highlight/highlight.min.js' %}"></script>
-<script>
+<script type="module">
 hljs.highlightAll();
 </script>
 

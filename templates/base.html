@@ -1,6 +1,7 @@
 {% load static %}
 {% load i18n %}
 {% load l10n %}
+{% load vite %}
 {% get_current_language as LANGUAGE_CODE %}
 <!doctype html>
 <html lang="{{ LANGUAGE_CODE }}" class="no-js">
@@ -8,23 +9,13 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-
-	<link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
-	<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
-	<link rel="stylesheet" href="{% static 'vendor/leaflet.loading/Control.Loading.css' %}">
-	<link rel="stylesheet" href="{% static 'vendor/leaflet-fullscreen/leaflet.fullscreen.css' %}">
-
-
-	<link rel="stylesheet" href="{% static 'vendor/DataTables/datatables.min.css' %}">
-	<link rel="stylesheet" href="{% static 'vendor/autocomplete/autocomplete-theme-classic.css' %}">
-
-	<link rel="stylesheet" href="{% static 'css/styles.css' %}">
-
 	<title>{% block title %}{% endblock %} - {{ datahub_name }}</title>
+
 	<script>
 		document.documentElement.className = document.documentElement.className.replace("no-js","js");
 		document.documentElement.classList.toggle('mac', /Mac|iPhone|iPod|iPad/i.test(navigator.platform))
 	</script>
+
 	{% localize off %}
 	<script>
 		const DATAHUB = {
@@ -34,6 +25,11 @@
 		};
 	</script>
 	{% endlocalize %}
+
+	{% vite_dev %}
+	{% vite_asset "app/resources/js/app.js" %}
+	{% vite_asset "app/resources/css/app.css" %}
+
 	{% block head %}{% endblock %}
 </head>
 <body>
@@ -67,6 +63,7 @@
 				</button>
 
 				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+
 					{% if not datahub_login_required or user.is_authenticated %}
 					<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 						{% for st in nav_shape_types %}
@@ -179,127 +176,6 @@
 			</small>
 		</div>
 	</footer>
-
-
-	<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
-	<script src="{% static 'vendor/plotly-2.29.1.min.js' %}"></script>
-
-	<script src="{% static 'vendor/d3/d3.v7.min.js' %}"></script>
-	<script src="{% static 'vendor/d3/d3.legend.js' %}"></script>
-
-	<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-	<script src="{% static 'vendor/leaflet.loading/Control.Loading.js' %}"></script>
-	<script src="{% static 'vendor/leaflet-fullscreen/Leaflet.fullscreen.min.js' %}"></script>
-
-
-	<script src="{% static 'vendor/jQuery/jquery-3.6.0.min.js' %}"></script>
-	<script src="{% static 'vendor/DataTables/datatables.min.js' %}"></script>
-	<script src="{% static 'js/map.js' %}"></script>
-
-
-	<script src="{% static 'vendor/autocomplete/autocomplete-js.js' %}"></script>
-	<script>
-		const { autocomplete } = window['@algolia/autocomplete-js'];
-
-		// the setOpen() API does not work in combination with detached work
-		// see https://github.com/algolia/autocomplete/issues/843
-		let myautosearch = null;
-		function createSearch() {
-
-			// returned struct contains the following functions:
-			/* const {
-				setActiveItemId,
-				setQuery,
-				setCollections,
-				setIsOpen,
-				setStatus,
-				setContext,
-				refresh,
-				update,
-				destroy,
-			} */
-			myautosearch = autocomplete({
-				container: '#autocomplete',
-				detachedMediaQuery: '',
-				// performs q= (empty string) search on open if true, i don't want that
-				// but true is needed for custom trigger button, so we initalize a
-				// search on each action...
-				// see: https://github.com/algolia/autocomplete/discussions/1029
-				openOnFocus: false,
-				initialState: {
-					isOpen: true,
-				},
-				//onStateChange: function(e) {
-					// onStateChange catches a lot of events, even multiple
-					// per key stroke. Also ther doesn't seem to be a way to
-					// detect of detached Mode is active or not? "isOpen" is the
-					// autcomplete panel, not the detchedmode modal thing.
-				//},
-				placeholder: 'Search for Shapes or Data Layers',
-				getSources({ query }) {
-					return [
-						{
-						sourceId: 'suggestions',
-						getItems() {
-							return fetch('/search?q=' + encodeURIComponent(query))
-							.then(response => response.json())
-							.then(data => {
-								return data.results;
-							})
-							.catch(error => {
-								return [];
-							});
-						},
-						getItemUrl({ item }) {
-							return item.url;
-						},
-						templates: {
-							item({ item, createElement }) {
-								return createElement("div", {
-								dangerouslySetInnerHTML: {
-									__html: `<a href="${item.url}">${item.label}</a>`
-								}
-								});
-							},
-							noResults() {
-							return 'No results matching.';
-							},
-						},
-						},
-					];
-				},
-			});
-		}
-
-		var searchNode = document.getElementById('open-search')
-		if (searchNode) {
-			searchNode.addEventListener("click", function() {
-				createSearch();
-			});
-		}
-
-		document.addEventListener("keydown", ({key}) => {
-			if (key === "Escape") {
-				if (myautosearch) {
-					myautosearch.destroy();
-					myautosearch  = null;
-				}
-			}
-		});
-
-		document.addEventListener('keydown', function(event) {
-			if (event.key.toLowerCase() === 'k' && (event.ctrlKey || event.metaKey)) {
-				event.preventDefault(); // prevent focus/popup of Search Bar in Firefox
-				if (document.querySelectorAll('.aa-DetachedOverlay').length > 0) {
-					myautosearch.destroy();
-					myautosearch = null;
-				} else {
-					createSearch();
-				}
-			}
-		  });
-	</script>
 
 	{% block footer %}{% endblock %}
 </body>

@@ -1,0 +1,8 @@
+.m-pageheader {
+	border-bottom: 1px solid var(--bs-gray-200);
+	padding-bottom: 0.25rem;
+	margin-bottom: 1rem;
+}
+.m-pageheader h1 {
+	margin-bottom: 0;
+}

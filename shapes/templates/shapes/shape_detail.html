@@ -194,9 +194,8 @@
 					<td>
 						<div class="d-flex justify-content-end">
 							<button
-							data-datalayer-id="{{ dl.id }}"
+							data-datalayer-key="{{ dl.key }}"
 							data-shape-id="{{shape.id}}"
-							data-datalayer-name="{{ dl.name }}"
 							title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-link js-add-datalayer-chart">{% icon "graph" %}</button>
 							<a title="{% translate "Download processed data for this shape and Data Layer" %}" href="{% url "datalayer_data" %}?datalayer_id={{ dl.id}}&shape_id={{shape.id}}&format=csv" class="btn btn-sm btn-link">{% icon "download" %}</a>
 							<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link">{% icon "arrow-right" %}</a>
@@ -218,7 +217,7 @@
 {% endblock %}
 
 {% block footer %}
-<script>
+<script type="module">
 	var map = new MyMap('map');
 	map.load_shape({shape_id: '{{ shape.id }}', name: "{{ shape.name }}"});
 
@@ -231,7 +230,7 @@
 	}));
 </script>
 
-<script>
+<script type="module">
 $(document).ready(function() {
 	$('#js-show-raw-data').on('change', function() {
 		var show_raw_values = $(this).is(':checked');
@@ -253,67 +252,14 @@ $(document).ready(function() {
 		]
 	});
 });
-</script>
 
-<script>
-
-
-var charts = document.getElementById('charts');
-$('.js-add-datalayer-chart').on('click', function() {
-
-	var $this = $(this)
-
-	var shape_id       = $this.attr('data-shape-id');
-	var datalayer_id   = $this.attr('data-datalayer-id');
-	var datalayer_name = $this.attr('data-datalayer-name');
-
-	var traces = [{
-		x: [],
-		y: [],
-		mode: 'lines+markers',
-		name: datalayer_name,
-	}];
-	var layout = {
-		title: datalayer_name,
-		xaxis: {
-			title: 'Time',
-		},
-		yaxis: {
-			title: 'Value',
-			automargin: true, // prevent tick labels from beeing cut off
-		},
-		showlegend: true,
-		legend: {
-			orientation: "h",
-			x: 0,
-			y: -0.2
-		},
-		margin: {
-			l: 50,
-			r: 10,
-			b: 100,
-			t: 50,
-			pad: 4
-		},
-	};
-
-	var config = {
-		responsive: true
-	};
-
-	var chart = document.createElement("div");
+let charts = document.getElementById('charts');
+document.querySelectorAll('.js-add-datalayer-chart').forEach(el => el.addEventListener('click', (event) => {
+	let chart = document.createElement("dh-chart");
+	chart.setAttribute("dl", event.currentTarget.dataset.datalayerKey);
+	chart.setAttribute("query", JSON.stringify({shape_id: event.currentTarget.dataset.shapeId}));
 	charts.insertBefore(chart, charts.firstChild);
+}));
 
-	Plotly.newPlot(chart, traces, layout, config).then(function() {
-		$.getJSON(`/api/datalayers/data?datalayer_id=${datalayer_id}&shape_id=${shape_id}&format=plotly`, function(response) {
-			// inject lyout for the update as well. The xaxis.type seetings get's lost otherwise
-			Plotly.update(chart, {
-				x: [response.x],
-				y: [response.y],
-			}, layout, [0]);
-		});
-	});
-});
 </script>
-
 {% endblock %}

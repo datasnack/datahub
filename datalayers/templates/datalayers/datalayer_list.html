@@ -96,45 +96,39 @@
 {% endblock %}
 
 {% block footer %}
-<script>
+<script type="module">
+var table = $('#datalayers').DataTable({
+	pageLength: 25,
+	//order: [[0, 'asc']],
+	columnDefs: [
+		{targets: 'no-sort', orderable: false },
+		{ visible: false, targets: [{% for column in columns %}{{ forloop.counter0|add:3 }},{%endfor%}] }
+	],
+	layout: {
+		topEnd: [document.getElementById('dt-columns'), 'search']
+	},
+	initComplete: function() {
+		// apply inline-block style to search so dt-columns and dt-search
+		// or along side each other and not stacked.
+		$('.dt-search').addClass('d-inline-block');
 
-$(document).ready(function() {
-	var table = $('#datalayers').DataTable({
-		pageLength: 25,
-		//order: [[0, 'asc']],
-		columnDefs: [
-			{targets: 'no-sort', orderable: false },
-			{ visible: false, targets: [{% for column in columns %}{{ forloop.counter0|add:3 }},{%endfor%}] }
-		],
-		layout: {
-			topEnd: [document.getElementById('dt-columns'), 'search']
-		},
-		initComplete: function() {
-			// apply inline-block style to search so dt-columns and dt-search
-			// or along side each other and not stacked.
-			$('.dt-search').addClass('d-inline-block');
+		$('.dt-uninitialized').removeClass('dt-uninitialized');
+	}
+});
 
-			$('.dt-uninitialized').removeClass('dt-uninitialized');
-		}
-	});
+document.querySelectorAll('input.js-dt-toggle-col').forEach((el) => {
+	el.addEventListener('change', function (e) {
+		e.preventDefault();
 
-	document.querySelectorAll('input.js-dt-toggle-col').forEach((el) => {
-		el.addEventListener('change', function (e) {
-			e.preventDefault();
+		let columnIdx = e.target.getAttribute('data-column');
+		let column = table.column(columnIdx);
 
-			let columnIdx = e.target.getAttribute('data-column');
-			let column = table.column(columnIdx);
-
-			// Toggle the visibility
-			column.visible(!column.visible());
-		});
+		// Toggle the visibility
+		column.visible(!column.visible());
 	});
 });
-</script>
 
-<script>
-	$('.dropdown-menu').on('click', function(event) {
-		event.stopPropagation();
-	});
+// prevent columns selector dropdown from being closed after one toggle
+document.querySelector('#dt-columns .dropdown-menu').addEventListener('click', (e) => {e.stopPropagation()});
 </script>
 {% endblock %}

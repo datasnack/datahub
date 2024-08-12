@@ -19,6 +19,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 
 from datalayers.models import Datalayer
+from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
 from datalayers.utils import get_conn_string
 from shapes.models import Shape, Type
 
@@ -117,6 +118,9 @@ def data(request):
     start_date = request.GET.get("start_date", None)
     end_date = request.GET.get("end_date", None)
 
+    # resample?
+    resample = request.GET.get("resample", "")
+
     # get data
     df = datalayer.data(
         start_date=start_date, end_date=end_date, shape=shape, shape_type=shape_type
@@ -147,7 +151,22 @@ def data(request):
                 }
             )
         case "plotly":
+            if len(resample) > 0:
+                df[str(datalayer.temporal_resolution)] = pd.to_datetime(
+                    df[str(datalayer.temporal_resolution)]
+                )
+                df = df.set_index(str(datalayer.temporal_resolution))
+                df = df.resample(resample).mean()
+                df[str(datalayer.temporal_resolution)] = df.index
+                df = df.dropna()
+
+            if shape:
+                name = f"{shape.name} ({shape.type.name})"
+
             json_data = {
+                "name": name,
+                "mode": "lines+markers",
+                # "type": "bar",
                 "x": df[str(datalayer.temporal_resolution)].tolist(),
                 "y": df["value"].tolist(),
             }
@@ -171,8 +190,11 @@ def plotly(request):
     datalayer = _get_datalayer_from_request(request)
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
+    # resample?
+    resample = request.GET.get("resample", "")
+
     query = sql.SQL(
-        "SELECT {temporal_column}, AVG(value) AS value \
+        "SELECT {temporal_column}, AVG(value) AS value, MIN(value) AS min, MAX(value) AS max \
         FROM {table} \
         JOIN shapes_shape s ON s.id = {table}.shape_id \
         WHERE s.type_id = %(type)s \
@@ -189,13 +211,95 @@ def plotly(request):
         params={"type": shape_type.id},
     )
 
-    # df = df.set_index(str(datalayer.temporal_resolution))
-    # df = df.resample('W').mean()
+    if len(resample) > 0:
+        df[str(datalayer.temporal_resolution)] = pd.to_datetime(
+            df[str(datalayer.temporal_resolution)]
+        )
+        df = df.set_index(str(datalayer.temporal_resolution))
+        df = df.resample(resample).mean()
+        df[str(datalayer.temporal_resolution)] = df.index
+        df = df.dropna()
 
     json_data = {
-        #'x': df.index.values.tolist(),
-        "x": df[str(datalayer.temporal_resolution)].tolist(),
-        "y": df["value"].tolist(),
+        "traces": [
+            {
+                #'x': df.index.values.tolist(),
+                "name": f"{shape_type.name} (mean)",
+                "x": df[str(datalayer.temporal_resolution)].tolist(),
+                "y": df["value"].tolist(),
+            },
+            {
+                "name": f"{shape_type.name} (lower)",
+                "x": df[str(datalayer.temporal_resolution)].tolist(),
+                "y": df["min"].tolist(),
+                "fill": "tonexty",
+                "fillcolor": "rgba(68, 68, 68, 0.3)",
+                "line": {"width": 0},
+            },
+            {
+                "name": f"{shape_type.name} (upper)",
+                "x": df[str(datalayer.temporal_resolution)].tolist(),
+                "y": df["max"].tolist(),
+                "fill": "tonexty",
+                "fillcolor": "rgba(68, 68, 68, 0.3)",
+                "line": {"width": 0},
+            },
+        ]
     }
 
     return JsonResponse(json_data)
+
+
+def meta(request):
+    datalayer = _get_datalayer_from_request(request)
+
+    layout = {
+        "title": {
+            "text": datalayer.name,
+            "subtitle": {
+                "text": datalayer.key,
+            },
+        },
+        "xaxis": {},
+        "yaxis": {"automargin": True},
+        "showlegend": True,
+        "legend": {
+            "orientation": "h",
+            "x": 0,
+            "y": -0.2,
+        },
+        "margin": {"l": 50, "r": 10, "b": 100, "t": 50, "pad": 4},
+    }
+
+    if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
+        layout["xaxis"] = {"title": "Year", "type": "date", "hoverformat": "%Y"}
+    elif datalayer.temporal_resolution == LayerTimeResolution.DAY:
+        layout["xaxis"] = {"title": "Date", "type": "date", "hoverformat": "%Y-%m-%d"}
+
+    if datalayer.format_suffix():
+        layout["yaxis"]["title"] = f"Value [{datalayer.format_suffix()}]"
+    else:
+        layout["yaxis"]["title"] = "Value"
+
+    if datalayer.value_type == LayerValueType.PERCENTAGE:
+        layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision() }%"
+        layout["yaxis"]["range"] = [0, 1]
+    elif datalayer.value_type == LayerValueType.VALUE:
+        layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision() }f"
+
+    shape_types = [
+        {"name": st.name, "key": st.key} for st in datalayer.get_available_shape_types
+    ]
+
+    res = {
+        "plotly": {"layout": layout, "config": {"responsive": True}},
+        "datalayer": {
+            "temporal_resolution": str(datalayer.temporal_resolution),
+            "available_years": datalayer.get_available_years,
+            "first_time": datalayer.first_time(),
+            "last_time": datalayer.last_time(),
+            "shape_types": shape_types,
+        },
+    }
+
+    return JsonResponse(res)

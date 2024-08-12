@@ -1,0 +1,164 @@
+/* Vendor */
+@import "bootstrap/scss/bootstrap.scss";
+@import "datatables.net-bs5/css/dataTables.bootstrap5.css";
+@import "@algolia/autocomplete-theme-classic/dist/theme.min.css";
+
+@import "leaflet/dist/leaflet.css";
+@import "leaflet-loading/src/Control.Loading.css";
+@import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
+
+@import "highlight.js/styles/github.css";
+
+@import "modules/pageheader.css";
+@import "modules/searchbutton.css";
+
+
+/* overwrite large Bootstrap headings */
+h1 {
+	font-size: min(calc(1.375rem + 1.5vw), 2rem);
+}
+h2 {
+	font-size: min(calc(1.325rem + .9vw), 1.75rem);
+}
+h3 {
+	font-size: min(calc(1.3rem + .6vw), 1.5rem);
+}
+h4 {
+	font-size: min(calc(1.275rem + .3vw), 1.25rem);
+}
+h5 {
+	font-size: 1.125rem;
+}
+h6 {
+	font-size: 1rem;
+}
+
+.footer-copy {
+	border-top: 1px solid var(--bs-gray-200);
+}
+
+
+.table-meta_data thead th:first-child {
+	width: 33%;
+}
+
+.link-subtle {
+	color: currentColor;
+	text-decoration: none;
+}
+.link-subtle:hover,
+.link-subtle:focus {
+	text-decoration: underline;
+}
+
+/**
+ * Map Control overlay for map.
+ * https://leafletjs.com/examples/choropleth/
+ */
+.info {
+	padding: 6px 8px;
+	font: 14px/16px Arial, Helvetica, sans-serif;
+	background: white;
+	background: rgba(255,255,255,0.8);
+	box-shadow: 0 0 15px rgba(0,0,0,0.2);
+	border-radius: 5px;
+	min-width: 150px;
+}
+.info h4 {
+	margin: 0 0 5px;
+	color: #777;
+}
+
+.legend {
+	line-height: 18px;
+	color: #555;
+}
+.legend i {
+	width: 18px;
+	height: 18px;
+	float: left;
+	margin-right: 8px;
+	opacity: 0.7;
+}
+
+.c-icon {
+	fill: currentColor;
+}
+
+.icon-text {
+	fill: currentColor;
+}
+
+
+.c-tag {
+	color: rgba(var(--bs-secondary-rgb), 1);
+	text-decoration: none;
+	background-color: var(--bs-secondary-bg-subtle);
+}
+
+.datalayer-states--inline .datalayer-state {
+	display: inline-block;
+}
+
+.datalayer-state {
+	position: relative;
+	font-size: .875em;
+	color: rgba(var(--bs-secondary-rgb),1);
+}
+.datalayer-state--active .datalayer-state-icon {
+	color: var(--bs-success);
+}
+.datalayer-state--inactive .datalayer-state-icon {
+	color: var(--bs-gray-400);
+}
+
+
+.dt-uninitialized .dt-default-hidden {
+	display: none;
+}
+
+
+.c-pidbadge {
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, .3);
+	--border-radius: 3px;
+
+	color: #fff;
+	font-size: 80%;
+	font-family: "DejaVu Sans", Verdana, Geneva, sans-serif;
+}
+.c-pidbadge-type {
+	border-top-left-radius: var(--border-radius);
+	border-bottom-left-radius: var(--border-radius);
+	background-color: #555;
+	padding: 0 0.3em;
+	text-decoration: none;
+	display: inline-block;
+}
+
+.c-pidbadge-pid {
+	border-top-right-radius: var(--border-radius);
+	border-bottom-right-radius: var(--border-radius);
+	background-color: #007ec6;
+	background-image: linear-gradient(to top,
+    rgba(187, 187, 187, 0.1) 0%,
+    rgba(187, 187, 187, 0.1) 10%);
+	padding: 0 0.3em;
+	text-decoration: none;
+	display: inline-block;
+}
+
+
+
+dh-chart {
+	--aa-search-input-height: 36px;
+	--aa-input-border-color-rgb: 222, 226, 230;
+	--aa-input-border-color-alpha: 1;
+
+
+	min-height: 538px;
+	display: block;
+}
+
+dh-chart .aa-Form {
+	border-radius: var(--bs-border-radius); /* no var in AA for this */
+}

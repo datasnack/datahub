@@ -27,6 +27,7 @@ coverage.xml
 .env
 config.ini
 
+/static/
 /data/
 /data
 /data.*

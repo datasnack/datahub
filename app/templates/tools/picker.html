@@ -66,7 +66,7 @@
 									<div class="d-flex justify-content-end">
 										<button
 										data-container="charts{{ forloop.parentloop.counter0 }}"
-										data-datalayer-id="{{ dl.id }}"
+										data-datalayer-key="{{ dl.key }}"
 										data-shape-id="{{shape.id}}"
 										data-datalayer-name="{{ dl.name }}"
 										title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-link js-add-datalayer-chart">{% icon "graph" %}</button>
@@ -132,7 +132,7 @@
 {% endblock %}
 
 {% block footer %}
-<script>
+<script type="module">
 var picker = new MyMap('map');
 
 var marker = false;
@@ -145,6 +145,28 @@ picker.map.on("click", function (event) {
 	document.getElementById('lng').value = event.latlng.lng;
 
 	marker = L.marker(event.latlng).addTo(picker.map);
+});
+
+$('.js-add-datalayer-chart').on('click', function() {
+	console.log("show chart");
+	var $this = $(this)
+	var container      = $this.attr('data-container');
+	var shape_id       = $this.attr('data-shape-id');
+	var datalayer_key  = $this.attr('data-datalayer-key');
+	var datalayer_name = $this.attr('data-datalayer-name');
+
+
+	var config = {
+		responsive: true
+	};
+
+	var charts = document.getElementById(container);
+	var chart = document.createElement("dh-chart");
+	chart.setAttribute("dl", datalayer_key);
+	chart.setAttribute("query", JSON.stringify({shape_id: shape_id}));
+
+	charts.insertBefore(chart, charts.firstChild);
+
 });
 
 {% if shapes %}
@@ -162,74 +184,18 @@ var $table{{ forloop.counter0 }} = $('#datalayers{{ forloop.counter0 }}').DataTa
 	]
 });
 
-document.getElementById('details{{ forloop.counter0 }}').addEventListener('toggle', (event) => {
+/*document.getElementById('details{{ forloop.counter0 }}').addEventListener('toggle', (event) => {
 	console.log("asdasdad");
 	map{{ forloop.counter0 }}.map.invalidateSize();
 	$('#datalayers{{ forloop.counter0 }}').DataTable().responsive.recalc();
-});
+});*/
 
 {%endfor%}
 {% endif %}
 
 
 
-$('.js-add-datalayer-chart').on('click', function() {
 
-	var $this = $(this)
-
-	var container      = $this.attr('data-container');
-	var shape_id       = $this.attr('data-shape-id');
-	var datalayer_id   = $this.attr('data-datalayer-id');
-	var datalayer_name = $this.attr('data-datalayer-name');
-
-	var traces = [{
-		x: [],
-		y: [],
-		mode: 'lines+markers',
-		name: datalayer_name,
-	}];
-	var layout = {
-		title: datalayer_name,
-		xaxis: {
-			title: 'Time',
-		},
-		yaxis: {
-			title: 'Value',
-			automargin: true, // prevent tick labels from beeing cut off
-		},
-		showlegend: true,
-		legend: {
-			orientation: "h",
-			x: 0,
-			y: -0.2
-		},
-		margin: {
-			l: 50,
-			r: 10,
-			b: 100,
-			t: 50,
-			pad: 4
-		},
-	};
-
-	var config = {
-		responsive: true
-	};
-
-	var charts = document.getElementById(container);
-	var chart = document.createElement("div");
-	charts.insertBefore(chart, charts.firstChild);
-
-	Plotly.newPlot(chart, traces, layout, config).then(function() {
-		$.getJSON(`/api/datalayers/data?datalayer_id=${datalayer_id}&shape_id=${shape_id}&format=plotly`, function(response) {
-			// inject lyout for the update as well. The xaxis.type seetings get's lost otherwise
-			Plotly.update(chart, {
-				x: [response.x],
-				y: [response.y],
-			}, layout, [0]);
-		});
-	});
-});
 
 </script>
 {% endblock %}
