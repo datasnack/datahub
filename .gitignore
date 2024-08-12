@@ -240,3 +240,6 @@ data.*
 src.*
 /src
 /node_modules
+
+
+!/app/static/build/

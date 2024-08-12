@@ -1,2 +1,5 @@
 # Prevent .sh scripts failing after docker build on Windows
 *.sh text eol=lf
+
+# To simplify build/deployment processes we keep compliled assets for now
+/app/static/build/* binary
