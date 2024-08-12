@@ -11,7 +11,7 @@ The recommended way to use the Data Hub is via Docker and to reference the image
 
 To install the Data Hub from source, follow these steps:
 
-- Use at least Python v3.11.x
+- Use at least Python v3.12.x
 - Install a PostGIS v16.x database (you can use the provided Docker image from the `docker-compose.yml`).
 - Create a `.env` file based on the `.env.example` file.
 - Create a Python virtual environment with `python -m venv .venv` and activate it with `source .venv/bin/activate`.
