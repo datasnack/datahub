@@ -2,6 +2,7 @@ from django.contrib.gis.geos import Point
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils.translation import gettext as _
 
 from datalayers.models import Datalayer
 from shapes.models import Shape, Type
@@ -66,6 +67,7 @@ def tools_picker(request):
         "shapes": None,
         "datalayers": None,
         "point": None,
+        "warning": None,
     }
 
     lat = request.GET.get("lat")
@@ -76,14 +78,19 @@ def tools_picker(request):
         shapes = Shape.objects.filter(geometry__contains=point).order_by(
             "type__position"
         )
-        context["shapes"] = shapes
 
-        context["point"] = point
+        if not shapes:
+            context["warning"] = _(
+                "The provided location did not intersect with any Shapes."
+            )
+        else:
+            context["shapes"] = shapes
+            context["point"] = point
 
-        all_layers = Datalayer.objects.all()
-        context["datalayers"] = []
-        for layer in all_layers:
-            if layer.is_loaded():
-                context["datalayers"].append(layer)
+            all_layers = Datalayer.objects.all()
+            context["datalayers"] = []
+            for layer in all_layers:
+                if layer.is_loaded():
+                    context["datalayers"].append(layer)
 
     return render(request, "tools/picker.html", context)

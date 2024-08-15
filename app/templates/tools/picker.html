@@ -5,20 +5,27 @@
 {% load datalayer_value %}
 {% load datalayerformat %}
 
-
 {% block title %}{% translate "Location picker" %}{% endblock %}
 
 {% block content %}
 
-<h1>{% translate "Location picker" %}</h1>
+<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
+	</div>
 
+	<h1>{% translate "Location picker" %}</h1>
+</div>
 
-{% if shapes %}
+{% if warning %}
 
+	<div class="alert alert-warning">
+		{{ warning }}
+	</div>
+{% elif shapes %}
 <div class="row">
 <div class="col-12">
 	<p>
-		{% translate "Your point matches is inside the following shapes:" %}
+		{% translate "The provided location is contained inside the following shapes:" %}
 	</p>
 
 	{% for shape in shapes %}
@@ -30,6 +37,9 @@
         <div class="card-body">
 			<div class="row">
 				<div class="col-12 col-lg-8">
+
+
+					<div class="mb-3">
 					<table class="table table-sm small table-striped" id="datalayers{{ forloop.counter0 }}">
 						<thead>
 							<tr>
@@ -46,15 +56,29 @@
 						<tbody>
 						{% for dl in datalayers %}
 							<tr>
-								<td class="align-middle">{{ dl.category }}</td>
-								<td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
+								<td class="align-middle">
+									{% with category=dl.category %}
+										{% if category %}
+											<a class="link-secondary" href="{{ category.get_absolute_url}}">
+												{{ category }}
+											</a>
+										{% else %}
+											-
+										{% endif %}
+									{% endwith %}
+								</td>
+								<td class="align-middle">
+									<a class="text-body" href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
+									{% include "datalayers/partials/tags.html" with datalayer=dl %}
+									<code class="visually-hidden">{{ dl.key }}</code>
+								</td>
 
 								{% with dlv=shape|datalayer_first_value:dl %}
-								<td class="align-middle">{{ dlv.date }}</td>
+								<td class="align-middle text-nowrap">{{ dlv.date }}</td>
 								{% endwith %}
 
 								{% with dlv=shape|datalayer_value:dl %}
-								<td class="align-middle">{{ dlv.date }}</td>
+								<td class="align-middle text-nowrap">{{ dlv.date }}</td>
 								<td class="align-middle js-value" data-order="{{ dlv.value }}"
 								  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
 								  data-value-raw="{{ dlv.value }}">
@@ -69,15 +93,17 @@
 										data-datalayer-key="{{ dl.key }}"
 										data-shape-id="{{shape.id}}"
 										data-datalayer-name="{{ dl.name }}"
-										title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-link js-add-datalayer-chart">{% icon "graph" %}</button>
-										<a title="{% translate "Download processed data for this shape and Data Layer" %}" href="{% url "datalayer_data" %}?datalayer_id={{ dl.id}}&shape_id={{shape.id}}&format=csv" class="btn btn-sm btn-link">{% icon "download" %}</a>
-										<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link">{% icon "arrow-right" %}</a>
+										title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
+										<a title="{% translate "Download processed data for this shape and Data Layer" %}" href="{% url "datalayer_data" %}?datalayer_id={{ dl.id}}&shape_id={{shape.id}}&format=csv" class="ms-1 btn btn-sm btn-outline-primary">{% icon "download" %}</a>
+										<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="ms-1 btn btn-sm btn-link">{% icon "arrow-right" %}</a>
 									</div>
 								</td>
 							</tr>
 						{% endfor %}
 						</tbody>
 					</table>
+					</div>
+
 				</div>
 				<div class="col-12 col-lg-4">
 					<div id="map{{ forloop.counter0 }}" style="width: 100%; height: 250px"></div>
@@ -97,35 +123,45 @@
 <hr>
 {% endif %}
 <p>
-	Shows shapes and known Data Layer values for a given coordinate.
+	{% translate "Provide a location by latitude/longitude to identify all shapes that contain the given point." %}
 </p>
 
 <div class="row">
 	<div class="col-md-6">
 
-		<div class="mb-3">
-			{% translate "Provide location of interest:" %}
-		</div>
 
-		<div class="mb-3">
-			<div id="map" style="width: 100%; height: 300px"></div>
-			<div class="form-text">{% translate "Click on the map to set coordinates in the form." %}</div>
-		</div>
+		<div class="card">
+			<div class="card-header">{% translate "Provide location of interest" %}</div>
+			<div class="card-body">
 
-		<form action="{% url 'app:tools_picker' %}" method="GET" class="mb-3">
-			<div class="row">
-				<div class="col-6 mb-3">
-					<label for="lat">{% translate "Latitude" %}</label>
-					<input type="number" class="form-control" id="lat" name="lat" step="any"  min="-90" max="90" placeholder="{% translate "Latitude" %}" required>
+
+				<div class="mb-3">
+					<div id="map" style="width: 100%; height: 300px"></div>
+					<div class="form-text">{% translate "Click on the map to set coordinates in the form." %}</div>
 				</div>
-				<div class="mb-3 col-6">
-					<label for="lng">{% translate "Longitude" %}</label>
-					<input type="number" class="form-control" id="lng" name="lng" step="any" min="-180" max="180" placeholder="{% translate "Longitude" %}" required>
-				</div>
+
+				<form action="{% url 'app:tools_picker' %}" method="GET">
+					<div class="row">
+						<div class="col-6 mb-3">
+							<label for="lat">{% translate "Latitude" %}</label>
+							<input type="number" class="form-control" id="lat" name="lat" step="any"  min="-90" max="90" placeholder="{% translate "Latitude" %}" required>
+						</div>
+						<div class="mb-3 col-6">
+							<label for="lng">{% translate "Longitude" %}</label>
+							<input type="number" class="form-control" id="lng" name="lng" step="any" min="-180" max="180" placeholder="{% translate "Longitude" %}" required>
+						</div>
+					</div>
+
+
+					<div class="d-flex justify-content-end">
+							<button type="submit" class="btn btn-primary">
+								{% translate "Submit" %}
+							</button>
+					</div>
+				</form>
 			</div>
+		</div>
 
-			<button type="submit" class="btn btn-primary">Submit</button>
-		</form>
 	</div>
 </div>
 
@@ -148,7 +184,6 @@ picker.map.on("click", function (event) {
 });
 
 $('.js-add-datalayer-chart').on('click', function() {
-	console.log("show chart");
 	var $this = $(this)
 	var container      = $this.attr('data-container');
 	var shape_id       = $this.attr('data-shape-id');
@@ -167,6 +202,9 @@ $('.js-add-datalayer-chart').on('click', function() {
 
 	charts.insertBefore(chart, charts.firstChild);
 
+	chart.scrollIntoView({
+		block: 'end'
+	});
 });
 
 {% if shapes %}
