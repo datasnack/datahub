@@ -70,10 +70,12 @@
 				{% else %}
 					-
 				{% endif %}
-
 			{% endwith %}
 		</td>
-        <td class="align-middle"><a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a></td>
+        <td class="align-middle">
+			<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
+			{% include "datalayers/partials/tags.html" with datalayer=dl %}
+		</td>
         <td class="align-middle"><code>{{ dl.key }}</code></td>
 
 		{% for column in columns %}

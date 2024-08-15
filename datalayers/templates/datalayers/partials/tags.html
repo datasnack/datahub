@@ -1,0 +1,11 @@
+{% with tags=datalayer.tags.all %}
+	{% if tags|length %}
+	| <ul class="d-inline list-inline">
+		{% for tag in tags %}
+		<li class="list-inline-item me-0">
+			<a class="badge c-tag" href="{% url "datalayers:datalayer_index_tag" tag.slug %}">#{{tag.name}}</a>
+		</li>
+		{% endfor %}
+	</ul>
+	{% endif %}
+{% endwith %}
