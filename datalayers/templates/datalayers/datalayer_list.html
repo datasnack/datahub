@@ -87,7 +87,10 @@
         </td>
         <td>
             <div class="d-flex justify-content-end">
-                <a href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link">{% translate "Details" %}</a>
+                <a href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link text-nowrap">
+					<span class="d-none d-sm-inline">{% translate "Details" %}</span>
+					{% icon "arrow-right" %}
+				</a>
             </div>
         </td>
     </tr>

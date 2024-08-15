@@ -148,11 +148,13 @@
 		</div>
 
 
+		<div class="mb-3">
 		<table class="table table-sm table-striped" id="datalayers">
 			<thead>
 				<tr>
 					<th>{% translate "Category" %}</th>
-					<th>{% translate "Data Layer" %}</th>
+					<th>{% translate "Name" %}</th>
+					<th>{% translate "Key" %}</th>
 					<th>{% translate "First" %}</th>
 					<th>{% translate "Last" %}</th>
 					<th>
@@ -180,13 +182,14 @@
 						<a class="text-body" href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
 						{% include "datalayers/partials/tags.html" with datalayer=dl %}
 					</td>
+					<td class="align-middle"><code>{{ dl.key }}</code></td>
 
 					{% with dlv=shape|datalayer_first_value:dl %}
-					<td class="align-middle">{{ dlv.date }}</td>
+					<td class="align-middle text-nowrap">{{ dlv.date }}</td>
 					{% endwith %}
 
 					{% with dlv=shape|datalayer_value:dl %}
-					<td class="align-middle">{{ dlv.date }}</td>
+					<td class="align-middle text-nowrap">{{ dlv.date }}</td>
 					<td class="align-middle js-value" data-order="{{ dlv.value }}"
 					  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
 					  data-value-raw="{{ dlv.value }}">
@@ -199,15 +202,16 @@
 							<button
 							data-datalayer-key="{{ dl.key }}"
 							data-shape-id="{{shape.id}}"
-							title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-link js-add-datalayer-chart">{% icon "graph" %}</button>
-							<a title="{% translate "Download processed data for this shape and Data Layer" %}" href="{% url "datalayer_data" %}?datalayer_id={{ dl.id}}&shape_id={{shape.id}}&format=csv" class="btn btn-sm btn-link">{% icon "download" %}</a>
-							<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link">{% icon "arrow-right" %}</a>
+							title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
+							<a title="{% translate "Download processed data for this shape and Data Layer" %}" href="{% url "datalayer_data" %}?datalayer_id={{ dl.id}}&shape_id={{shape.id}}&format=csv" class="ms-1 btn btn-sm btn-outline-primary">{% icon "download" %}</a>
+							<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="ms-1 btn btn-sm btn-link">{% icon "arrow-right" %}</a>
 						</div>
 					</td>
 				</tr>
 			{% endfor %}
 			</tbody>
 		</table>
+	</div>
 
 		<div id="charts" class="mb-3">
 
@@ -262,6 +266,10 @@ document.querySelectorAll('.js-add-datalayer-chart').forEach(el => el.addEventLi
 	chart.setAttribute("dl", event.currentTarget.dataset.datalayerKey);
 	chart.setAttribute("query", JSON.stringify({shape_id: event.currentTarget.dataset.shapeId}));
 	charts.insertBefore(chart, charts.firstChild);
+	chart.scrollIntoView({
+		block: 'end'
+	});
+
 }));
 
 </script>
