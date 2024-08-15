@@ -19,7 +19,7 @@
 			</ul>
 		</div>
 
-		<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#api">API</button>
+		<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal_api_{{ datalayer.key }}">{% translate "API" %}</button>
 
 		{% if perms.shapes.change_datalayer %}
 			<a class="btn btn-sm btn-outline-primary" href="{% url "admin:datalayers_datalayer_change" datalayer.id %}">{% icon "pencil" %}</a>
@@ -456,6 +456,9 @@
 
 
 {% block footer %}
+
+{% include "datalayers/partials/api_modal.html" with datalyer=datalayer %}
+
 <script type="module">
 
 var map = new MyMap('map');

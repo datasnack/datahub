@@ -21,6 +21,20 @@ class LayerTimeResolution(Enum):
     def __str__(self) -> str:
         return str(self.value)
 
+    def string(self) -> str:
+        """Duplicated str method so we can call .string in Django templates."""
+        return str(self.value)
+
+    def format(self) -> str:
+        if self == LayerTimeResolution.YEAR:
+            return "%Y"
+        if self == LayerTimeResolution.MONTH:
+            return "%Y-%m"
+        if self == LayerTimeResolution.DAY:
+            return "%Y-%m-%d"
+
+        raise ValueError("Unsupported time resolution")
+
 
 class LayerValueType(Enum):
     VALUE = "value"
