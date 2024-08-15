@@ -55,6 +55,8 @@ et-xmlfile==1.1.0
     # via openpyxl
 fiona==1.9.6
     # via datahub (pyproject.toml)
+geoalchemy2==0.15.2
+    # via datahub (pyproject.toml)
 geojson==3.1.0
     # via datahub (pyproject.toml)
 geopandas==1.0.1
@@ -99,6 +101,7 @@ osmnx==1.9.3
     # via datahub (pyproject.toml)
 packaging==24.1
     # via
+    #   geoalchemy2
     #   geopandas
     #   gunicorn
     #   pyogrio
@@ -161,7 +164,9 @@ six==1.16.0
 snuggs==1.4.7
     # via rasterio
 sqlalchemy==2.0.31
-    # via datahub (pyproject.toml)
+    # via
+    #   datahub (pyproject.toml)
+    #   geoalchemy2
 sqlparse==0.5.0
     # via
     #   django

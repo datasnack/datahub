@@ -10,6 +10,7 @@ from shapely import wkt
 
 from django.db import connection
 
+from sqlalchemy import create_engine
 from datalayers.utils import get_conn_string
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
 from shapes.models import Shape
@@ -50,19 +51,7 @@ class MeteostatLayer(BaseLayer):
         raise NotImplementedError
 
     def download(self):
-        stations = Stations()
-
-        # stations = stations.region("GH")
-
-        stations = stations.bounds(
-            (52.675507659705794, 13.088347600424314),
-            (52.338245531668925, 13.761159130580843),
-        )
-
-        start = dt.datetime(2022, 1, 1, tzinfo=dt.UTC)
-        end = dt.datetime(2022, 12, 31, tzinfo=dt.UTC)
-
-        df = stations.fetch()
+        df = self.stations().fetch()
 
         # Meteostat ID is not always numerical. Safe the internal Meteostat ID
         # but add an numerical index for smooth PostGIS access
@@ -90,7 +79,7 @@ class MeteostatLayer(BaseLayer):
                 "Fetching Daily %s (%s)",
                 {"name": row["name"], "meteostat_id": row["meteostat_id"]},
             )
-            data = Daily(row["meteostat_id"], start, end)
+            data = Daily(row["meteostat_id"], start=self.start(), end=self.end())
             data = data.fetch()
 
             self.layer.debug("Found Daily %s rows", len(data))
@@ -111,7 +100,7 @@ class MeteostatLayer(BaseLayer):
                 "Fetching Hourly %s (%s)",
                 {"name": row["name"], "meteostat_id": row["meteostat_id"]},
             )
-            data = Hourly(row["meteostat_id"], start, end)
+            data = Hourly(row["meteostat_id"], start=self.start(), end=self.end())
             data = data.fetch()
 
             self.layer.debug("Found Hourly %s rows", {"len": len(data)})
@@ -122,13 +111,18 @@ class MeteostatLayer(BaseLayer):
         gdf = gdf[
             ~gdf["id"].isin(stations_with_no_data)
         ]  # do not write empty stations to database
-        gdf.to_postgis(self.table_name, connection, if_exists="replace")
+
+        engine = create_engine(get_conn_string())
+
+        gdf.to_postgis(self.table_name, engine, index=False, if_exists="replace")
 
         merged_df = pd.concat(dfs_daily)
-        merged_df.to_sql("meteostat_daily", connection, if_exists="replace")
+        merged_df.to_sql("meteostat_daily", engine, if_exists="replace")
 
         merged_df = pd.concat(dfs_hourly)
-        merged_df.to_sql("meteostat_hourly", connection, if_exists="replace")
+        merged_df.to_sql("meteostat_hourly", engine, if_exists="replace")
+
+        engine.dispose()
 
     def get_station_data_for_shape(self, shape):
         # load all stations
