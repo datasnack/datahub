@@ -10,6 +10,17 @@ from datalayers.utils import get_conn_string
 class Command(BaseCommand):
     help = "Dump complete database for backup/later restoration."
 
+    user_data_tables = (
+        "app_user",
+        "app_user_groups",
+        "app_user_user_permissions",
+        "auth_group",
+        "auth_group_permissions",
+        "django_admin_log",
+        "auth_permission",
+        "django_content_type",
+    )  # tuple for immutable
+
     def add_arguments(self, parser):
         parser.add_argument(
             "-f",
@@ -19,21 +30,59 @@ class Command(BaseCommand):
             help="Specify the filename for the dump",
         )
 
+        parser.add_argument(
+            "--exclude-user-data",
+            action="store_true",
+            help="Exclude data of user tables (but keep table definition)",
+        )
+
+        parser.add_argument(
+            "--exclude-user-tables",
+            action="store_true",
+            help="Exclude user data table definition",
+        )
+
+        parser.add_argument(
+            "--format",
+            choices=["plain", "custom"],
+            default="custom",
+            help='Specify the data format, choose either "plain" or "custom"',
+        )
+
     def handle(self, *args, **options):
         file = options["file"]
+        output_format = options["format"]
+        extension = "dump"
+        if output_format == "plain":
+            extension = "sql"
+
         if not file:
-            file = f"{dt.datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}_datahub.dump"
+            file = f"{dt.datetime.now(dt.UTC).strftime('%Y-%m-%d_%H-%M-%S')}_datahub.{extension}"
 
         path = Path("data/") / file
 
         try:
             params = [
                 "pg_dump",
-                "-Fc",
+                f"-F{output_format}",
                 "-f",
                 f"{path}",
                 get_conn_string(sqlalchemy=False),
             ]
+
+            # active sessions should never be dumped
+            params.append("--exclude-table-data")
+            params.append("django_session")
+
+            if options["exclude_user_data"]:
+                for table in self.user_data_tables:
+                    params.append("--exclude-table-data")
+                    params.append(table)
+
+            if options["exclude_user_tables"]:
+                for table in self.user_data_tables:
+                    params.append("--exclude-table")
+                    params.append(table)
 
             # to capture stderr we need to set "stderr=subprocess.STDOUT", to
             # actually get a string and not a byte string (b'..') we need to set
