@@ -37,9 +37,9 @@
 	<div class="datalayer-state datalayer-state--{% if datalayer.has_files %}active{%else%}inactive{%endif%}">
 
 		{% if datalayer.has_files %}
-			{% translate "Data is available local" as label %}
+			{% translate "Data is available locally" as label %}
 		{% else %}
-			{% translate "Data is not available local" as label %}
+			{% translate "Data is not available locally" as label %}
 		{% endif %}
 
 		<span title="{{ label }}" class="datalayer-state-icon">{% icon "file-directory" %}</span>
