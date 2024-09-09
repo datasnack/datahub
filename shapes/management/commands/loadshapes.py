@@ -2,13 +2,12 @@ import argparse
 
 import geopandas
 from psycopg import sql
-from sqlalchemy import create_engine
 
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 from django.utils.timezone import now
 
+from datalayers.utils import get_engine
 from shapes.models import Shape, Type
 
 
@@ -21,9 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         file = options["file"]
 
-        engine = create_engine(
-            f"postgresql://{settings.DATABASES['default']['USER']}:{settings.DATABASES['default']['PASSWORD']}@{settings.DATABASES['default']['HOST']}:{settings.DATABASES['default']['PORT']}/{settings.DATABASES['default']['NAME']}"
-        )
+        engine = get_engine()
 
         gdf = geopandas.read_file(file.name)
         required_cols = ["id", "name", "type", "parent_id", "properties", "geometry"]
