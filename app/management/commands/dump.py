@@ -17,8 +17,6 @@ class Command(BaseCommand):
         "auth_group",
         "auth_group_permissions",
         "django_admin_log",
-        "auth_permission",
-        "django_content_type",
     )  # tuple for immutable
 
     def add_arguments(self, parser):
@@ -33,13 +31,13 @@ class Command(BaseCommand):
         parser.add_argument(
             "--exclude-user-data",
             action="store_true",
-            help="Exclude data of user tables (but keep table definition)",
+            help="Exclude data of user tables (but keep table definition), useful for export to new instances.",
         )
 
         parser.add_argument(
             "--exclude-user-tables",
             action="store_true",
-            help="Exclude user data table definition",
+            help="Exclude user data table definition, only suitable for updates of other existing instances, since table definitions are missing.",
         )
 
         parser.add_argument(
@@ -83,6 +81,17 @@ class Command(BaseCommand):
                 for table in self.user_data_tables:
                     params.append("--exclude-table")
                     params.append(table)
+
+                # Those need to to be excluded when tables are ignored, but need to be
+                # present during export with exclude_user_data. They contain no user data
+                # but content type information. If they would also be missing during
+                # exclude_user_tables foreign key constraints would break.
+                # That's the reason why they are added here manually and are not part of
+                # this.user_data_tables.
+                params.append("--exclude-table")
+                params.append("auth_permission")
+                params.append("--exclude-table")
+                params.append("django_content_type")
 
             # to capture stderr we need to set "stderr=subprocess.STDOUT", to
             # actually get a string and not a byte string (b'..') we need to set
