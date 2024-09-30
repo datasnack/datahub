@@ -34,6 +34,7 @@ env = environ.Env(
     DATAHUB_CENTER_ZOOM=(int, 0),
     DATAHUB_DATALAYER_DIR=(str, "src"),
     DATAHUB_DATA_DIR=(str, "data"),
+    DATAHUB_HEAD=(str, ""),
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -256,6 +257,8 @@ DATAHUB_CENTER_ZOOM = env("DATAHUB_CENTER_ZOOM")
 
 DATAHUB_DATALAYER_DIR = BASE_DIR / env("DATAHUB_DATALAYER_DIR")
 DATAHUB_DATA_DIR = BASE_DIR / env("DATAHUB_DATA_DIR")
+
+DATAHUB_HEAD = env("DATAHUB_HEAD")
 
 INSTANCE_VERSION = False
 try:

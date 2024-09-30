@@ -31,6 +31,8 @@
 	{% vite_asset "app/resources/css/app.css" %}
 
 	{% block head %}{% endblock %}
+
+	{{ DATAHUB_HEAD|safe }}
 </head>
 <body>
 	<header>
