@@ -36,6 +36,7 @@ urlpatterns += [
     path("shapes/", include("shapes.urls")),
     path("api/", include("shapes.api.urls")),
     path("api/", include("datalayers.api.urls")),
+    path("dashboard/", include("dashboard.urls")),
 ]
 
 # check if user apps have urls

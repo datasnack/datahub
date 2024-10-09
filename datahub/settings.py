@@ -51,7 +51,8 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG")
+# DEBUG = env("DEBUG")
+DEBUG=True
 
 LOGGING = {
     "version": 1,
@@ -91,6 +92,7 @@ INSTALLED_APPS = [
     "shapes",
     "taggit",
     "src.datalayer",
+    "dashboard"
 ]
 
 # inject potential user apps that should be able to overwrite templates in app

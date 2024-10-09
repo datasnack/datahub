@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}Dashboard Home{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="{% static 'box.css' %}">
+<h1>Dashboard</h1>
+
+<div class="box-container">
+    <a href="{% url 'slider_view' %}" class="box">
+        <div class="box-title">Temporal Slider</div>
+        <div class="box-info">See temporal trend with this slider</div>
+    </a>
+	<div class="box">
+        <div class="box-title">Information Content Ranking</div>
+        <div class="box-info">See the ranking of information content</div>
+    </div>
+</div>
+
+{% endblock %}

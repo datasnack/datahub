@@ -18,7 +18,8 @@ python manage.py migrate
 
 # Start dev server or nginx/gunicorn for prod
 if [ "${DEBUG}" == "True" ]; then
-    python manage.py runserver 0.0.0.0:8000 --noreload
+    watchmedo auto-restart --directory=./ --pattern=*.py --recursive --  python manage.py runserver 0.0.0.0:8000
+    #--noreload
 else
     service nginx start
     gunicorn --bind 127.0.0.1:8001 datahub.wsgi:application

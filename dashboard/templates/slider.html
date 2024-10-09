@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <h1>Select Type, Shape, and Data Layer</h1>
+
+    <label for="type">Select Type:</label>
+    <select id="type-dropdown">
+        <option value="">--- Select Type ---</option>
+        {% for type in types %}
+            <option value="{{ type.id }}">{{ type.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="shape">Select Shape:</label>
+    <select id="shape-dropdown">
+        <option value="">--- Select Shape ---</option>
+    </select>
+
+    <label for="data-layer">Select Data Layer:</label>
+    <select id="data-layer-dropdown">
+        <option value="">--- Select Data Layer ---</option>
+        {% for datalayer in datalayers %}
+            <option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
+        {% endfor %}
+    </select>
+
+	<div id="map" style="height: 600px; width: 100%; margin-top: 20px;"></div>
+
+    <script>
+        $('#type-dropdown').change(function() {
+            var typeId = $(this).val();
+            $('#shape-dropdown').empty();
+
+            if (typeId) {
+                $.ajax({
+                    url: "{% url 'load_shapes' %}",
+                    data: {
+                        'type_id': typeId
+                    },
+                    success: function(data) {
+                        $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
+                        $.each(data, function(key, shape) {
+                            $('#shape-dropdown').append('<option value="' + shape.id + '">' + shape.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
+            }
+        });
+
+ 		const mapCenterX = parseFloat("{{ datahub_center_x }}");  // Convert string to float
+        const mapCenterY = parseFloat("{{ datahub_center_y }}");  // Convert string to float
+        const mapZoom = parseInt("{{ datahub_center_zoom }}");    // Convert string to int
+
+        const map = L.map('map').setView([mapCenterY, mapCenterX], mapZoom);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+		// Event listener for shape dropdown
+        $('#shape-dropdown').change(function() {
+            var selectedShape = $(this).val();  // Get the selected shape ID
+            console.log("Selected Shape ID:", selectedShape);
+            // You can handle the shape selection here (e.g., load shape data or display it on the map)
+        });
+
+        // Event listener for data layer dropdown
+        $('#data-layer-dropdown').change(function() {
+            var selectedDataLayer = $(this).val();  // Get the selected data layer key
+            console.log("Selected Data Layer Key:", selectedDataLayer);
+            // Handle the data layer selection here, for example, by adding it to the map
+        });
+
+        // Function to retrieve both selected values at any time (e.g., on form submission or a button click)
+        function getSelectedValues() {
+            var selectedShape = $('#shape-dropdown').val();
+            var selectedDataLayer = $('#data-layer-dropdown').val();
+
+            console.log("Selected Shape ID:", selectedShape);
+            console.log("Selected Data Layer Key:", selectedDataLayer);
+        }
+
+    </script>
+
+{% endblock %}

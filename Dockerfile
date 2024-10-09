@@ -25,6 +25,7 @@ RUN mkdir -p /app
 COPY ./requirements.txt /app/requirements.txt
 WORKDIR /app
 RUN /opt/datahub/venv/bin/pip install --no-cache-dir -r requirements.txt
+RUN /opt/datahub/venv/bin/pip install watchdog
 COPY . /app
 
 
