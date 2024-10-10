@@ -137,7 +137,7 @@ class BaseLayer:
                 ["md5sum", folder / file_name], text=True
             )
             md5 = md5_output.split(" ", maxsplit=1)[0]
-            self.layer.warning(
+            self.layer.info(
                 "Downloaded file",
                 {"url": url, "file": (folder / file_name).as_posix(), "md5": md5},
             )
