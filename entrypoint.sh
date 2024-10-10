@@ -8,6 +8,9 @@ do
   sleep $SLEEP_TIME;
 done
 
+NUM_WORKERS_DEFAULT=$((2 * $(nproc)))
+export NUM_WORKERS=${NUM_WORKERS:-$NUM_WORKERS_DEFAULT}
+
 # Merge/copy local saved data into actual data directory. Some data sources are stored
 # locally in the git repo due to complicated/unreliable downloads of the source.
 # Trailing slash is required!
@@ -21,5 +24,5 @@ if [ "${DEBUG}" == "True" ]; then
     python manage.py runserver 0.0.0.0:8000 --noreload
 else
     service nginx start
-    gunicorn --bind 127.0.0.1:8001 datahub.wsgi:application
+    gunicorn --bind 127.0.0.1:8001 --workers $NUM_WORKERS datahub.wsgi:application
 fi
