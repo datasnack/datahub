@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load static %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
+	<link rel="stylesheet" type="text/css" href="{% static 'dropdown.css' %}">
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <h1>Select Type, Shape, and Data Layer</h1>
 
@@ -31,23 +37,86 @@
         {% endfor %}
     </select>
 
-	<div id="map" style="height: 600px; width: 100%; margin-top: 20px;"></div>
+    <div id="map" style="height: 600px; width: 100%; margin-top: 20px;"></div>
+
+    <div id="year-slider" style="margin-top: 50px;"></div>
+    <span id="year-slider-value"></span>
+
+	<h2 id="temporal-trend-heading">Temporal Trend</h2>
+    <canvas id="valueChart" width="800" height="400" style="max-width: 100%; margin-top: 20px;"></canvas>
+
 
     <script>
+        function getColor(value, minValue, maxValue) {
+            const percentage = (value - minValue) / (maxValue - minValue);
+            const r = Math.floor(212 + percentage * (0 - 212));
+            const g = Math.floor(234 + percentage * (68 - 234));
+            const b = Math.floor(199 + percentage * (27 - 199));
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        const map = L.map('map').setView(
+            [parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
+            parseInt("{{ datahub_center_zoom }}")
+        );
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let currentLayer = null;
+		let chart = null;
+
+		function initializeChart(labels = [], data = []) {
+			const ctx = document.getElementById('valueChart').getContext('2d');
+			const dataLayerName = $('#data-layer-dropdown option:selected').text();
+			const shapeName = $('#shape-dropdown option:selected').text();
+
+			document.getElementById('temporal-trend-heading').innerText = `Temporal Trend for ${shapeName}`;
+
+			if (chart !== null) {
+				chart.destroy();
+			}
+
+			chart = new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: dataLayerName,
+						data: data,
+						backgroundColor: 'rgba(75, 192, 192, 0.2)',
+						borderColor: 'rgba(75, 192, 192, 1)',
+						borderWidth: 2,
+						fill: false
+					}]
+				},
+				options: {
+					responsive: true,
+					scales: {
+						x: {
+							title: { display: true, text: 'Year' }
+						},
+						y: {
+							title: { display: true, text: 'Value' }
+						}
+					}
+				}
+			});
+		}
+
+
         $('#type-dropdown').change(function() {
             var typeId = $(this).val();
             $('#shape-dropdown').empty();
-
             if (typeId) {
                 $.ajax({
                     url: "{% url 'load_shapes' %}",
-                    data: {
-                        'type_id': typeId
-                    },
+                    data: { 'type_id': typeId },
                     success: function(data) {
                         $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
                         $.each(data, function(key, shape) {
-                            $('#shape-dropdown').append('<option value="' + shape.id + '">' + shape.name + '</option>');
+                            $('#shape-dropdown').append(`<option value="${shape.id}">${shape.name}</option>`);
                         });
                     }
                 });
@@ -56,39 +125,137 @@
             }
         });
 
- 		const mapCenterX = parseFloat("{{ datahub_center_x }}");  // Convert string to float
-        const mapCenterY = parseFloat("{{ datahub_center_y }}");  // Convert string to float
-        const mapZoom = parseInt("{{ datahub_center_zoom }}");    // Convert string to int
+        function fetchDataForChart() {
+			const shapeId = $('#shape-dropdown').val();
+			const dataLayerKey = $('#data-layer-dropdown').val();
+			if (shapeId && dataLayerKey) {
+				$.ajax({
+					url: "{% url 'get_historical_data' %}",
+					data: { 'shape_id': shapeId, 'data_layer_key': dataLayerKey },
+					success: function(data) {
+						console.log('Chart Data:', data);  // Debugging: Check the data in the console
+						const years = data.map(entry => entry.year);
+						const values = data.map(entry => entry.value);
+						initializeChart(years, values);
+					},
+					error: function() {
+						alert("Error fetching data.");
+					}
+				});
+			}
+}
 
-        const map = L.map('map').setView([mapCenterY, mapCenterX], mapZoom);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-		// Event listener for shape dropdown
-        $('#shape-dropdown').change(function() {
-            var selectedShape = $(this).val();  // Get the selected shape ID
-            console.log("Selected Shape ID:", selectedShape);
-            // You can handle the shape selection here (e.g., load shape data or display it on the map)
-        });
-
-        // Event listener for data layer dropdown
         $('#data-layer-dropdown').change(function() {
-            var selectedDataLayer = $(this).val();  // Get the selected data layer key
-            console.log("Selected Data Layer Key:", selectedDataLayer);
-            // Handle the data layer selection here, for example, by adding it to the map
+            const dataLayerKey = $(this).val();
+            $('#year-slider').hide();
+            if (document.getElementById('year-slider').noUiSlider) {
+                document.getElementById('year-slider').noUiSlider.destroy();
+            }
+            if (currentLayer) {
+				map.removeLayer(currentLayer);
+				currentLayer = null;
+			}
+
+            if (dataLayerKey) {
+                $.ajax({
+                    url: "{% url 'get_available_years' %}",
+                    data: { 'data_layer_key': dataLayerKey },
+                    success: function(years) {
+                        if (years.length > 0) {
+                            const minYear = Math.min(...years);
+                            const maxYear = Math.max(...years);
+                            noUiSlider.create(document.getElementById('year-slider'), {
+                                start: [minYear],
+                                range: { 'min': minYear, 'max': maxYear },
+                                step: 1,
+                                tooltips: {
+									to: function(value) {
+										return Math.round(value);
+									}
+                        		}
+                            });
+                            $('#year-slider').show();
+                            document.getElementById('year-slider').noUiSlider.on('update', function(values) {
+                                const year = parseInt(values[0]);
+                                $('#year-slider-value').text(year);
+                                //updateMap(year);
+                            });
+							fetchDataForChart()
+                        }
+                    }
+                });
+            }
         });
 
-        // Function to retrieve both selected values at any time (e.g., on form submission or a button click)
-        function getSelectedValues() {
-            var selectedShape = $('#shape-dropdown').val();
-            var selectedDataLayer = $('#data-layer-dropdown').val();
+        $('#shape-dropdown').change(function() {
+			if (currentLayer) map.removeLayer(currentLayer);
+			const shapeId = $(this).val();
+			const year = parseInt($('#year-slider-value').text());
 
-            console.log("Selected Shape ID:", selectedShape);
-            console.log("Selected Data Layer Key:", selectedDataLayer);
-        }
+			if (shapeId) {
+				fetchDataForChart();
+				//if (year) updateMap(year);  // Update map if year is selected
+			}
+		});
+
+
+        /*
+        function updateMap(year) {
+			const shapeId = $('#shape-dropdown').val();
+			const dataLayerKey = $('#data-layer-dropdown').val();
+
+			if (shapeId && dataLayerKey) {
+				$.ajax({
+					url: "{% url 'get_geometry_shape' %}",
+					data: { 'shape_id': shapeId },
+					success: function(shapeResponse) {
+						$.ajax({
+							url: "{% url 'get_datalayer_for_year' %}",
+							data: { 'data_layer_key': dataLayerKey, 'shape_id': shapeId, 'year': year },
+							success: function(dataResponse) {
+								const geometry = typeof shapeResponse.geometry === 'string'
+									? JSON.parse(shapeResponse.geometry)
+									: shapeResponse.geometry;
+
+								const value = dataResponse.value;
+								const minValue = 0;
+								const maxValue = 10;
+
+								const color = getColor(value, minValue, maxValue);
+								const geoJsonFeature = { type: 'Feature', geometry: geometry, properties: { value } };
+
+								// Clear the previous layer
+								if (currentLayer) map.removeLayer(currentLayer);
+
+								// Delay adding the new layer to ensure the map is ready
+								setTimeout(() => {
+									currentLayer = L.geoJSON(geoJsonFeature, {
+										style: () => ({
+											fillColor: color,
+											weight: 2,
+											opacity: 1,
+											color: 'white',
+											fillOpacity: 0.7
+										}),
+										onEachFeature: (feature, layer) => {
+											layer.bindPopup(`Value: ${feature.properties.value}`);
+										}
+									}).addTo(map);
+
+									// Adjust the map view to the bounds of the new layer
+									map.fitBounds(currentLayer.getBounds());
+								}, 100); // Adjust this delay if needed
+							},
+							error: () => alert("Data layer error.")
+						});
+					},
+					error: () => alert("Shape error.")
+				});
+			}
+		}
+		*/
+
 
     </script>
-
 {% endblock %}

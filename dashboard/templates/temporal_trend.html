@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+	<link rel="stylesheet" type="text/css" href="{% static 'dropdown.css' %}">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <h1>Select Type, Shape, and Data Layer</h1>
+
+    <label for="type">Select Type:</label>
+    <select id="type-dropdown">
+        <option value="">--- Select Type ---</option>
+        {% for type in types %}
+            <option value="{{ type.id }}">{{ type.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="shape">Select Shape:</label>
+    <select id="shape-dropdown">
+        <option value="">--- Select Shape ---</option>
+    </select>
+
+    <label for="data-layers">Select Data Layers:</label>
+	<div id="data-layer-container">
+		<div class="data-layer-select">
+			<select class="data-layer-dropdown">
+				<option value="">--- Select Data Layer ---</option>
+				{% for datalayer in datalayers %}
+					<option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
+				{% endfor %}
+			</select>
+		</div>
+	</div>
+
+
+	<h2 id="temporal-trend-heading">Temporal Trend</h2>
+    <canvas id="valueChart" width="800" height="400" style="max-width: 100%; margin-top: 20px;"></canvas>
+
+	 <script>
+		let maxLayers = 3;
+		let currentLayerCount = 1;
+		let currentLayer = null;
+		let chart = null;
+
+		function createNewDropdown() {
+			if (currentLayerCount >= maxLayers) return;
+
+			const newDropdown = $(`
+				<div class="data-layer-select">
+					<select class="data-layer-dropdown">
+						<option value="">--- Select Data Layer ---</option>
+						{% for datalayer in datalayers %}
+							<option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
+						{% endfor %}
+					</select>
+				</div>
+			`);
+
+			$('#data-layer-container').append(newDropdown);
+			currentLayerCount++;
+		}
+
+
+		function initializeChart(labels = [], data = []) {
+			const ctx = document.getElementById('valueChart').getContext('2d');
+			const dataLayerName = $('#data-layer-dropdown option:selected').text();
+			const shapeName = $('#shape-dropdown option:selected').text();
+
+			document.getElementById('temporal-trend-heading').innerText = `Temporal Trend for ${shapeName}`;
+
+			if (chart !== null) {
+				chart.destroy();
+			}
+
+			chart = new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: dataLayerName,
+						data: data,
+						backgroundColor: 'rgba(75, 192, 192, 0.2)',
+						borderColor: 'rgba(75, 192, 192, 1)',
+						borderWidth: 2,
+						fill: false
+					}]
+				},
+				options: {
+					responsive: true,
+					scales: {
+						x: {
+							title: { display: true, text: 'Year' }
+						},
+						y: {
+							title: { display: true, text: 'Value' }
+						}
+					}
+				}
+			});
+		}
+
+		function fetchDataForChart() {
+			const shapeId = $('#shape-dropdown').val();
+			const selectedLayers = $('.data-layer-dropdown').map(function() { return $(this).val(); }).get()
+				.filter(layer => layer);
+
+			$.ajax({
+				url: "{% url 'get_historical_data' %}",
+				data: {
+					'shape_id': shapeId, 'data_layer_keys[]': selectedLayers
+				},
+				success: function(data) {
+					console.log('Chart Data:', data);
+					const years = data.map(entry => entry.year);
+					const datasets = data.flatMap(entry =>
+						entry.values.map(v => ({
+							label: v.data_layer,
+							data: entry.values.map(value => value.value)
+						}))
+					);
+					initializeChart(years, datasets);
+				},
+				error: function() {
+					alert("Error fetching data.");
+				}
+			});
+		}
+
+        $('#type-dropdown').change(function() {
+            var typeId = $(this).val();
+            $('#shape-dropdown').empty();
+            if (typeId) {
+                $.ajax({
+                    url: "{% url 'load_shapes' %}",
+                    data: { 'type_id': typeId },
+                    success: function(data) {
+                        $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
+                        $.each(data, function(key, shape) {
+                            $('#shape-dropdown').append(`<option value="${shape.id}">${shape.name}</option>`);
+                        });
+                    }
+                });
+            } else {
+                $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
+            }
+        });
+
+
+		$('#shape-dropdown').change(function() {
+			if (currentLayer) map.removeLayer(currentLayer);
+			const shapeId = $(this).val();
+
+			if (shapeId) {
+				fetchDataForChart();
+			}
+		});
+
+        $('#data-layer-container').on('change', '.data-layer-dropdown', function () {
+			const selectedValue = $(this).val();
+
+			if (selectedValue) {
+				if ($(this).closest('.data-layer-select').next().length === 0 && currentLayerCount < maxLayers) {
+					createNewDropdown();
+				}
+				fetchDataForChart();
+			}
+		});
+    </script>
+
+
+{% endblock %}
