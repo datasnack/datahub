@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
@@ -82,29 +80,26 @@ def get_datalayer_for_year(request):
 
 def get_historical_data(request):
     shape_id = request.GET.get('shape_id')
-    data_layer_keys = request.GET.getlist('data_layer_keys[]')
+    data_layer_key = request.GET.get('data_layer_key')
 
     shape = get_object_or_404(Shape, id=shape_id)
+    data_layer = get_object_or_404(Datalayer, key=data_layer_key)
 
-    combined_data = defaultdict(list)
+    years = data_layer.get_available_years
+    data = []
 
-    try:
-        for data_layer_key in data_layer_keys:
-            data_layer = get_object_or_404(Datalayer, key=data_layer_key)
+    for year in years:
+        value_obj = data_layer.value(shape=shape, when=dt.datetime(year, 1, 1))
+        data.insert(0, {
+            'year': year,
+            'value': value_obj.value
+        })
 
-            years = data_layer.get_available_years
+    return JsonResponse(data, safe=False)
 
-            for year in years:
-                value_obj = data_layer.value(shape=shape, when=dt.datetime(year, 1, 1))
-                combined_data[year].append({
-                    'data_layer': data_layer_key,
-                    'value': value_obj.value
-                })
 
-        result = [{'year': year, 'values': values} for year, values in combined_data.items()]
-        result.sort(key=lambda x: x['year'])
+def get_datalayer_name(request):
+    data_layer_key = request.GET.get('data_layer_key')
+    data_layer = get_object_or_404(Datalayer, key=data_layer_key)
 
-        return JsonResponse(result, safe=False)
-
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse(data_layer.name, safe=False)
