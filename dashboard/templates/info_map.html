@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
+
+
+	<h1>Information Density Map</h1>
+
+	<h2 style="margin-top: 20px;">Lowest Type Hierarchy: {{ lowest_type }}</h2>
+
+
+    <div id="map" style="height: 600px; width: 100%; margin-top: 20px;"></div>
+
+    <div id="year-slider" style="margin-top: 50px;"></div>
+    <span id="year-slider-value"></span>
+
+
+    <script>
+    const map = L.map('map').setView(
+        [parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
+        parseInt("{{ datahub_center_zoom }}")
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+	const year_slider = document.getElementById('year-slider');
+
+	noUiSlider.create(year_slider, {
+        start: {{ min_year }},
+        range: {
+            'min': {{ min_year }},
+            'max': {{ max_year }}
+        },
+		tooltips: {
+			to: function(value) {
+				return Math.floor(value);
+			}
+		}
+    });
+
+	let debounceTimeout;
+
+    year_slider.noUiSlider.on('update', function(values, handle) {
+        const selectedYear = Math.floor(values[handle]);
+
+        clearTimeout(debounceTimeout);
+
+        debounceTimeout = setTimeout(function() {
+            $.ajax({
+                url: "{% url 'get_data_for_year_shape' %}",
+				data: { 'year': selectedYear },
+                success: function(data) {
+                    console.log(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching data:', error);
+                }
+            });
+        }, 500);
+    });
+
+
+
+
+</script>
+
+{% endblock %}

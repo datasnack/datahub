@@ -11,6 +11,55 @@ def home(request):
     return render(request, 'home.html')
 
 
+def info_map_base(request):
+    lowest_type = Type.objects.order_by('-position').first()
+    shapes = Shape.objects.filter(type_id=lowest_type.id)
+    datalayers = Datalayer.objects.all()
+
+    min_year = dt.date.today().year
+    max_year = 0
+
+    for dl in datalayers:
+        available_years = dl.get_available_years
+        if available_years:
+            min_available_year = min(available_years)
+            max_available_year = max(available_years)
+            if min_year > min_available_year:
+                min_year = min_available_year
+            if max_year < max_available_year:
+                max_year = max_available_year
+
+    context = {
+        'lowest_type': lowest_type.name,
+        'shapes': shapes,
+        'min_year': min_year,
+        'max_year': max_year,
+        'datahub_center_x': settings.DATAHUB_CENTER_X,
+        'datahub_center_y': settings.DATAHUB_CENTER_Y,
+        'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
+    }
+
+    return render(request, 'info_map.html', context)
+
+
+def get_data_for_year_shape(request):
+    lowest_type = Type.objects.order_by('-position').first()
+    shapes = Shape.objects.filter(type_id=lowest_type.id)
+
+    year = int(request.GET.get('year'))
+    query_year = dt.datetime(year, 1, 1)
+
+    shape_dlcount_dict = {shape.id: 0 for shape in shapes}
+
+    for datalayer in Datalayer.objects.all():
+        for shape in shapes:
+            dl_value = datalayer.value(shape=shape, when=query_year)
+            if dl_value and dl_value.value is not None:
+                shape_dlcount_dict[shape.id] += 1
+
+    context = {'shape_dlcount': shape_dlcount_dict}
+    return JsonResponse(context, safe=False)
+
 def temporal_trend_view(request):
     types = Type.objects.all().order_by('id')
     datalayers = Datalayer.objects.all()
