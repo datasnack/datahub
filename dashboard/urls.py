@@ -15,5 +15,7 @@ urlpatterns = [
 
     path('info-map/', views.info_map_base, name='info_map'),
     path('info-map/get-data-for-year-shape/', views.get_data_for_year_shape, name='get_data_for_year_shape'),
+    path('info-map/get-shape-type-geometries/', views.get_shape_type_geometries, name='get_shape_type_geometries'),
+
 ]
 

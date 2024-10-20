@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 import datetime as dt
+import time
 
 from shapes.models import Type, Shape
 from datalayers.models import Datalayer
@@ -12,8 +13,7 @@ def home(request):
 
 
 def info_map_base(request):
-    lowest_type = Type.objects.order_by('-position').first()
-    shapes = Shape.objects.filter(type_id=lowest_type.id)
+    shape_types = Type.objects.all()
     datalayers = Datalayer.objects.all()
 
     min_year = dt.date.today().year
@@ -29,11 +29,11 @@ def info_map_base(request):
             if max_year < max_available_year:
                 max_year = max_available_year
 
+    years = range(int(min_year), int(max_year) + 1)
+
     context = {
-        'lowest_type': lowest_type.name,
-        'shapes': shapes,
-        'min_year': min_year,
-        'max_year': max_year,
+        'shape_types': shape_types,
+        'years': years,
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
         'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
@@ -43,10 +43,10 @@ def info_map_base(request):
 
 
 def get_data_for_year_shape(request):
-    lowest_type = Type.objects.order_by('-position').first()
-    shapes = Shape.objects.filter(type_id=lowest_type.id)
+    shape_type = request.GET['shape_type']
+    shapes = Shape.objects.filter(type_id=shape_type)
 
-    year = int(request.GET.get('year'))
+    year = int(request.GET['year'])
     query_year = dt.datetime(year, 1, 1)
 
     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
@@ -57,8 +57,28 @@ def get_data_for_year_shape(request):
             if dl_value and dl_value.value is not None:
                 shape_dlcount_dict[shape.id] += 1
 
-    context = {'shape_dlcount': shape_dlcount_dict}
+    context = {
+        'shape_dlcount': shape_dlcount_dict}
+
     return JsonResponse(context, safe=False)
+
+
+def get_shape_type_geometries(request):
+    shape_type = request.GET['shape_type']
+    shapes = Shape.objects.filter(type_id=shape_type)
+
+    geometries = {}
+    names = {}
+    for shape in shapes:
+        geometries[shape.id] = shape.geometry.geojson
+        names[shape.id] = shape.name
+
+    data = {
+        "geometries": geometries,
+        "names": names
+    }
+
+    return JsonResponse(data, safe=False)
 
 def temporal_trend_view(request):
     types = Type.objects.all().order_by('id')

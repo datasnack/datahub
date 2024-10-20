@@ -5,6 +5,7 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
@@ -12,69 +13,168 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css" />
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
 
+    <h1>Information Density Map</h1>
 
-	<h1>Information Density Map</h1>
+    <label for="type">Select Type:</label>
+    <select id="type-dropdown">
+        <option value="">>>> Select Type <<<</option>
+        {% for shape_type in shape_types %}
+            <option value="{{ shape_type.id }}">{{ shape_type.name }}</option>
+        {% endfor %}
+    </select>
 
-	<h2 style="margin-top: 20px;">Lowest Type Hierarchy: {{ lowest_type }}</h2>
+    <label for="year">Select Year:</label>
+    <select id="year-dropdown">
+        <option value="">>>> Select Year <<<</option>
+        {% for year in years %}
+            <option value="{{ year }}">{{ year }}</option>
+        {% endfor %}
+    </select>
 
+    <div id="map" style="height: 600px; width: 100%; margin-top: 20px;">
+        <div id="loading-message">Loading, please wait...</div>
+    </div>
 
-    <div id="map" style="height: 600px; width: 100%; margin-top: 20px;"></div>
-
-    <div id="year-slider" style="margin-top: 50px;"></div>
-    <span id="year-slider-value"></span>
-
+	<h2>Information Ranking</h2>
+	<ol id="ranking-list" style="list-style-type: none; padding: 0;"></ol>
 
     <script>
-    const map = L.map('map').setView(
-        [parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
-        parseInt("{{ datahub_center_zoom }}")
-    );
+        const map = L.map('map').setView(
+            [parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
+            parseInt("{{ datahub_center_zoom }}")
+        );
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-	const year_slider = document.getElementById('year-slider');
+        const layerGroup = L.layerGroup().addTo(map);
 
-	noUiSlider.create(year_slider, {
-        start: {{ min_year }},
-        range: {
-            'min': {{ min_year }},
-            'max': {{ max_year }}
-        },
-		tooltips: {
-			to: function(value) {
-				return Math.floor(value);
+		map.whenReady(() => {
+    $('#year-dropdown').on('change', update_map);
+    $('#type-dropdown').on('change', update_map);
+});
+
+		/*
+        $('#year-dropdown').on('change', function () {
+            update_map();
+        });
+
+        $('#type-dropdown').on('change', function () {
+            update_map();
+        });
+
+		 */
+
+        function update_map() {
+    		$('#loading-message').show();
+			const shape_type = $('#type-dropdown').val();
+			const year = $('#year-dropdown').val();
+
+			if (shape_type && year) {
+				setTimeout(() => {
+					$.ajax({
+						url: "{% url 'get_shape_type_geometries' %}",
+						data: { 'shape_type': shape_type },
+						success: function (geometryResponse) {
+							$.ajax({
+								url: "{% url 'get_data_for_year_shape' %}",
+								data: {
+									'shape_type': shape_type,
+									'year': year,
+								},
+								success: function (dlCountResponse) {
+									layerGroup.eachLayer(function (layer) {
+										layerGroup.removeLayer(layer);
+									});
+
+									const geometries = geometryResponse.geometries;
+									const names = geometryResponse.names;
+									const dlCounts = dlCountResponse.shape_dlcount;
+
+									const values = Object.values(dlCounts);
+									const minValue = Math.min(...values) - 1;
+									const maxValue = Math.max(...values) + 1;
+
+									// Collect shape data for sorting
+									const shapeData = [];
+									for (const shapeId in geometries) {
+										const count = dlCounts[shapeId] || 0;
+										const name = names[shapeId] || 'Unknown';
+										shapeData.push({ id: shapeId, name, count });
+
+										const geometry = typeof geometries[shapeId] === 'string'
+											? JSON.parse(geometries[shapeId])
+											: geometries[shapeId];
+
+										const color = getColor(count, minValue, maxValue);
+
+										const geoJsonFeature = {
+											type: 'Feature',
+											geometry: geometry,
+											properties: { count, name }
+										};
+
+										map.whenReady(function () {
+											const geoJsonLayer = L.geoJSON(geoJsonFeature, {
+												style: () => ({
+													fillColor: color,
+													weight: 2,
+													opacity: 1,
+													color: 'black',
+													fillOpacity: 0.7
+												}),
+												onEachFeature: (feature, layer) => {
+													layer.bindPopup(`<b>Name: ${feature.properties.name}</b><br>Value: ${feature.properties.count}`);
+												}
+											});
+
+											geoJsonLayer.addTo(layerGroup);
+										});
+									}
+
+									// Sort shape data by count in descending order
+									shapeData.sort((a, b) => b.count - a.count);
+
+									// Populate the ranking list
+									const rankingList = $('#ranking-list');
+									rankingList.empty();  // Clear previous entries
+									shapeData.forEach((shape) => {
+										rankingList.append(
+											`<li><b>${shape.name}:</b> ${shape.count}</li>`
+										);
+									});
+
+									$('#loading-message').hide();
+								},
+								error: function (xhr, status, error) {
+									console.error('Error fetching data layer count:', error);
+									$('#loading-message').hide();
+								}
+							});
+						},
+						error: function (xhr, status, error) {
+							console.error('Error fetching geometries:', error);
+							$('#loading-message').hide();
+						}
+					});
+				}, 300);
+			} else {
+				alert('Please select both shape type and year.');
+				$('#loading-message').hide();
 			}
 		}
-    });
-
-	let debounceTimeout;
-
-    year_slider.noUiSlider.on('update', function(values, handle) {
-        const selectedYear = Math.floor(values[handle]);
-
-        clearTimeout(debounceTimeout);
-
-        debounceTimeout = setTimeout(function() {
-            $.ajax({
-                url: "{% url 'get_data_for_year_shape' %}",
-				data: { 'year': selectedYear },
-                success: function(data) {
-                    console.log(data);
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error fetching data:', error);
-                }
-            });
-        }, 500);
-    });
 
 
-
-
-</script>
-
+        function getColor(value, minValue, maxValue) {
+            const ratio = Math.max(0, Math.min((value - minValue) / (maxValue - minValue), 1));
+            if (ratio > 0.8) return '#0e6251';
+            if (ratio > 0.6) return '#148f77';
+            if (ratio > 0.4) return '#1abc9c';
+            if (ratio > 0.2) return '#76d7c4';
+            return '#FFFFFF';
+        }
+    </script>
 {% endblock %}
