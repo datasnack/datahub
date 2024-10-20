@@ -38,7 +38,7 @@
     </div>
 
 	<h2>Information Ranking</h2>
-	<ol id="ranking-list" style="list-style-type: none; padding: 0;"></ol>
+	<ol id="ranking-list" style="padding-left: 20px;"></ol>
 
     <script>
         const map = L.map('map').setView(
@@ -53,20 +53,9 @@
         const layerGroup = L.layerGroup().addTo(map);
 
 		map.whenReady(() => {
-    $('#year-dropdown').on('change', update_map);
-    $('#type-dropdown').on('change', update_map);
-});
-
-		/*
-        $('#year-dropdown').on('change', function () {
-            update_map();
-        });
-
-        $('#type-dropdown').on('change', function () {
-            update_map();
-        });
-
-		 */
+			$('#year-dropdown').on('change', update_map);
+			$('#type-dropdown').on('change', update_map);
+		});
 
         function update_map() {
     		$('#loading-message').show();
@@ -98,7 +87,6 @@
 									const minValue = Math.min(...values) - 1;
 									const maxValue = Math.max(...values) + 1;
 
-									// Collect shape data for sorting
 									const shapeData = [];
 									for (const shapeId in geometries) {
 										const count = dlCounts[shapeId] || 0;
@@ -135,12 +123,10 @@
 										});
 									}
 
-									// Sort shape data by count in descending order
 									shapeData.sort((a, b) => b.count - a.count);
 
-									// Populate the ranking list
 									const rankingList = $('#ranking-list');
-									rankingList.empty();  // Clear previous entries
+									rankingList.empty();
 									shapeData.forEach((shape) => {
 										rankingList.append(
 											`<li><b>${shape.name}:</b> ${shape.count}</li>`
