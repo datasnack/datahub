@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load humanize %}
 {% load i18n %}
+{% load l10n %}
 
 {% block title %}
 {% blocktranslate with name=type.name %}"{{ name }}" shapes{% endblocktranslate %}
@@ -45,8 +46,8 @@
 						<td class="align-middle">
 							<a href="{{ shape.get_absolute_url }}">{{ shape.name }}</a>
 						</td>
-						<td class="align-middle" data-order="{{ shape.area_sqm }}">
-							{% blocktranslate with area=shape.area_sqkm|floatformat:2|intcomma %}
+						<td class="align-middle" data-order="{{ shape.area_sqkm }}">
+							{% blocktranslate with area=shape.area_sqkm|floatformat:2 %}
 								{{ area }} km<sup>2</sup>
 							{% endblocktranslate %}
 						</td>

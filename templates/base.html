@@ -1,8 +1,10 @@
 {% load static %}
 {% load i18n %}
 {% load l10n %}
+{% load humanize %}
 {% load vite %}
 {% get_current_language as LANGUAGE_CODE %}
+{% localize off %}
 <!doctype html>
 <html lang="{{ LANGUAGE_CODE }}" class="no-js">
 <head>
@@ -16,7 +18,6 @@
 		document.documentElement.classList.toggle('mac', /Mac|iPhone|iPod|iPad/i.test(navigator.platform))
 	</script>
 
-	{% localize off %}
 	<script>
 		const DATAHUB = {
 			CENTER_X: {{ DATAHUB_CENTER_X }},
@@ -24,7 +25,6 @@
 			CENTER_ZOOM: {{ DATAHUB_CENTER_ZOOM }},
 		};
 	</script>
-	{% endlocalize %}
 
 	{% vite_dev %}
 	{% vite_asset "app/resources/js/app.js" %}
@@ -182,3 +182,4 @@
 	{% block footer %}{% endblock %}
 </body>
 </html>
+{% endlocalize %}

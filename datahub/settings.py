@@ -187,6 +187,7 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 
 USE_I18N = True
+USE_THOUSAND_SEPARATOR = True
 
 LOCALE_PATHS = [
     "./locale/",
