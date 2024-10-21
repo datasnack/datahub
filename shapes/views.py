@@ -8,7 +8,8 @@ from .models import Shape, Type
 
 # Create your views here.
 class ShapeListView(ListView):
-    """List of shapes, filtered by a shape type.
+    """
+    List of shapes, filtered by a shape type.
 
     Technically this could also be a DetailView based on the type, nevertheless
     the intended View is a list of Shapes, so we went for a ListView that feels
