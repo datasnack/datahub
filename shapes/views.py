@@ -1,9 +1,13 @@
+import logging
+
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import DetailView, ListView
 
 from datalayers.models import Datalayer
 
 from .models import Shape, Type
+
+logger = logging.getLogger(__name__)
 
 
 # Create your views here.
@@ -50,8 +54,10 @@ class ShapeDetailView(DetailView):
         context["datalayers"] = []
         for l in all_layers:
             if l.is_loaded():
-                context["datalayers"].append(l)
-
+                if l.has_files():
+                    context["datalayers"].append(l)
+                else:
+                    logger.warning("datalayer class is missing key=%s", l.key)
         return context
 
 
