@@ -18,6 +18,8 @@ Including another URLconf
 
 """
 
+from importlib.util import find_spec
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
@@ -47,7 +49,7 @@ for app in settings.INSTALLED_USER_APPS:
         pass
 
 
-if settings.DEBUG:
+if settings.DEBUG and find_spec("debug_toolbar") is not None:
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
     ]

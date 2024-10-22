@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from importlib.util import find_spec
 from pathlib import Path
 
 import environ
@@ -112,10 +113,11 @@ MIDDLEWARE = [
     "app.middleware.require_login_middleware.RequireLoginMiddleware",
 ]
 
-if DEBUG:
-    # Enable debug toolbar only if DEBUG=True
+# Enable debug toolbar only if DEBUG=True and the package is installed
+if DEBUG and find_spec("debug_toolbar") is not None:
     INSTALLED_APPS = [*INSTALLED_APPS, "debug_toolbar"]
     MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware", *MIDDLEWARE]
+
 
 ROOT_URLCONF = "datahub.urls"
 

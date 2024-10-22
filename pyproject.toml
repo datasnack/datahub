@@ -21,7 +21,6 @@ dependencies = [
     "shapely==2.0.4",
     "SQLAlchemy==2.0.31", # used for pandas read_sql etc. connection string
     "GeoAlchemy2", # required for GeoPandas to_postgis()
-    "django-debug-toolbar==4.3.0",
     "django-taggit==5.0.1",
     "geojson==3.1.0",
     "cdsapi==0.7.0",
@@ -29,10 +28,12 @@ dependencies = [
     "fiona", # TiffLayer uses fiona for openening mask files, refactor to not depend on it
 ]
 
-[project.optional-dependencies]
-dev = [
-
+[tool.uv]
+dev-dependencies = [
+    "rich>=13.9.2", # console log color output
+    "django-debug-toolbar>=4.3.0",
 ]
+
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -149,3 +150,4 @@ docstring-code-format = false
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
+
