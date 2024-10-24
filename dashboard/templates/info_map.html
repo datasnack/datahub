@@ -41,6 +41,11 @@
 	<ol id="ranking-list" style="padding-left: 20px;"></ol>
 
     <script>
+		$(document).ready(function() {
+			$('#type-dropdown').prop('selectedIndex', 0);
+			$('#year-dropdown').prop('selectedIndex', 0);
+		});
+
         const map = L.map('map').setView(
             [parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
             parseInt("{{ datahub_center_zoom }}")
@@ -69,7 +74,7 @@
 						data: { 'shape_type': shape_type },
 						success: function (geometryResponse) {
 							$.ajax({
-								url: "{% url 'get_data_for_year_shape' %}",
+								url: "{% url 'get_dl_count_for_year_shape' %}",
 								data: {
 									'shape_type': shape_type,
 									'year': year,

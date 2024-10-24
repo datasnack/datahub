@@ -1,9 +1,10 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
+from django.db import connection, ProgrammingError
 import datetime as dt
-import time
 
+from datalayers.datasources.base_layer import LayerTimeResolution
 from shapes.models import Type, Shape
 from datalayers.models import Datalayer
 
@@ -42,23 +43,48 @@ def info_map_base(request):
     return render(request, 'info_map.html', context)
 
 
-def get_data_for_year_shape(request):
+def get_dl_count_for_year_shape(request):
     shape_type = request.GET['shape_type']
     shapes = Shape.objects.filter(type_id=shape_type)
 
     year = int(request.GET['year'])
-    query_year = dt.datetime(year, 1, 1)
 
     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
 
     for datalayer in Datalayer.objects.all():
+        table_name = datalayer.key
         for shape in shapes:
-            dl_value = datalayer.value(shape=shape, when=query_year)
-            if dl_value and dl_value.value is not None:
+            rec_count = 0
+            try:
+                if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
+                    query = f"""
+                                SELECT COUNT(*)
+                                FROM {table_name}
+                                WHERE shape_id = %s AND year = %s
+                    """
+                    with connection.cursor() as c:
+                        c.execute(query, [shape.id, year])
+                        rec_count = c.fetchone()[0]
+
+                elif datalayer.temporal_resolution == LayerTimeResolution.DAY:
+                    query = f"""
+                                SELECT COUNT(*)
+                                FROM {table_name}
+                                WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
+                    """
+                    with connection.cursor() as c:
+                        c.execute(query, [shape.id, year])
+                        rec_count = c.fetchone()[0]
+
+            except ProgrammingError as e:
+                rec_count = 0
+
+            if rec_count > 0:
                 shape_dlcount_dict[shape.id] += 1
 
     context = {
-        'shape_dlcount': shape_dlcount_dict}
+        'shape_dlcount': shape_dlcount_dict
+    }
 
     return JsonResponse(context, safe=False)
 
@@ -73,14 +99,15 @@ def get_shape_type_geometries(request):
         geometries[shape.id] = shape.geometry.geojson
         names[shape.id] = shape.name
 
-    data = {
+    context = {
         "geometries": geometries,
         "names": names
     }
 
-    return JsonResponse(data, safe=False)
+    return JsonResponse(context, safe=False)
 
-def temporal_trend_view(request):
+
+def temporal_trend_base(request):
     types = Type.objects.all().order_by('id')
     datalayers = Datalayer.objects.all()
 
@@ -93,25 +120,6 @@ def temporal_trend_view(request):
     }
     return render(request, 'temporal_trend.html', context)
 
-
-def load_shapes(request):
-    type_id = request.GET.get('type_id')
-    if type_id:
-        shapes = Shape.objects.filter(type_id=type_id).order_by('name')
-    else:
-        shapes = Shape.objects.all()
-    return JsonResponse(list(shapes.values('id', 'name')), safe=False)
-
-
-def get_available_years(request):
-    data_layer_key = request.GET.get('data_layer_key')
-    data_layer = Datalayer.objects.get(key=data_layer_key)
-    if data_layer:
-        available_years = data_layer.get_available_years
-    else:
-        available_years = []
-    return JsonResponse(available_years, safe=False)
-
 def get_geometry_shape(request):
     shape_id = request.GET.get('shape_id')
     shape = get_object_or_404(Shape, id=shape_id)
@@ -123,30 +131,6 @@ def get_geometry_shape(request):
 
     return JsonResponse(data, safe=False)
 
-def get_datalayer_for_year(request):
-    data_layer_key = request.GET.get('data_layer_key')
-    shape_id = request.GET.get('shape_id')
-    year = int(request.GET.get('year'))
-
-    data_layer = get_object_or_404(Datalayer, key=data_layer_key)
-    shape = get_object_or_404(Shape, id=shape_id)
-
-    value_obj = data_layer.value(shape=shape, when=dt.datetime(year, 1, 1))
-
-    # # Calculate min and max values for the entire data layer across all shapes and years
-    # min_value =
-    # max_value =
-
-    if value_obj:
-        return JsonResponse({
-            'value': value_obj.value,
-            # 'min_value': min_value,
-            # 'max_value': max_value,
-        })
-    else:
-        return JsonResponse({'error': 'No data available'}, status=404)
-
-
 def get_historical_data(request):
     shape_id = request.GET.get('shape_id')
     data_layer_key = request.GET.get('data_layer_key')
@@ -155,20 +139,56 @@ def get_historical_data(request):
     data_layer = get_object_or_404(Datalayer, key=data_layer_key)
 
     years = data_layer.get_available_years
+    table_name = data_layer.key
     data = []
 
     for year in years:
-        value_obj = data_layer.value(shape=shape, when=dt.datetime(year, 1, 1))
+        if data_layer.temporal_resolution == LayerTimeResolution.YEAR:
+            value_obj = data_layer.value(shape=shape, when=dt.datetime(year, 1, 1))
+            value = value_obj.value
+        elif data_layer.temporal_resolution == LayerTimeResolution.DAY:
+            query = f"""
+                        SELECT AVG(value)
+                        FROM {table_name}
+                        WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
+                    """
+            with connection.cursor() as c:
+                c.execute(query, [shape.id, year])
+                value = c.fetchone()[0]
         data.insert(0, {
             'year': year,
-            'value': value_obj.value
+            'value': value
         })
 
     return JsonResponse(data, safe=False)
 
 
-def get_datalayer_name(request):
-    data_layer_key = request.GET.get('data_layer_key')
-    data_layer = get_object_or_404(Datalayer, key=data_layer_key)
+def slider_base(request):
+    shape_types = Type.objects.all()
+    datalayers = Datalayer.objects.all()
 
-    return JsonResponse(data_layer.name, safe=False)
+    context = {
+        "shape_types": shape_types,
+        "datalayers": datalayers
+    }
+
+    return render(request, 'slider.html', context)
+
+
+def get_shapes_by_shape_id(request):
+    type_id = request.GET.get('type_id')
+    if type_id:
+        shapes = Shape.objects.filter(type_id=type_id).order_by('name')
+    else:
+        shapes = Shape.objects.all()
+    return JsonResponse(list(shapes.values('id', 'name')), safe=False)
+
+
+def get_datalayer_available_years(request):
+    data_layer_key = request.GET.get('data_layer_key')
+    data_layer = Datalayer.objects.get(key=data_layer_key)
+    if data_layer:
+        available_years = data_layer.get_available_years
+    else:
+        available_years = []
+    return JsonResponse(available_years, safe=False)

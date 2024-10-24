@@ -8,9 +8,7 @@
 	<link rel="stylesheet" type="text/css" href="{% static 'dropdown.css' %}">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     <h1>Select Type, Shape, and Data Layer</h1>
 
@@ -28,139 +26,227 @@
     </select>
 
     <label for="data-layer-one">Select Data Layer 1:</label>
-    <select id="data-layer-one-dropdown">
-        <option value="">--- Select Data Layer ---</option>
-        {% for datalayer in datalayers %}
-            <option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
-        {% endfor %}
-    </select>
+	<select id="data-layer-one-dropdown">
+		<option value="">--- Select Data Layer ---</option>
+		{% for datalayer in datalayers %}
+			<option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
+		{% endfor %}
+	</select>
 
-	<h2 id="temporal-trend-heading">Temporal Trend</h2>
-    <canvas id="valueChart" width="800" height="400" style="max-width: 100%; margin-top: 20px;"></canvas>
+	<div id="data-layer-two-container" style="display:none;">
+		<label for="data-layer-two">Select Data Layer 2:</label>
+		<select id="data-layer-two-dropdown">
+			<option value="">--- Select Data Layer ---</option>
+			{% for datalayer in datalayers %}
+				<option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
+			{% endfor %}
+		</select>
+	</div>
 
+	<div id="data-layer-three-container" style="display:none;">
+		<label for="data-layer-three">Select Data Layer 3:</label>
+		<select id="data-layer-three-dropdown">
+			<option value="">--- Select Data Layer ---</option>
+			{% for datalayer in datalayers %}
+				<option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
+			{% endfor %}
+		</select>
+	</div>
+
+	<button id="load-button" style="margin-top: 30px">Load Data</button>
+
+	<div id="temporal-trend-graph" style="width: 100%; height: 400px;"></div>
+
+	<div id="graphs-container" style="display: flex; justify-content: space-between; width: 100%;">
+		<div id="data-layer-one-graph" style="width: 30%; height: 350px; display:none;"></div>
+		<div id="data-layer-two-graph" style="width: 30%; height: 350px; display:none;"></div>
+		<div id="data-layer-three-graph" style="width: 30%; height: 350px; display:none;"></div>
+	</div>
 
     <script>
-        let currentLayer = null;
-		let chart = null;
 
-		function createNewDropdown() {
-			if (currentLayerCount >= maxLayers) return;
+		$(document).ready(function() {
+			$('#type-dropdown').prop('selectedIndex', 0);
+			$('#shape-dropdown').prop('selectedIndex', 0);
+			$('#data-layer-one-dropdown').prop('selectedIndex', 0);
+			$('#data-layer-two-dropdown').prop('selectedIndex', 0);
+			$('#data-layer-three-dropdown').prop('selectedIndex', 0);
 
-			const newDropdown = $(`
-				<div class="data-layer-select">
-					<select class="data-layer-dropdown">
-						<option value="">--- Select Data Layer ---</option>
-						{% for datalayer in datalayers %}
-							<option value="{{ datalayer.key }}">{{ datalayer.name }}</option>
-						{% endfor %}
-					</select>
-				</div>
-			`);
+			$('#data-layer-two-container').hide();
+			$('#data-layer-three-container').hide();
+		});
 
-			$('#data-layer-container').append(newDropdown);
-			currentLayerCount++;
-		}
-
-
-		function initializeChart(labels = [], data = []) {
-			const ctx = document.getElementById('valueChart').getContext('2d');
-			const dataLayerName = $('#data-layer-one-dropdown option:selected').text();
-			const shapeName = $('#shape-dropdown option:selected').text();
-
-			document.getElementById('temporal-trend-heading').innerText = `Temporal Trend for ${shapeName}`;
-
-			if (chart !== null) {
-				chart.destroy();
-			}
-
-			chart = new Chart(ctx, {
-				type: 'line',
-				data: {
-					labels: labels,
-					datasets: [{
-						label: dataLayerName,
-						data: data,
-						backgroundColor: 'rgba(75, 192, 192, 0.2)',
-						borderColor: 'rgba(75, 192, 192, 1)',
-						borderWidth: 2,
-						fill: false
-					}]
-				},
-				options: {
-					responsive: true,
-					scales: {
-						x: {
-							title: { display: true, text: 'Year' }
-						},
-						y: {
-							title: { display: true, text: 'Value' }
-						}
+		$('#type-dropdown').change(function() {
+			var typeId = $(this).val();
+			$('#shape-dropdown').empty();
+			if (typeId) {
+				$.ajax({
+					url: "{% url 'get_shapes_by_shape_id' %}",
+					data: { 'type_id': typeId },
+					success: function(data) {
+						$('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
+						$.each(data, function(key, shape) {
+							$('#shape-dropdown').append(`<option value="${shape.id}">${shape.name}</option>`);
+						});
 					}
+				});
+			} else {
+				$('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
+			}
+		});
+
+		function handleDataLayerSelection(dropdownId, nextDropdownContainerId) {
+			$(dropdownId).change(function() {
+				const selectedValue = $(this).val();
+
+				if (selectedValue) {
+					$(nextDropdownContainerId).show();
+				} else {
+					$(nextDropdownContainerId).hide();
 				}
 			});
 		}
 
+		handleDataLayerSelection('#data-layer-one-dropdown', '#data-layer-two-container');
+		handleDataLayerSelection('#data-layer-two-dropdown', '#data-layer-three-container');
+		handleDataLayerSelection('#data-layer-three-dropdown', null);
 
-        $('#type-dropdown').change(function() {
-            var typeId = $(this).val();
-            $('#shape-dropdown').empty();
-            if (typeId) {
-                $.ajax({
-                    url: "{% url 'load_shapes' %}",
-                    data: { 'type_id': typeId },
-                    success: function(data) {
-                        $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
-                        $.each(data, function(key, shape) {
-                            $('#shape-dropdown').append(`<option value="${shape.id}">${shape.name}</option>`);
-                        });
-                    }
-                });
-            } else {
-                $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
-            }
-        });
+		$('#load-button').click(function() {
+			let shapeId = $('#shape-dropdown').val();
 
-        function fetchDataForChart() {
-			const shapeId = $('#shape-dropdown').val();
-			const dataLayerKey = $('#data-layer-one-dropdown').val();
-			if (shapeId && dataLayerKey) {
-				$.ajax({
+			let shapeName = $('#shape-dropdown option:selected').text();
+
+			let dataLayerOne = $('#data-layer-one-dropdown').val();
+			let dataLayerTwo = $('#data-layer-two-dropdown').val();
+			let dataLayerThree = $('#data-layer-three-dropdown').val();
+
+			let dataLayerOneName = $('#data-layer-one-dropdown option:selected').text();
+			let dataLayerTwoName = $('#data-layer-two-dropdown option:selected').text();
+			let dataLayerThreeName = $('#data-layer-three-dropdown option:selected').text();
+
+			const fetchData = (dataLayer, shapeId) => {
+				return $.ajax({
 					url: "{% url 'get_historical_data' %}",
-					data: { 'shape_id': shapeId, 'data_layer_key': dataLayerKey },
-					success: function(data) {
-						console.log('Chart Data:', data);  // Debugging: Check the data in the console
-						const years = data.map(entry => entry.year);
-						const values = data.map(entry => entry.value);
-						initializeChart(years, values);
-					},
-					error: function() {
-						alert("Error fetching data.");
-					}
+					data: { 'shape_id': shapeId, 'data_layer_key': dataLayer }
 				});
-			}
-		}
+			};
 
+			const normalizeData = (data) => {
 
-		$('#shape-dropdown').change(function() {
-			if (currentLayer) map.removeLayer(currentLayer);
-			const shapeId = $(this).val();
+				if (data.length === 0) return [];
 
-			if (shapeId) {
-				fetchDataForChart();
-			}
+				if (data.length === 1) {
+					return [{ year: data[0].year, normalizedValue: 0.5 }];
+				}
+
+				let values = data.map(d => d.value);
+				let min = Math.min(...values);
+				let max = Math.max(...values);
+
+				return data.map(d => {
+					return {
+						year: d.year,
+						normalizedValue: (d.value - min) / (max - min)
+					};
+				});
+			};
+
+			$.when(
+				dataLayerOne ? fetchData(dataLayerOne, shapeId) : null,
+				dataLayerTwo ? fetchData(dataLayerTwo, shapeId) : null,
+				dataLayerThree ? fetchData(dataLayerThree, shapeId) : null
+			).done(function(dataOne, dataTwo, dataThree) {
+				let rawDataOne = dataOne ? dataOne[0] : [];
+				let normalizedDataOne = normalizeData(rawDataOne);
+
+				let rawDataTwo = dataTwo ? dataTwo[0] : [];
+				let normalizedDataTwo = normalizeData(rawDataTwo);
+
+				let rawDataThree = dataThree ? dataThree[0] : [];
+				let normalizedDataThree = normalizeData(rawDataThree);
+
+				if (rawDataOne.length > 0) {
+					Plotly.newPlot('data-layer-one-graph', [{
+						x: rawDataOne.map(d => d.year),
+						y: rawDataOne.map(d => d.value),
+						mode: 'lines+markers',
+						name: dataLayerOneName
+					}], {
+						title: 'Data Layer 1: ' + dataLayerOneName,
+						xaxis: { title: 'Year' },
+						yaxis: { title: 'Value' },
+						height: 350
+					});
+					$('#data-layer-one-graph').show();
+				}
+
+				if (rawDataTwo.length > 0) {
+					Plotly.newPlot('data-layer-two-graph', [{
+						x: rawDataTwo.map(d => d.year),
+						y: rawDataTwo.map(d => d.value),
+						mode: 'lines+markers',
+						name: dataLayerTwoName
+					}], {
+						title: 'Data Layer 2: ' + dataLayerTwoName,
+						xaxis: { title: 'Year' },
+						yaxis: { title: 'Value' },
+						height: 350
+					});
+					$('#data-layer-two-graph').show();
+				}
+
+				if (rawDataThree.length > 0) {
+					Plotly.newPlot('data-layer-three-graph', [{
+						x: rawDataThree.map(d => d.year),
+						y: rawDataThree.map(d => d.value),
+						mode: 'lines+markers',
+						name: dataLayerThreeName
+					}], {
+						title: 'Data Layer 3: ' + dataLayerThreeName,
+						xaxis: { title: 'Year' },
+						yaxis: { title: 'Value' },
+						height: 350
+					});
+					$('#data-layer-three-graph').show();
+				}
+
+				let traces = [];
+				if (normalizedDataOne.length > 0) {
+					traces.push({
+						x: normalizedDataOne.map(d => d.year),
+						y: normalizedDataOne.map(d => d.normalizedValue),
+						mode: 'lines+markers',
+						name: dataLayerOneName
+					});
+				}
+				if (normalizedDataTwo.length > 0) {
+					traces.push({
+						x: normalizedDataTwo.map(d => d.year),
+						y: normalizedDataTwo.map(d => d.normalizedValue),
+						mode: 'lines+markers',
+						name: dataLayerTwoName
+					});
+				}
+				if (normalizedDataThree.length > 0) {
+					traces.push({
+						x: normalizedDataThree.map(d => d.year),
+						y: normalizedDataThree.map(d => d.normalizedValue),
+						mode: 'lines+markers',
+						name: dataLayerThreeName
+					});
+				}
+
+				let layout = {
+					title: 'Normalized Temporal Trend for ' + shapeName,
+					xaxis: { title: 'Year' },
+					yaxis: { title: 'Normalized Value' },
+					width: null,
+    				height: 400
+				};
+
+				Plotly.newPlot('temporal-trend-graph', traces, layout);
+			});
 		});
 
-        $('#data-layer-one-dropdown').change(function() {
-            const dataLayerKey = $(this).val();
-
-            if (currentLayer) {
-				map.removeLayer(currentLayer);
-				currentLayer = null;
-			}
-
-            if (dataLayerKey) {
-				fetchDataForChart()
-			}
-		});
     </script>
 {% endblock %}
