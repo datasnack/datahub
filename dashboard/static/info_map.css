@@ -1,0 +1,52 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+h1 {
+    text-align: left;
+    font-size: 2em;
+    margin-top: 20px;
+    color: #000000;
+}
+
+h2 {
+    text-align: left;
+	margin-top: 50px;
+    color: #000000;
+}
+
+label {
+    text-align: left;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+#loading-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    font-size: 20px;
+}
+
+.legend-bar {
+      width: 150px;
+      height: 20px;
+      background: linear-gradient(to right, #20dab4, #1bb898, #16957c, #11735f, #0c5143);
+      border: 1px solid #000;
+      margin-top: 5px;
+  }
+  .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8em;
+  }

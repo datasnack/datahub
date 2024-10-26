@@ -5,25 +5,14 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'info_map.css' %}">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
-
     <h1>Information Density Map</h1>
-
-    <label for="type">Select Type:</label>
-    <select id="type-dropdown">
-        <option value="">>>> Select Type <<<</option>
-        {% for shape_type in shape_types %}
-            <option value="{{ shape_type.id }}">{{ shape_type.name }}</option>
-        {% endfor %}
-    </select>
 
     <label for="year">Select Year:</label>
     <select id="year-dropdown">
@@ -33,139 +22,163 @@
         {% endfor %}
     </select>
 
+	<button id="load-button">Load</button>
+
     <div id="map" style="height: 600px; width: 100%; margin-top: 20px;">
         <div id="loading-message">Loading, please wait...</div>
     </div>
 
 	<h2>Information Ranking</h2>
-	<ol id="ranking-list" style="padding-left: 20px;"></ol>
+	<ol id="ranking-list"></ol>
 
     <script>
 		$(document).ready(function() {
-			$('#type-dropdown').prop('selectedIndex', 0);
 			$('#year-dropdown').prop('selectedIndex', 0);
+			$('loading-message').hide();
 		});
 
-        const map = L.map('map').setView(
-            [parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
-            parseInt("{{ datahub_center_zoom }}")
-        );
+        let map;
+		let layerGroup = L.layerGroup();
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+		$(document).ready(function() {
+			if (!map) {
+				map = L.map('map').setView(
+					[parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
+					parseInt("{{ datahub_center_zoom }}")
+				);
 
-        const layerGroup = L.layerGroup().addTo(map);
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+				}).addTo(map);
 
-		map.whenReady(() => {
-			$('#year-dropdown').on('change', update_map);
-			$('#type-dropdown').on('change', update_map);
+				layerGroup.addTo(map);
+
+				addLegend();
+			}
 		});
 
-        function update_map() {
-    		$('#loading-message').show();
-			const shape_type = $('#type-dropdown').val();
+		function addLegend() {
+			const legend = L.control({ position: 'bottomright' });
+
+			legend.onAdd = function (map) {
+				const div = L.DomUtil.create('div', 'info legend');
+				div.innerHTML = `
+					<div class="legend-bar"></div>
+					<div class="legend-labels">
+						<span id="min-label"></span>
+						<span id="max-label"></span>
+					</div>
+				`;
+				return div;
+			};
+
+			legend.addTo(map);
+		}
+
+
+		$('#load-button').on('click', update_map);
+
+		function update_map(parent_id) {
+			$('#loading-message').show();
 			const year = $('#year-dropdown').val();
+			parent_id = parseInt(parent_id) || null;
 
-			if (shape_type && year) {
+			if (year) {
 				setTimeout(() => {
 					$.ajax({
-						url: "{% url 'get_shape_type_geometries' %}",
-						data: { 'shape_type': shape_type },
-						success: function (geometryResponse) {
-							$.ajax({
-								url: "{% url 'get_dl_count_for_year_shape' %}",
-								data: {
-									'shape_type': shape_type,
-									'year': year,
-								},
-								success: function (dlCountResponse) {
-									layerGroup.eachLayer(function (layer) {
-										layerGroup.removeLayer(layer);
-									});
+						url: "{% url 'get_dl_count_for_year_shapes' %}",
+						data: { 'parent_id': parent_id, 'year': year },
+						success: function (response) {
+							layerGroup.clearLayers();
 
-									const geometries = geometryResponse.geometries;
-									const names = geometryResponse.names;
-									const dlCounts = dlCountResponse.shape_dlcount;
+							const dlCounts = response.shape_dlcount_dict;
+							const geometries = response.geometries;
+							const names = response.names;
 
-									const values = Object.values(dlCounts);
-									const minValue = Math.min(...values) - 1;
-									const maxValue = Math.max(...values) + 1;
+							const values = Object.values(dlCounts);
+							const minValue = Math.min(...values);
+							const maxValue = Math.max(...values);
 
-									const shapeData = [];
-									for (const shapeId in geometries) {
-										const count = dlCounts[shapeId] || 0;
-										const name = names[shapeId] || 'Unknown';
-										shapeData.push({ id: shapeId, name, count });
+							updateLegend(minValue, maxValue);
 
-										const geometry = typeof geometries[shapeId] === 'string'
-											? JSON.parse(geometries[shapeId])
-											: geometries[shapeId];
+							const shapeData = [];
+							for (const shapeId in geometries) {
+								const count = dlCounts[shapeId] || 0;
+								const name = names[shapeId] || 'Unknown';
+								shapeData.push({ id: shapeId, name, count });
 
-										const color = getColor(count, minValue, maxValue);
+								let geometry;
 
-										const geoJsonFeature = {
-											type: 'Feature',
-											geometry: geometry,
-											properties: { count, name }
-										};
+								if (typeof geometries[shapeId] === 'string') {
+									geometry = JSON.parse(geometries[shapeId]);
+								} else {
+									geometry = geometries[shapeId];
+								}
 
-										map.whenReady(function () {
-											const geoJsonLayer = L.geoJSON(geoJsonFeature, {
-												style: () => ({
-													fillColor: color,
-													weight: 2,
-													opacity: 1,
-													color: 'black',
-													fillOpacity: 0.7
-												}),
-												onEachFeature: (feature, layer) => {
-													layer.bindPopup(`<b>Name: ${feature.properties.name}</b><br>Value: ${feature.properties.count}`);
-												}
-											});
+								const color = getColor(count, minValue, maxValue);
 
-											geoJsonLayer.addTo(layerGroup);
+								const geoJsonFeature = {
+									type: 'Feature',
+									geometry: geometry,
+									properties: { id: shapeId, name, count }
+								};
+
+								const geoJsonLayer = L.geoJSON(geoJsonFeature, {
+									style: () => ({
+										fillColor: color,
+										weight: 2,
+										opacity: 1,
+										color: 'black',
+										fillOpacity: 0.7
+									}),
+									onEachFeature: (feature, layer) => {
+										layer.bindPopup(`<b>Name: ${feature.properties.name}</b><br>Value: ${feature.properties.count}`);
+										layer.on('dblclick', function () {
+											update_map(feature.properties.id);
 										});
 									}
+								});
 
-									shapeData.sort((a, b) => b.count - a.count);
+								geoJsonLayer.addTo(layerGroup);
+							}
 
-									const rankingList = $('#ranking-list');
-									rankingList.empty();
-									shapeData.forEach((shape) => {
-										rankingList.append(
-											`<li><b>${shape.name}:</b> ${shape.count}</li>`
-										);
-									});
+							shapeData.sort((a, b) => b.count - a.count);
 
-									$('#loading-message').hide();
-								},
-								error: function (xhr, status, error) {
-									console.error('Error fetching data layer count:', error);
-									$('#loading-message').hide();
-								}
+							const rankingList = $('#ranking-list');
+							rankingList.empty();
+							shapeData.forEach((shape) => {
+								rankingList.append(
+									`<li><b>${shape.name}:</b> ${shape.count}</li>`
+								);
 							});
+
+							$('#loading-message').hide();
 						},
 						error: function (xhr, status, error) {
-							console.error('Error fetching geometries:', error);
+							console.error('Error fetching data layer count:', error);
 							$('#loading-message').hide();
 						}
 					});
 				}, 300);
 			} else {
-				alert('Please select both shape type and year.');
+				alert('Please select the year.');
 				$('#loading-message').hide();
 			}
 		}
 
+		function updateLegend(minValue, maxValue) {
+			document.getElementById('min-label').textContent = Math.round(minValue);
+			document.getElementById('max-label').textContent = Math.round(maxValue);
+		}
+
 
         function getColor(value, minValue, maxValue) {
-            const ratio = Math.max(0, Math.min((value - minValue) / (maxValue - minValue), 1));
-            if (ratio > 0.8) return '#0e6251';
-            if (ratio > 0.6) return '#148f77';
-            if (ratio > 0.4) return '#1abc9c';
-            if (ratio > 0.2) return '#76d7c4';
-            return '#FFFFFF';
+            const norm_val = (value - minValue) / (maxValue - minValue);
+            if (norm_val > 0.8) return '#0c5143';
+            if (norm_val > 0.6) return '#11735f';
+            if (norm_val > 0.4) return '#16957c';
+            if (norm_val > 0.2) return '#1bb898';
+            return '#20dab4';
         }
     </script>
 {% endblock %}

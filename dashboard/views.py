@@ -13,39 +13,13 @@ def home(request):
     return render(request, 'home.html')
 
 
-def info_map_base(request):
-    shape_types = Type.objects.all()
-    datalayers = Datalayer.objects.all()
-
-    min_year = dt.date.today().year
-    max_year = 0
-
-    for dl in datalayers:
-        available_years = dl.get_available_years
-        if available_years:
-            min_available_year = min(available_years)
-            max_available_year = max(available_years)
-            if min_year > min_available_year:
-                min_year = min_available_year
-            if max_year < max_available_year:
-                max_year = max_available_year
-
-    years = range(int(min_year), int(max_year) + 1)
-
-    context = {
-        'shape_types': shape_types,
-        'years': years,
-        'datahub_center_x': settings.DATAHUB_CENTER_X,
-        'datahub_center_y': settings.DATAHUB_CENTER_Y,
-        'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
-    }
-
-    return render(request, 'info_map.html', context)
-
-
-def get_dl_count_for_year_shape(request):
-    shape_type = request.GET['shape_type']
-    shapes = Shape.objects.filter(type_id=shape_type)
+def get_dl_count_for_year_shapes(request):
+    parent_id = request.GET['parent_id']
+    if parent_id:
+        shapes = Shape.objects.filter(parent_id=parent_id)
+    else:
+        highest_type = Type.objects.order_by('position').first()
+        shapes = Shape.objects.filter(type_id=highest_type.id)
 
     year = int(request.GET['year'])
 
@@ -82,17 +56,6 @@ def get_dl_count_for_year_shape(request):
             if rec_count > 0:
                 shape_dlcount_dict[shape.id] += 1
 
-    context = {
-        'shape_dlcount': shape_dlcount_dict
-    }
-
-    return JsonResponse(context, safe=False)
-
-
-def get_shape_type_geometries(request):
-    shape_type = request.GET['shape_type']
-    shapes = Shape.objects.filter(type_id=shape_type)
-
     geometries = {}
     names = {}
     for shape in shapes:
@@ -100,11 +63,118 @@ def get_shape_type_geometries(request):
         names[shape.id] = shape.name
 
     context = {
-        "geometries": geometries,
-        "names": names
+        'shape_dlcount_dict' : shape_dlcount_dict,
+        'geometries' : geometries,
+        'names' : names,
     }
 
     return JsonResponse(context, safe=False)
+
+
+def info_map_base(request):
+    highest_type = Type.objects.order_by('position').first()
+    highest_shape = Shape.objects.filter(type_id=highest_type.id).first()
+
+    datalayers = Datalayer.objects.all()
+
+    min_year = dt.date.today().year
+    max_year = 0
+
+    for dl in datalayers:
+        available_years = dl.get_available_years
+        if available_years:
+            min_available_year = min(available_years)
+            max_available_year = max(available_years)
+            if min_year > min_available_year:
+                min_year = min_available_year
+            if max_year < max_available_year:
+                max_year = max_available_year
+
+    years = range(int(min_year), int(max_year) + 1)
+
+    context = {
+        'highest_shape_geometry' : highest_shape.geometry.geojson,
+        'highest_shape_name' : highest_shape.name,
+        'years': years,
+        'datahub_center_x': settings.DATAHUB_CENTER_X,
+        'datahub_center_y': settings.DATAHUB_CENTER_Y,
+        'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
+    }
+
+    return render(request, 'info_map.html', context)
+
+
+# def get_shapes_geometries_name(shapes):
+#     geometries = {}
+#     names = {}
+#     for shape in shapes:
+#         geometries[shape.id] = shape.geometry.geojson
+#         names[shape.id] = shape.name
+#
+#     return geometries, names
+
+# def get_dl_count_for_year_shape(request):
+#     shape_type = request.GET['shape_type']
+#     shapes = Shape.objects.filter(type_id=shape_type)
+#
+#     year = int(request.GET['year'])
+#
+#     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
+#
+#     for datalayer in Datalayer.objects.all():
+#         table_name = datalayer.key
+#         for shape in shapes:
+#             rec_count = 0
+#             try:
+#                 if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
+#                     query = f"""
+#                                 SELECT COUNT(*)
+#                                 FROM {table_name}
+#                                 WHERE shape_id = %s AND year = %s
+#                     """
+#                     with connection.cursor() as c:
+#                         c.execute(query, [shape.id, year])
+#                         rec_count = c.fetchone()[0]
+#
+#                 elif datalayer.temporal_resolution == LayerTimeResolution.DAY:
+#                     query = f"""
+#                                 SELECT COUNT(*)
+#                                 FROM {table_name}
+#                                 WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
+#                     """
+#                     with connection.cursor() as c:
+#                         c.execute(query, [shape.id, year])
+#                         rec_count = c.fetchone()[0]
+#
+#             except ProgrammingError as e:
+#                 rec_count = 0
+#
+#             if rec_count > 0:
+#                 shape_dlcount_dict[shape.id] += 1
+#
+#     context = {
+#         'shape_dlcount': shape_dlcount_dict
+#     }
+#
+#     return JsonResponse(context, safe=False)
+
+
+# def get_shape_type_geometries(request):
+#     shape_type = request.GET['shape_type']
+#     shapes = Shape.objects.filter(type_id=shape_type)
+#
+#     geometries = {}
+#     names = {}
+#     for shape in shapes:
+#         geometries[shape.id] = shape.geometry.geojson
+#         names[shape.id] = shape.name
+#
+#     context = {
+#         "geometries": geometries,
+#         "names": names
+#     }
+#
+#     return JsonResponse(context, safe=False)
 
 
 def temporal_trend_base(request):
