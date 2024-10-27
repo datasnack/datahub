@@ -104,79 +104,6 @@ def info_map_base(request):
     return render(request, 'info_map.html', context)
 
 
-# def get_shapes_geometries_name(shapes):
-#     geometries = {}
-#     names = {}
-#     for shape in shapes:
-#         geometries[shape.id] = shape.geometry.geojson
-#         names[shape.id] = shape.name
-#
-#     return geometries, names
-
-# def get_dl_count_for_year_shape(request):
-#     shape_type = request.GET['shape_type']
-#     shapes = Shape.objects.filter(type_id=shape_type)
-#
-#     year = int(request.GET['year'])
-#
-#     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
-#
-#     for datalayer in Datalayer.objects.all():
-#         table_name = datalayer.key
-#         for shape in shapes:
-#             rec_count = 0
-#             try:
-#                 if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
-#                     query = f"""
-#                                 SELECT COUNT(*)
-#                                 FROM {table_name}
-#                                 WHERE shape_id = %s AND year = %s
-#                     """
-#                     with connection.cursor() as c:
-#                         c.execute(query, [shape.id, year])
-#                         rec_count = c.fetchone()[0]
-#
-#                 elif datalayer.temporal_resolution == LayerTimeResolution.DAY:
-#                     query = f"""
-#                                 SELECT COUNT(*)
-#                                 FROM {table_name}
-#                                 WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
-#                     """
-#                     with connection.cursor() as c:
-#                         c.execute(query, [shape.id, year])
-#                         rec_count = c.fetchone()[0]
-#
-#             except ProgrammingError as e:
-#                 rec_count = 0
-#
-#             if rec_count > 0:
-#                 shape_dlcount_dict[shape.id] += 1
-#
-#     context = {
-#         'shape_dlcount': shape_dlcount_dict
-#     }
-#
-#     return JsonResponse(context, safe=False)
-
-
-# def get_shape_type_geometries(request):
-#     shape_type = request.GET['shape_type']
-#     shapes = Shape.objects.filter(type_id=shape_type)
-#
-#     geometries = {}
-#     names = {}
-#     for shape in shapes:
-#         geometries[shape.id] = shape.geometry.geojson
-#         names[shape.id] = shape.name
-#
-#     context = {
-#         "geometries": geometries,
-#         "names": names
-#     }
-#
-#     return JsonResponse(context, safe=False)
-
-
 def temporal_trend_base(request):
     types = Type.objects.all().order_by('id')
     datalayers = Datalayer.objects.all()
@@ -190,16 +117,6 @@ def temporal_trend_base(request):
     }
     return render(request, 'temporal_trend.html', context)
 
-def get_geometry_shape(request):
-    shape_id = request.GET.get('shape_id')
-    shape = get_object_or_404(Shape, id=shape_id)
-
-    data = {
-        "type": "Feature",
-        "geometry": shape.geometry.geojson
-    }
-
-    return JsonResponse(data, safe=False)
 
 def get_historical_data(request):
     shape_id = request.GET.get('shape_id')
@@ -213,9 +130,18 @@ def get_historical_data(request):
     data = []
 
     for year in years:
+        value = 0
         if data_layer.temporal_resolution == LayerTimeResolution.YEAR:
-            value_obj = data_layer.value(shape=shape, when=dt.datetime(year, 1, 1))
-            value = value_obj.value
+            query = f"""
+                        SELECT value
+                        FROM {table_name}
+                        WHERE shape_id = %s AND year = %s
+                    """
+            with connection.cursor() as c:
+                c.execute(query, [shape.id, year])
+                res = c.fetchone()
+            # value_obj = data_layer.value(shape=shape, when=dt.datetime(year, 1, 1))
+            # value = value_obj.value
         elif data_layer.temporal_resolution == LayerTimeResolution.DAY:
             query = f"""
                         SELECT AVG(value)
@@ -224,11 +150,14 @@ def get_historical_data(request):
                     """
             with connection.cursor() as c:
                 c.execute(query, [shape.id, year])
-                value = c.fetchone()[0]
-        data.insert(0, {
-            'year': year,
-            'value': value
-        })
+                res = c.fetchone()
+
+        if res is not None:
+            value = res[0]
+            data.insert(0, {
+                'year': year,
+                'value': value
+            })
 
     return JsonResponse(data, safe=False)
 

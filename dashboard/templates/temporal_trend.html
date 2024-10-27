@@ -5,7 +5,7 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-	<link rel="stylesheet" type="text/css" href="{% static 'dropdown.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'temporal_trend.css' %}">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -57,10 +57,13 @@
 
 	<div id="temporal-trend-graph" style="width: 100%; height: 400px;"></div>
 
-	<div id="graphs-container" style="display: flex; justify-content: space-between; width: 100%;">
-		<div id="data-layer-one-graph" style="width: 30%; height: 350px; display:none;"></div>
-		<div id="data-layer-two-graph" style="width: 30%; height: 350px; display:none;"></div>
-		<div id="data-layer-three-graph" style="width: 30%; height: 350px; display:none;"></div>
+
+	<div id="graphs-container" style="margin: 0; display: flex; flex-direction: column; align-items: center; width: 100%;">
+		<div style="display: flex; justify-content: center; width: 100%;">
+			<div id="data-layer-one-graph" style="width: 50%; height: 350px; display:none;"></div>
+			<div id="data-layer-two-graph" style="width: 50%; height: 350px; display:none;"></div>
+		</div>
+		<div id="data-layer-three-graph" style="width: 50%; height: 350px; display:none; margin-top: 20px;"></div>
 	</div>
 
     <script>
@@ -132,6 +135,7 @@
 			};
 
 			const normalizeData = (data) => {
+				console.log(data)
 
 				if (data.length === 0) return [];
 
@@ -143,12 +147,17 @@
 				let min = Math.min(...values);
 				let max = Math.max(...values);
 
-				return data.map(d => {
-					return {
+				if (min === max) {
+					return data.map(d => ({
 						year: d.year,
-						normalizedValue: (d.value - min) / (max - min)
-					};
-				});
+						normalizedValue: 0
+					}));
+				}
+
+				return data.map(d => ({
+					year: d.year,
+					normalizedValue: (d.value - min) / (max - min)
+				}));
 			};
 
 			$.when(
@@ -164,13 +173,15 @@
 
 				let rawDataThree = dataThree ? dataThree[0] : [];
 				let normalizedDataThree = normalizeData(rawDataThree);
+				console.log(normalizedDataThree)
 
 				if (rawDataOne.length > 0) {
 					Plotly.newPlot('data-layer-one-graph', [{
 						x: rawDataOne.map(d => d.year),
 						y: rawDataOne.map(d => d.value),
 						mode: 'lines+markers',
-						name: dataLayerOneName
+						name: dataLayerOneName,
+						line: { color: '#8979da' }
 					}], {
 						title: 'Data Layer 1: ' + dataLayerOneName,
 						xaxis: { title: 'Year' },
@@ -185,7 +196,8 @@
 						x: rawDataTwo.map(d => d.year),
 						y: rawDataTwo.map(d => d.value),
 						mode: 'lines+markers',
-						name: dataLayerTwoName
+						name: dataLayerTwoName,
+						line: { color: '#799ada' }
 					}], {
 						title: 'Data Layer 2: ' + dataLayerTwoName,
 						xaxis: { title: 'Year' },
@@ -200,7 +212,8 @@
 						x: rawDataThree.map(d => d.year),
 						y: rawDataThree.map(d => d.value),
 						mode: 'lines+markers',
-						name: dataLayerThreeName
+						name: dataLayerThreeName,
+						line: { color: '#da8979' }
 					}], {
 						title: 'Data Layer 3: ' + dataLayerThreeName,
 						xaxis: { title: 'Year' },
@@ -216,7 +229,8 @@
 						x: normalizedDataOne.map(d => d.year),
 						y: normalizedDataOne.map(d => d.normalizedValue),
 						mode: 'lines+markers',
-						name: dataLayerOneName
+						name: dataLayerOneName,
+						line: {color: '#8979da'}
 					});
 				}
 				if (normalizedDataTwo.length > 0) {
@@ -224,7 +238,8 @@
 						x: normalizedDataTwo.map(d => d.year),
 						y: normalizedDataTwo.map(d => d.normalizedValue),
 						mode: 'lines+markers',
-						name: dataLayerTwoName
+						name: dataLayerTwoName,
+						line: { color: '#799ada' }
 					});
 				}
 				if (normalizedDataThree.length > 0) {
@@ -232,7 +247,8 @@
 						x: normalizedDataThree.map(d => d.year),
 						y: normalizedDataThree.map(d => d.normalizedValue),
 						mode: 'lines+markers',
-						name: dataLayerThreeName
+						name: dataLayerThreeName,
+						line: { color: '#da8979' }
 					});
 				}
 
