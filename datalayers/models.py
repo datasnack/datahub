@@ -1,6 +1,6 @@
 import datetime as dt
-import string
 import logging
+import string
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import Optional
