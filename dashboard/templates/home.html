@@ -5,18 +5,18 @@
 {% block title %}Dashboard Home{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" type="text/css" href="{% static 'box.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'home.css' %}">
 <h1>Dashboard</h1>
 
 <div class="box-container">
-    <a href="{% url 'temporal_trend_view' %}" class="box">
-        <div class="box-title">Temporal Trend</div>
-        <div class="box-info">See temporal trend of different data layers</div>
+    <a href="{% url 'info_map' %}" class="box">
+        <div class="box-title">Info Map</div>
+        <div class="box-info">Data Layer Coverage</div>
     </a>
-	<div class="box">
-        <div class="box-title">Time slider</div>
-        <div class="box-info">See how data gradually changes over time</div>
-    </div>
+	<a href="{% url 'temporal_trend' %}" class="box">
+        <div class="box-title">Temporal Trend</div>
+        <div class="box-info">Compare values of different data layers</div>
+    </a>
 </div>
 
 {% endblock %}

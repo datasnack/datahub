@@ -24,6 +24,7 @@ def get_dl_count_for_year_shapes(request):
     year = int(request.GET['year'])
 
     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
+    shape_dl_dict = {shape.id: [] for shape in shapes}
 
     for datalayer in Datalayer.objects.all():
         table_name = datalayer.key
@@ -55,6 +56,7 @@ def get_dl_count_for_year_shapes(request):
 
             if rec_count > 0:
                 shape_dlcount_dict[shape.id] += 1
+                shape_dl_dict.get(shape.id).append(datalayer.name)
 
     geometries = {}
     names = {}
@@ -63,9 +65,10 @@ def get_dl_count_for_year_shapes(request):
         names[shape.id] = shape.name
 
     context = {
-        'shape_dlcount_dict' : shape_dlcount_dict,
-        'geometries' : geometries,
-        'names' : names,
+        'shape_dlcount_dict': shape_dlcount_dict,
+        'shape_dl_dict': shape_dl_dict,
+        'geometries': geometries,
+        'names': names,
     }
 
     return JsonResponse(context, safe=False)
@@ -93,8 +96,8 @@ def info_map_base(request):
     years = range(int(min_year), int(max_year) + 1)
 
     context = {
-        'highest_shape_geometry' : highest_shape.geometry.geojson,
-        'highest_shape_name' : highest_shape.name,
+        'highest_shape_geometry': highest_shape.geometry.geojson,
+        'highest_shape_name': highest_shape.name,
         'years': years,
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
@@ -130,7 +133,6 @@ def get_historical_data(request):
     data = []
 
     for year in years:
-        value = 0
         if data_layer.temporal_resolution == LayerTimeResolution.YEAR:
             query = f"""
                         SELECT value

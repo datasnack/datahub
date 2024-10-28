@@ -92,6 +92,7 @@
 							layerGroup.clearLayers();
 
 							const dlCounts = response.shape_dlcount_dict;
+							const dls = response.shape_dl_dict;
 							const geometries = response.geometries;
 							const names = response.names;
 
@@ -103,9 +104,10 @@
 
 							const shapeData = [];
 							for (const shapeId in geometries) {
+								const availableDls = dls[shapeId] || 'No available data layer';
 								const count = dlCounts[shapeId] || 0;
 								const name = names[shapeId] || 'Unknown';
-								shapeData.push({ id: shapeId, name, count });
+								shapeData.push({ id: shapeId, name, count, availableDls });
 
 								let geometry;
 
@@ -120,7 +122,7 @@
 								const geoJsonFeature = {
 									type: 'Feature',
 									geometry: geometry,
-									properties: { id: shapeId, name, count }
+									properties: { id: shapeId, name, count}
 								};
 
 								const geoJsonLayer = L.geoJSON(geoJsonFeature, {
@@ -132,7 +134,7 @@
 										fillOpacity: 0.7
 									}),
 									onEachFeature: (feature, layer) => {
-										layer.bindPopup(`<b>Name: ${feature.properties.name}</b><br>Value: ${feature.properties.count}`);
+										layer.bindPopup(`<b>${feature.properties.name}</b><br>Available Data Layers: <br>${feature.properties.count}`);
 										layer.on('dblclick', function () {
 											update_map(feature.properties.id);
 										});
@@ -146,10 +148,28 @@
 
 							const rankingList = $('#ranking-list');
 							rankingList.empty();
-							shapeData.forEach((shape) => {
-								rankingList.append(
-									`<li><b>${shape.name}:</b> ${shape.count}</li>`
-								);
+
+							shapeData.forEach((shape, index) => {
+								let availableDl;
+								if (Array.isArray(shape.availableDls)) {
+									availableDl = shape.availableDls.map(dl => `<li>${dl}</li>`).join('');
+								} else {
+									availableDl = `<li>${shape.availableDls}</li>`;
+}
+								rankingList.append(`
+									<li>
+										<b class="shape-name" data-index="${index}" style="cursor: pointer;">
+											${shape.name}:</b> ${shape.count}
+										<ul class="available-dls" style="display: none; padding-left: 20px;">
+											${availableDl}
+										</ul>
+									</li>
+								`);
+							});
+
+							$('.shape-name').on('click', function () {
+								const index = $(this).data('index');
+								$(`.available-dls:eq(${index})`).toggle();
 							});
 
 							$('#loading-message').hide();
