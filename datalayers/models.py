@@ -309,6 +309,10 @@ class Datalayer(models.Model):
 
         return has_class
 
+    def has_source_file(self) -> bool:
+        """Check if the source file for a Data Layer exists."""
+        return self.get_class_path().exists()
+
     def get_class_path(self) -> Path:
         return Path(f"src/datalayer/{self.key}.py")
 
