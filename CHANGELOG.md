@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Regression not showing Data Layers on Shape detail if local data are not available (65c9a7e0767248f9664b3ade7ff5d00e14a6ebee)
+- Regression not showing Data Layers on Shape detail if local data are not available 65c9a7e0767248f9664b3ade7ff5d00e14a6ebee
 
 ## [0.3.0](https://github.com/datasnack/datahub/compare/v0.2.0..v0.3.0) - 2024-10-28
 
