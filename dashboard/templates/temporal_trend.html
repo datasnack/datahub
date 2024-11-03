@@ -129,14 +129,12 @@
 
 			const fetchData = (dataLayer, shapeId) => {
 				return $.ajax({
-					url: "{% url 'get_historical_data' %}",
+					url: "{% url 'get_historical_data_shape' %}",
 					data: { 'shape_id': shapeId, 'data_layer_key': dataLayer }
 				});
 			};
 
 			const normalizeData = (data) => {
-				console.log(data)
-
 				if (data.length === 0) return [];
 
 				if (data.length === 1) {
@@ -165,13 +163,14 @@
 				dataLayerTwo ? fetchData(dataLayerTwo, shapeId) : null,
 				dataLayerThree ? fetchData(dataLayerThree, shapeId) : null
 			).done(function(dataOne, dataTwo, dataThree) {
-				let rawDataOne = dataOne ? dataOne[0] : [];
+				console.log(dataOne)
+				let rawDataOne = dataOne ? dataOne[0].historical_data : [];
 				let normalizedDataOne = normalizeData(rawDataOne);
 
-				let rawDataTwo = dataTwo ? dataTwo[0] : [];
+				let rawDataTwo = dataTwo ? dataTwo[0].historical_data : [];
 				let normalizedDataTwo = normalizeData(rawDataTwo);
 
-				let rawDataThree = dataThree ? dataThree[0] : [];
+				let rawDataThree = dataThree ? dataThree[0].historical_data : [];
 				let normalizedDataThree = normalizeData(rawDataThree);
 
 				if (rawDataOne.length > 0) {

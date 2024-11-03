@@ -32,15 +32,12 @@
 	<ol id="ranking-list"></ol>
 
     <script>
-		$(document).ready(function() {
-			$('#year-dropdown').prop('selectedIndex', 0);
-			$('loading-message').hide();
-		});
-
         let map;
 		let layerGroup = L.layerGroup();
 
 		$(document).ready(function() {
+			$('#year-dropdown').prop('selectedIndex', 0);
+			$('#loading-message').hide();
 			if (!map) {
 				map = L.map('map').setView(
 					[parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
@@ -155,7 +152,7 @@
 									availableDl = shape.availableDls.map(dl => `<li>${dl}</li>`).join('');
 								} else {
 									availableDl = `<li>${shape.availableDls}</li>`;
-}
+								}
 								rankingList.append(`
 									<li>
 										<b class="shape-name" data-index="${index}" style="cursor: pointer;">

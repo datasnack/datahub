@@ -5,13 +5,14 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-	<link rel="stylesheet" type="text/css" href="{% static 'dropdown.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'slider.css' %}">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     <h1>Select Type, Shape, and Data Layer</h1>
 
@@ -23,11 +24,6 @@
         {% endfor %}
     </select>
 
-    <label for="shape">Select Shape:</label>
-    <select id="shape-dropdown">
-        <option value="">--- Select Shape ---</option>
-    </select>
-
     <label for="data-layer">Select Data Layer:</label>
     <select id="data-layer-dropdown">
         <option value="">--- Select Data Layer ---</option>
@@ -36,160 +32,275 @@
         {% endfor %}
     </select>
 
-    <div id="map" style="height: 600px; width: 100%; margin-top: 20px;"></div>
+	<button id="load-button">Load</button>
 
-    <div id="year-slider" style="margin-top: 50px;"></div>
+    <div id="map" style="height: 600px; width: 100%; margin-top: 20px;">
+		<div id="loading-message">Loading, please wait...</div>
+	</div>
+
+    <div id="year-slider" style="margin: 50px;"></div>
     <span id="year-slider-value"></span>
+
+	<div id="graph" style="width: 100%; height: 400px;"></div>
 
 
     <script>
-        const map = L.map('map').setView(
-            [parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
-            parseInt("{{ datahub_center_zoom }}")
-        );
+		let map;
+		let layerGroup = L.layerGroup();
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+		$(document).ready(function() {
+			$('#type-dropdown').prop('selectedIndex', 0);
+			$('#data-layer-dropdown').prop('selectedIndex', 0);
+			$('#loading-message').hide();
+			if (!map) {
+				map = L.map('map').setView(
+					[parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
+					parseInt("{{ datahub_center_zoom }}")
+				);
 
-        let currentLayer = null;
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+				}).addTo(map);
 
-        $('#type-dropdown').change(function() {
-            var typeId = $(this).val();
-            $('#shape-dropdown').empty();
-            if (typeId) {
-                $.ajax({
-                    url: "{% url 'get_shapes_by_shape_id' %}",
-                    data: { 'type_id': typeId },
-                    success: function(data) {
-                        $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
-                        $.each(data, function(key, shape) {
-                            $('#shape-dropdown').append(`<option value="${shape.id}">${shape.name}</option>`);
-                        });
-                    }
-                });
-            } else {
-                $('#shape-dropdown').append('<option value="">--- Select Shape ---</option>');
-            }
-        });
+				layerGroup.addTo(map);
 
-
-        $('#data-layer-dropdown').change(function() {
-            const dataLayerKey = $(this).val();
-            $('#year-slider').hide();
-            if (document.getElementById('year-slider').noUiSlider) {
-                document.getElementById('year-slider').noUiSlider.destroy();
-            }
-            if (currentLayer) {
-				map.removeLayer(currentLayer);
-				currentLayer = null;
-			}
-
-            if (dataLayerKey) {
-                $.ajax({
-                    url: "{% url 'get_datalayer_available_years' %}",
-                    data: { 'data_layer_key': dataLayerKey },
-                    success: function(years) {
-                        if (years.length > 0) {
-                            const minYear = Math.min(...years);
-                            const maxYear = Math.max(...years);
-                            noUiSlider.create(document.getElementById('year-slider'), {
-                                start: [minYear],
-                                range: { 'min': minYear, 'max': maxYear },
-                                step: 1,
-                                tooltips: {
-									to: function(value) {
-										return Math.round(value);
-									}
-                        		}
-                            });
-                            $('#year-slider').show();
-                            document.getElementById('year-slider').noUiSlider.on('update', function(values) {
-                                const year = parseInt(values[0]);
-                                $('#year-slider-value').text(year);
-                                //updateMap(year);
-                            });
-							fetchDataForChart()
-                        }
-                    }
-                });
-            }
-        });
-
-
-        $('#shape-dropdown').change(function() {
-			if (currentLayer) map.removeLayer(currentLayer);
-			const shapeId = $(this).val();
-			const year = parseInt($('#year-slider-value').text());
-
-			if (shapeId) {
-				fetchDataForChart();
-				//if (year) updateMap(year);  // Update map if year is selected
+				addLegend();
 			}
 		});
 
-        function updateMap(year) {
-			const shapeId = $('#shape-dropdown').val();
-			const dataLayerKey = $('#data-layer-dropdown').val();
+		function addLegend() {
+			const legend = L.control({ position: 'bottomright' });
 
-			if (shapeId && dataLayerKey) {
+			legend.onAdd = function (map) {
+				const div = L.DomUtil.create('div', 'info legend');
+				div.innerHTML = `
+					<div class="legend-bar"></div>
+					<div class="legend-labels">
+						<span id="min-label"></span>
+						<span id="max-label"></span>
+					</div>
+				`;
+				return div;
+			};
+
+			legend.addTo(map);
+		}
+
+		$('#load-button').on('click', initializeObjects);
+
+		function initializeObjects() {
+			const datalayer = $('#data-layer-dropdown').val();
+			const shapeType = $('#type-dropdown').val();
+			if (datalayer && shapeType) {
 				$.ajax({
-					url: "{% url 'get_geometry_shape' %}",
-					data: { 'shape_id': shapeId },
-					success: function(shapeResponse) {
-						$.ajax({
-							url: "{% url 'get_datalayer_for_year' %}",
-							data: { 'data_layer_key': dataLayerKey, 'shape_id': shapeId, 'year': year },
-							success: function(dataResponse) {
-								const geometry = typeof shapeResponse.geometry === 'string'
-									? JSON.parse(shapeResponse.geometry)
-									: shapeResponse.geometry;
-
-								const value = dataResponse.value;
-								const minValue = 0;
-								const maxValue = 10;
-
-								const color = getColor(value, minValue, maxValue);
-								const geoJsonFeature = { type: 'Feature', geometry: geometry, properties: { value } };
-
-								// Clear the previous layer
-								if (currentLayer) map.removeLayer(currentLayer);
-
-								// Delay adding the new layer to ensure the map is ready
-								setTimeout(() => {
-									currentLayer = L.geoJSON(geoJsonFeature, {
-										style: () => ({
-											fillColor: color,
-											weight: 2,
-											opacity: 1,
-											color: 'white',
-											fillOpacity: 0.7
-										}),
-										onEachFeature: (feature, layer) => {
-											layer.bindPopup(`Value: ${feature.properties.value}`);
-										}
-									}).addTo(map);
-
-									// Adjust the map view to the bounds of the new layer
-									map.fitBounds(currentLayer.getBounds());
-								}, 100); // Adjust this delay if needed
-							},
-							error: () => alert("Data layer error.")
-						});
-					},
-					error: () => alert("Shape error.")
+					url: "{% url 'get_datalayer_available_years' %}",
+					data: {'data_layer_key': datalayer},
+					success: function(data) {
+						initializeSlider(data);
+						updateMap();
+						initializeGraph();
+					}
 				});
+			} else {
+				alert("Please select both shape type and data layer property!!!!");
 			}
 		}
 
-		function getColor(value, minValue, maxValue) {
-			const ratio = Math.max(0, Math.min((value - minValue) / (maxValue - minValue), 1));
-			if (ratio > 0.8) return '#0e6251';
-			if (ratio > 0.6) return '#148f77';
-			if (ratio > 0.4) return '#1abc9c';
-			if (ratio > 0.2) return '#76d7c4';
-			return '#FFFFFF';
+		function initializeSlider(availableYears) {
+			const slider = document.getElementById('year-slider');
+			if(slider && slider.noUiSlider){
+				slider.noUiSlider.destroy();
+			}
+			const minYear = Math.min(...availableYears);
+			const maxYear = Math.max(...availableYears);
+			noUiSlider.create(slider, {
+				start: minYear,
+				step: 1,
+				range: {
+					'min': minYear,
+					'max': maxYear
+				},
+				tooltips: {
+					to: function(value) {
+						return value.toFixed(0);
+					},
+					from: function(value) {
+						return Number(value);
+					}
+				},
+				pips: {
+					mode: 'values',
+					values: [minYear, maxYear],
+					density: 10
+				}
+			});
+
+			slider.noUiSlider.on('change', updateMap);
 		}
+
+		function updateMap() {
+			$('#loading-message').show();
+			const year = parseInt(document.getElementById('year-slider').noUiSlider.get());
+			const shapeType = $('#type-dropdown').val();
+			const datalayer = $('#data-layer-dropdown').val();
+
+			let minValue = 0;
+			let maxValue = 0;
+
+			$.ajax({
+				url: "{% url 'get_min_max_dl_value' %}",
+				data: {'data_layer_key': datalayer, 'shape_type': shapeType},
+				success: function(data) {
+					minValue = data.min_value;
+					maxValue = data.max_value;
+				},
+				error: function(error) {
+					console.error('Error finding min and max values of datalayer:', error);
+				}
+			})
+
+			$.ajax({
+				url: "{% url 'get_dl_value_for_year_shapes' %}",
+				data: {'data_layer_key': datalayer, 'shape_type': shapeType, 'year': year},
+				success: function(data) {
+					layerGroup.clearLayers();
+					const names = data.names;
+					const geometries = data.geometries;
+					const dlValues = data.dl_values;
+
+					const shapeData = [];
+					for (const shapeId in geometries) {
+						const value = dlValues[shapeId];
+						const name = names[shapeId] || 'Unknown';
+						shapeData.push({id: shapeId, name, value});
+
+						let geometry;
+
+						if (typeof geometries[shapeId] === 'string') {
+							geometry = JSON.parse(geometries[shapeId]);
+						} else {
+							geometry = geometries[shapeId];
+						}
+
+						const color = getColor(value, minValue, maxValue);
+
+						const geoJsonFeature = {
+							type: 'Feature',
+							geometry: geometry,
+							properties: {id: shapeId, name, value}
+						};
+
+						const geoJsonLayer = L.geoJSON(geoJsonFeature, {
+							style: () => ({
+								fillColor: color,
+								weight: 2,
+								opacity: 1,
+								color: 'black',
+								fillOpacity: 0.9
+							}),
+							onEachFeature: (feature, layer) => {
+								layer.bindPopup(`<b>${feature.properties.name}</b><br>Value: <br>${feature.properties.value}`);
+								layer.on('click', function () {
+									addToGraph(feature.properties.id);
+								});
+							}
+						});
+
+						geoJsonLayer.addTo(layerGroup);
+
+						updateLegend(minValue, maxValue);
+					}
+					$('#loading-message').hide();
+				},
+				error: function (xhr, status, error) {
+					console.error('Error updating map:', error);
+					$('#loading-message').hide();
+				}
+			});
+		}
+
+		function initializeGraph(){
+			const dataLayer = $('#data-layer-dropdown').val();
+			const dataLayerName = $('#data-layer-dropdown option:selected').text();
+			let traces = [];
+			$.ajax({
+				url: "{% url 'get_historical_data_highest_type' %}",
+				data: {'data_layer_key': dataLayer},
+				success: function(data) {
+					let historicalData = data.historical_data;
+					let highestShapeName = data.highest_shape_name;
+					if (historicalData.length > 0) {
+						traces.push({
+							x: historicalData.map(d => d.year),
+							y: historicalData.map(d => d.value),
+							mode: 'lines+markers',
+							showlegend: true,
+							name: highestShapeName,
+							line: {color: '#8979da'}
+						});
+						let layout = {
+							title: dataLayerName,
+							xaxis: { title: 'Year' },
+							yaxis: { title: 'Value' },
+							width: null,
+							height: 400
+						};
+						Plotly.newPlot('graph', traces, layout);
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error('Error initializing graph:', error);
+				}
+			})
+
+		}
+
+		function addToGraph(shapeId) {
+			const datalayer = $('#data-layer-dropdown').val();
+			$.ajax({
+				url: "{% url 'get_historical_data_shape' %}",
+				data: {'data_layer_key': datalayer, 'shape_id': shapeId},
+				success: function(data) {
+					const historicalData = data.historical_data;
+					const shapeName = data.shape_name
+					if (historicalData.length > 0) {
+						const newTrace = {
+							x: historicalData.map(d => d.year),
+							y: historicalData.map(d => d.value),
+							mode: 'lines+markers',
+							showlegend: true,
+							name: shapeName
+						};
+
+						Plotly.addTraces('graph', newTrace);
+					}
+
+				},
+				error: function (xhr, status, error) {
+					console.error('Error adding to graph:', error);
+				}
+			});
+
+		}
+
+		function updateLegend(minValue, maxValue) {
+			document.getElementById('min-label').textContent = Math.round(minValue);
+			document.getElementById('max-label').textContent = Math.round(maxValue);
+		}
+
+		function getColor(value, minValue, maxValue) {
+            const norm_val = (value - minValue) / (maxValue - minValue);
+			if (norm_val > 0.9) return '#3d85c6';
+            if (norm_val > 0.8) return '#5091cb';
+			if (norm_val > 0.7) return '#639dd1';
+            if (norm_val > 0.6) return '#77a9d7';
+			if (norm_val > 0.5) return '#8ab5dc';
+            if (norm_val > 0.4) return '#9ec2e2';
+			if (norm_val > 0.3) return '#b1cee8';
+            if (norm_val > 0.2) return '#c4daed';
+			if (norm_val > 0.1) return '#d8e6f3';
+            return '#ebf2f9';
+        }
 
     </script>
 {% endblock %}
