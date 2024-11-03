@@ -23,9 +23,12 @@ coverage.xml
 .git
 .venv
 .vscode
+.ruff_cache
 
 .env
 config.ini
+
+node_modules
 
 /static/
 /data/
@@ -36,3 +39,5 @@ config.ini
 /src/
 /src
 /src.*
+env.*
+!env.example

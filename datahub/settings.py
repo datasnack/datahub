@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from importlib.util import find_spec
 from pathlib import Path
 
 import environ
@@ -21,6 +22,7 @@ from . import __version__
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
+    LOGLEVEL=(str, "INFO"),
     ALLOWED_HOSTS=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, []),
     USE_X_FORWARDED_HOST=(bool, False),
@@ -44,6 +46,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / ".env")
 
 
+DATAHUB_DATALAYER_DIR = BASE_DIR / env("DATAHUB_DATALAYER_DIR")
+DATAHUB_DATA_DIR = BASE_DIR / env("DATAHUB_DATA_DIR")
+LOG_DIR = DATAHUB_DATA_DIR / "logs"
+
+
+Path(LOG_DIR).mkdir(parents=False, exist_ok=True)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -54,22 +64,56 @@ SECRET_KEY = env("SECRET_KEY")
 # DEBUG = env("DEBUG")
 DEBUG=True
 
+loglevel = "DEBUG" if DEBUG else env("LOGLEVEL").upper()
 LOGGING = {
     "version": 1,
+    "disable_existing_loggers": False,
     "filters": {
         "require_debug_true": {
             "()": "django.utils.log.RequireDebugTrue",
         }
     },
+    "formatters": {
+        "default": {
+            "format": "[{asctime}] [{levelname:<8}]: {message} at {pathname}:{lineno}",
+            "style": "{",
+        },
+        "rich": {
+            "format": "{message}",
+            "style": "{",
+        },
+    },
     "handlers": {
         "console": {
             "level": "DEBUG",
-            "filters": ["require_debug_true"],
+            # "filters": ["require_debug_true"],
             "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+        "file": {
+            "level": loglevel,
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "datahub.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 5,
+            "formatter": "default",
+        },
+    },
+    "root": {
+        "handlers": ["file", "console"],
+        "level": loglevel,
+    },
+    "loggers": {
+        "": {
+            "level": loglevel,
+            "propagate": True,
         }
     },
-    "loggers": {},
 }
+
+if find_spec("rich") is not None:
+    LOGGING["handlers"]["console"]["class"] = "rich.logging.RichHandler"
+    LOGGING["handlers"]["console"]["formatter"] = "rich"
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
@@ -114,10 +158,11 @@ MIDDLEWARE = [
     "app.middleware.require_login_middleware.RequireLoginMiddleware",
 ]
 
-if DEBUG:
-    # Enable debug toolbar only if DEBUG=True
+# Enable debug toolbar only if DEBUG=True and the package is installed
+if DEBUG and find_spec("debug_toolbar") is not None:
     INSTALLED_APPS = [*INSTALLED_APPS, "debug_toolbar"]
     MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware", *MIDDLEWARE]
+
 
 ROOT_URLCONF = "datahub.urls"
 
@@ -189,6 +234,7 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 
 USE_I18N = True
+USE_THOUSAND_SEPARATOR = True
 
 LOCALE_PATHS = [
     "./locale/",
@@ -257,8 +303,6 @@ DATAHUB_CENTER_Y = env("DATAHUB_CENTER_Y")
 # levels: https://leafletjs.com/examples/zoom-levels/
 DATAHUB_CENTER_ZOOM = env("DATAHUB_CENTER_ZOOM")
 
-DATAHUB_DATALAYER_DIR = BASE_DIR / env("DATAHUB_DATALAYER_DIR")
-DATAHUB_DATA_DIR = BASE_DIR / env("DATAHUB_DATA_DIR")
 
 DATAHUB_HEAD = env("DATAHUB_HEAD")
 

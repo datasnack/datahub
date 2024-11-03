@@ -1,3 +1,5 @@
+import logging
+
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import DetailView, ListView
 
@@ -5,10 +7,13 @@ from datalayers.models import Datalayer
 
 from .models import Shape, Type
 
+logger = logging.getLogger(__name__)
+
 
 # Create your views here.
 class ShapeListView(ListView):
-    """List of shapes, filtered by a shape type.
+    """
+    List of shapes, filtered by a shape type.
 
     Technically this could also be a DetailView based on the type, nevertheless
     the intended View is a list of Shapes, so we went for a ListView that feels
@@ -47,10 +52,12 @@ class ShapeDetailView(DetailView):
 
         all_layers = Datalayer.objects.all()
         context["datalayers"] = []
-        for l in all_layers:
-            if l.is_loaded():
-                context["datalayers"].append(l)
-
+        for dl in all_layers:
+            if dl.is_loaded():
+                if dl.has_class():
+                    context["datalayers"].append(dl)
+                else:
+                    logger.warning("datalayer class is missing key=%s", dl.key)
         return context
 
 

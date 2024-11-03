@@ -75,6 +75,7 @@ def shape_geometry(request):
                 "id": s.id,
                 "url": request.build_absolute_uri(s.get_absolute_url()),
                 "name": s.name,
+                "area_sqkm": s.area_sqkm,
                 "type": s.type.key,
                 "geometry": wkt.loads(s.geometry.wkt),
             }

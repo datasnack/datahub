@@ -18,10 +18,15 @@ Including another URLconf
 
 """
 
+import logging
+from importlib.util import find_spec
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
+
+logger = logging.getLogger(__name__)
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
@@ -44,11 +49,10 @@ for app in settings.INSTALLED_USER_APPS:
     try:
         urlpatterns += [path("", include(f"{app}.urls"))]
     except ModuleNotFoundError:
-        # todo: error logging
-        pass
+        logger.warning("User app url could not be loaded: %s", app)
 
 
-if settings.DEBUG:
+if settings.DEBUG and find_spec("debug_toolbar") is not None:
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
     ]

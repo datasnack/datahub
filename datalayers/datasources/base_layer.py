@@ -9,6 +9,7 @@ import pandas as pd
 from psycopg import sql
 
 from django.db import connection
+from django.utils import formats
 
 from datalayers.utils import get_engine
 
@@ -83,9 +84,9 @@ class BaseLayer:
     def str_format(self, value) -> str:
         match self.value_type:
             case LayerValueType.PERCENTAGE:
-                return f"{round(value * 100, self.precision)} %"
+                return f"{formats.number_format(round(value * 100, self.precision))} %"
             case LayerValueType.VALUE:
-                fmt = str(round(value, self.precision))
+                fmt = formats.number_format(round(value, self.precision))
                 if self.format_suffix:
                     fmt += f" {self.format_suffix}"
                 return fmt
@@ -137,7 +138,7 @@ class BaseLayer:
                 ["md5sum", folder / file_name], text=True
             )
             md5 = md5_output.split(" ", maxsplit=1)[0]
-            self.layer.warning(
+            self.layer.info(
                 "Downloaded file",
                 {"url": url, "file": (folder / file_name).as_posix(), "md5": md5},
             )

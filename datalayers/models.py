@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 import string
 from pathlib import Path
 from timeit import default_timer as timer
@@ -19,6 +20,7 @@ from shapes.models import Shape, Type
 from .datasources.base_layer import LayerTimeResolution, LayerValueType
 
 # Create your models here.
+logger = logging.getLogger(__name__)
 
 
 def camel(s):
@@ -288,16 +290,28 @@ class Datalayer(models.Model):
 
     def has_class(self) -> bool:
         """Check if there is a implementation class for the Data Layer."""
+        has_class = False
         try:
             self._get_class()
-            return True
-        except ModuleNotFoundError:
+            has_class = True
+        except ModuleNotFoundError as e:
             # TODO: this will also return false if a dependency loaded by the
             # class is not found
 
+            logger.debug("Could not load Data Layer class for %s: %s", self.key, str(e))
+
             # raise
 
-            return False
+        except Exception as e:
+            logger.exception(
+                "Could not load Data Layer class for %s: %s", self.key, str(e)
+            )
+
+        return has_class
+
+    def has_source_file(self) -> bool:
+        """Check if the source file for a Data Layer exists."""
+        return self.get_class_path().exists()
 
     def get_class_path(self) -> Path:
         return Path(f"src/datalayer/{self.key}.py")

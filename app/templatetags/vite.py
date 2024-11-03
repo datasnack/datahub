@@ -4,6 +4,7 @@ from urllib.parse import quote
 
 from django import template
 from django.conf import settings
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 register = template.Library()
@@ -17,7 +18,7 @@ def vite_dev():
     if settings.DEBUG:
         hot_file = Path(f"{settings.BASE_DIR}/app/static/hot")
         if hot_file.exists():
-            dev_server_url = hot_file.read_text()
+            dev_server_url = escape(hot_file.read_text())
             return mark_safe(
                 f'<script type="module" src="{dev_server_url}/@vite/client"></script>'
             )
@@ -40,7 +41,7 @@ def vite_asset(file):
         # if a hot file is present, Vite dev mode runs and we return dev server path
         hot_file = Path(f"{settings.BASE_DIR}/app/static/hot")
         if hot_file.exists():
-            dev_server_url = hot_file.read_text()
+            dev_server_url = escape(hot_file.read_text())
             return _tag_for_type(f"{dev_server_url}/{quote(file)}")
 
         # no dev mode look fpr manifest and return last built file
@@ -48,7 +49,6 @@ def vite_asset(file):
     else:
         # look for manifest.json in prod, after collectstatic has been run
         manifest_file = Path(f"{settings.STATIC_ROOT}/build/manifest.json")
-        print(manifest_file)
 
     if not manifest_file.exists():
         raise Exception(f"manifest.json not found at {manifest_file.as_posix()}")
