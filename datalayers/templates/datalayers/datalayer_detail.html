@@ -63,7 +63,7 @@
 
 		<hr>
 
-		{% if datalayer.is_loaded and datalayer.has_class %}
+		{% if datalayer.is_available %}
 		<div class="row">
 			<div class="col-12 col-md-6">
 				<table class="table table-sm small caption-top">
@@ -285,7 +285,7 @@
 
 		<div id="legend"></div>
 
-		{% if datalayer.is_loaded and datalayer.has_class %}
+		{% if datalayer.is_available %}
 		<hr>
 		<div class="mb-3">
 			<dh-chart dl="{{ datalayer.key }}" query='{"shape_type": "{{ datalayer.get_available_shape_types.0.key}}"}'></dh-chart>
