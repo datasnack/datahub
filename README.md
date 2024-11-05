@@ -7,21 +7,22 @@ In [this repository](https://github.com/datasnack/dh-ghana) you can explore an e
 
 ## Installation
 
-The recommended way to use the Data Hub is via Docker and to reference the image built from this repository. See the [Ghana Data Hub](https://github.com/datasnack/dh-ghana) example for installation steps. By doing so it allows for updating the core system independent of you customizations.
+The recommended way to use the Data Hub is via Docker and to reference the [container](https://github.com/datasnack/datahub/pkgs/container/datahub) built from this repository. See the [Ghana Data Hub](https://github.com/datasnack/dh-ghana) example for installation steps. By doing so it allows for updating the core system independent of you customizations.
 
 To install the Data Hub from source, follow these steps:
 
-- Use at least Python v3.12.x
-- Install a PostGIS v16.x database (you can use the provided Docker image from the `docker-compose.yml`).
+- Install [uv](https://docs.astral.sh/uv/)
+- Clone this repository and open it in your terminal
 - Create a `.env` file based on the `.env.example` file.
-- Create a Python virtual environment with `python -m venv .venv` and activate it with `source .venv/bin/activate`.
-- Install Python dependencies via `pip install -r requirements.txt` (might be complicated due to GDAL/PROJ dependencies).
+- Install a PostGIS v16.x database (you can use the provided Docker image from the `docker-compose.yml`, `$ docker compose up -d postgis`).
+- Create a Python v.3.12.x. virtual environment with `uv venv --python 3.12` and activate it with `source .venv/bin/activate`.
+- Install Python dependencies via `uv sync` (might be complicated due to GDAL/PROJ dependencies).
 - Run database migrations with `python manage.py migrate`
 - Run Django with `python manage.py runserver`
-- Create a new superuser with `python manage.py createsuperuser`
 
 The system is now running and usable at [http://localhost:8000/](http://localhost:8000/), to use it:
 
+- Create a new superuser with `python manage.py createsuperuser`
 - Import your Shapes with `python manage.py loadshapes <file>`
 - Place your Data Layer source files in `src/datalayers/`
 - Downloaded data will be placed in `data/datalayers/`
