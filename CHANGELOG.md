@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2](https://github.com/datasnack/datahub/compare/v0.3.1..v0.3.2) - 2024-11-05
+
+### Changed
+
+- Use Data Layer key in download links ([731fdf9](https://github.com/datasnack/datahub/commit/731fdf9aa61b5573dec445bbcea0d2b0621f2ab2))
+- Scaffolding command to create a new app ([be9e0a3](https://github.com/datasnack/datahub/commit/be9e0a3f3a25f61b062b5e8970ca3931f5c2279d))
+
+### Fixed
+
+- Tell bots to not crawl `/api/` routes ([03d96ee](https://github.com/datasnack/datahub/commit/03d96ee98bc8019674fb8d32e6f8eb64e6f8edd5))
+
 ## [0.3.1](https://github.com/datasnack/datahub/compare/v0.3.0..v0.3.1) - 2024-10-29
 
 ### Fixed

@@ -93,7 +93,7 @@ def tools_picker(request):
             all_layers = Datalayer.objects.all()
             context["datalayers"] = []
             for layer in all_layers:
-                if layer.is_loaded():
+                if layer.is_available():
                     context["datalayers"].append(layer)
 
     return render(request, "tools/picker.html", context)

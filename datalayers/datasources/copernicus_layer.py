@@ -11,7 +11,7 @@ from datalayers.datasources.tiff_layer import TiffLayer
 class CopernicusLayer(TiffLayer):
     """Extends TiffParameter class for Copernicus consumption."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.value_type = LayerValueType.PERCENTAGE
@@ -46,8 +46,7 @@ class CopernicusLayer(TiffLayer):
         ]
 
     def get_data_path(self) -> Path:
-        """Overwrite parameter_id based input directory, because we have
-        multiple derives parameters from this source."""
+        """Overwrite input directory, b/c we have multiple derived layers from this source."""
         return Path("./data/datalayers/copernicus_landcover/")
 
     def download(self):
@@ -65,7 +64,7 @@ class CopernicusLayer(TiffLayer):
             self._save_url_to_file(url, folder=self.get_data_path())
 
     def get_value_for_key(self, key) -> int:
-        """Returns the value used for a land usage key."""
+        """Return the value used for a land usage key."""
         for item in self.mapping:
             if item["meaning"] == key:
                 return item["value"]

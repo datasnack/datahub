@@ -53,11 +53,9 @@ class ShapeDetailView(DetailView):
         all_layers = Datalayer.objects.all()
         context["datalayers"] = []
         for dl in all_layers:
-            if dl.is_loaded():
-                if dl.has_class():
-                    context["datalayers"].append(dl)
-                else:
-                    logger.warning("datalayer class is missing key=%s", dl.key)
+            if dl.is_available():
+                context["datalayers"].append(dl)
+
         return context
 
 

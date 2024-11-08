@@ -341,6 +341,24 @@ class Datalayer(models.Model):
         """
         return connection.introspection.table_names()
 
+    def is_available(self) -> bool:
+        """
+        Check if a Data Layer has a class and is loaded into the database.
+
+        It's important to check for both, because downloading/working with data depends
+        on the source file to be present, i.e., for time_col. A loaded Data Layer
+        without it's source file ise unusable.
+        """
+        has_class = self.has_class()
+        is_loaded = self.is_loaded()
+
+        if is_loaded and not has_class:
+            # this get's logged b/c we have a loaded datalayer class WITHOUT a source
+            # file. That shouldn't happen!
+            logger.warning("datalayer class is missing key=%s", self.key)
+
+        return has_class and is_loaded
+
     def is_loaded(self) -> bool:
         """Check if the data has been processed and are stored in the database."""
         # TODO: this runs a database query each time the method is called.

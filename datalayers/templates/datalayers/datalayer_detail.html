@@ -10,13 +10,15 @@
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
 	<div class="mb-2 mb-md-0">
 		<div class="btn-group">
-			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+			<button type="button"{% if not datalayer.is_available %} disabled{% endif %} class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 				{% icon "download" %} {% translate "Processed data" %}
 			</button>
+			{% if datalayer.is_available %}
 			<ul class="dropdown-menu">
-				<li><a class="dropdown-item" href="{% url 'datalayer_data' %}?datalayer_id={{ datalayer.id}}&format=csv">{% translate "CSV" %}</a></li>
-				<li><a class="dropdown-item" href="{% url 'datalayer_data' %}?datalayer_id={{ datalayer.id}}&format=excel">{% translate "Excel" %}</a></li>
+				<li><a class="dropdown-item" rel="nofollow" href="{% url 'datalayer_data' %}?datalayer_key={{ datalayer.key}}&format=csv">{% translate "CSV" %}</a></li>
+				<li><a class="dropdown-item" rel="nofollow" href="{% url 'datalayer_data' %}?datalayer_key={{ datalayer.key}}&format=excel">{% translate "Excel" %}</a></li>
 			</ul>
+			{% endif %}
 		</div>
 
 		<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal_api_{{ datalayer.key }}">{% translate "API" %}</button>
@@ -63,7 +65,7 @@
 
 		<hr>
 
-		{% if datalayer.is_loaded and datalayer.has_class %}
+		{% if datalayer.is_available %}
 		<div class="row">
 			<div class="col-12 col-md-6">
 				<table class="table table-sm small caption-top">
@@ -285,7 +287,7 @@
 
 		<div id="legend"></div>
 
-		{% if datalayer.is_loaded and datalayer.has_class %}
+		{% if datalayer.is_available %}
 		<hr>
 		<div class="mb-3">
 			<dh-chart dl="{{ datalayer.key }}" query='{"shape_type": "{{ datalayer.get_available_shape_types.0.key}}"}'></dh-chart>
