@@ -83,14 +83,26 @@ def info_map_base(request):
     max_year = 0
 
     for dl in datalayers:
-        available_years = dl.get_available_years
-        if available_years:
-            min_available_year = min(available_years)
-            max_available_year = max(available_years)
-            if min_year > min_available_year:
-                min_year = min_available_year
-            if max_year < max_available_year:
-                max_year = max_available_year
+        table_name = dl.key
+        try:
+            query = f"""
+                        SELECT MIN(year), MAX(year)
+                        FROM {table_name}
+                    """
+            with connection.cursor() as c:
+                c.execute(query)
+                res = c.fetchone()
+            min_available_year = res[0]
+            max_available_year = res[1]
+
+        except ProgrammingError as e:
+            min_available_year = dt.date.today().year
+            max_available_year = 0
+
+        if min_year > min_available_year:
+            min_year = min_available_year
+        if max_year < max_available_year:
+            max_year = max_available_year
 
     years = range(int(min_year), int(max_year) + 1)
 
