@@ -75,16 +75,16 @@
 
 		$('#load-button').on('click', update_map);
 
-		function update_map(parent_id) {
+		function update_map(shapeId, loadChildren = true) {
 			$('#loading-message').show();
 			const year = $('#year-dropdown').val();
-			parent_id = parseInt(parent_id) || null;
+			shapeId = parseInt(shapeId) || null;
 
 			if (year) {
 				setTimeout(() => {
 					$.ajax({
 						url: "{% url 'get_dl_count_for_year_shapes' %}",
-						data: { 'parent_id': parent_id, 'year': year },
+						data: { 'shape_id': shapeId, 'year': year, 'load_children': loadChildren },
 						success: function (response) {
 							layerGroup.clearLayers();
 
@@ -131,9 +131,11 @@
 										fillOpacity: 0.7
 									}),
 									onEachFeature: (feature, layer) => {
-										layer.bindPopup(`<b>${feature.properties.name}</b><br>Available Data Layers: <br>${feature.properties.count}`);
+										layer.bindPopup(`<b>${feature.properties.name}</b>
+										<br>Available Data Layers: ${feature.properties.count}
+										<br><button onclick="update_map('${feature.properties.id}', false)">Navigate to parent</button>`);
 										layer.on('dblclick', function () {
-											update_map(feature.properties.id);
+											update_map(feature.properties.id, true);
 										});
 									}
 								});

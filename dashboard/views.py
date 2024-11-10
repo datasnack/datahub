@@ -14,14 +14,19 @@ def home(request):
 
 
 def get_dl_count_for_year_shapes(request):
-    parent_id = request.GET['parent_id']
-    if parent_id:
-        shapes = Shape.objects.filter(parent_id=parent_id)
+    shape_id = request.GET['shape_id']
+    load_children = request.GET.get('load_children', 'true').lower() == 'true'
+    year = int(request.GET['year'])
+
+    if shape_id and load_children:
+        shapes = Shape.objects.filter(parent_id=shape_id)
+    elif shape_id and not load_children:  # load the parent
+        parent_id = Shape.objects.get(id=shape_id).parent_id
+        parent_type = Shape.objects.get(id=parent_id).type_id
+        shapes = Shape.objects.filter(type_id=parent_type)
     else:
         highest_type = Type.objects.order_by('position').first()
         shapes = Shape.objects.filter(type_id=highest_type.id)
-
-    year = int(request.GET['year'])
 
     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
     shape_dl_dict = {shape.id: [] for shape in shapes}
