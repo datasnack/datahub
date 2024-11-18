@@ -231,6 +231,9 @@ LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
 
+DATE_FORMAT = "Y-m-d"
+DATETIME_FORMAT = "Y-m-d H:i:s"
+
 USE_I18N = True
 USE_THOUSAND_SEPARATOR = True
 
