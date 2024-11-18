@@ -1,16 +1,13 @@
 from io import BytesIO
 
-import geopandas
 import numpy as np
 import pandas as pd
 from psycopg import sql
-from shapely import wkt
 
 from django.db import connection
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
-    HttpResponse,
     HttpResponseBadRequest,
     HttpResponseNotFound,
     JsonResponse,
@@ -18,8 +15,8 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 
-from datalayers.models import Datalayer
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
+from datalayers.models import Datalayer
 from datalayers.utils import get_conn_string
 from shapes.models import Shape, Type
 
@@ -47,6 +44,42 @@ def datalayer(request):
     datalayers = Datalayer.objects.all()
     rows = []
     name = "datalayers"
+
+    # handle json before other formats, because we don't need to flatten the
+    # nested structure
+    if fmt == "json":
+        # JsonResponse requires a dict on the top level
+        data = {"data": []}
+
+        for d in datalayers:
+            r = model_to_dict(d)
+
+            # category is not required!
+            r["category"] = d.category.name if d.category else None
+
+            tags = d.tags.all()
+            r["tags"] = []
+            for t in tags:
+                r["tags"].append(model_to_dict(t))
+
+            related = d.related_to.all()
+            r["related_to"] = []
+            for rl in related:
+                r["related_to"].append(rl.key)
+
+            r["sources"] = []
+            sources = d.sources.all()
+            for _, s in enumerate(sources):
+                rs = {}
+                rs["pid_type"] = s.pid_type
+                rs["pid"] = s.pid
+                rs["description"] = s.description
+
+                r["sources"].append(rs)
+            data["data"].append(r)
+
+        # print(data)
+        return JsonResponse(data)
 
     for d in datalayers:
         r = model_to_dict(d)
