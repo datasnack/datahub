@@ -1,3 +1,5 @@
+from typing import Self
+
 from django.contrib.gis.db import models
 from django.db import models as djmodels
 from django.urls import reverse
@@ -70,6 +72,17 @@ class Shape(models.Model):
 
     def get_absolute_url(self):
         return reverse("shapes:shape_detail", kwargs={"pk": self.id})
+
+    def is_parent_of(self, shape: Self) -> bool:
+        if self.id == shape.id:
+            return True
+
+        # breath search first
+        for child in self.children.all():
+            if child.id == shape.id or child.is_parent_of(shape):
+                return True
+
+        return False
 
     def datalayer_value(self, dl, mode="down"):
         # TODO: fallback to parent shape
