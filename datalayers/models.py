@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from datalayers.utils import dictfetchone
+from datalayers.utils import dictfetchone, get_conn_string
 from shapes.models import Shape, Type
 
 from .datasources.base_layer import LayerTimeResolution, LayerValueType
@@ -490,7 +490,9 @@ class Datalayer(models.Model):
             temporal_column=sql.Identifier(str(self.temporal_resolution)),
         )
 
-        return pd.read_sql(query.as_string(connection), con=connection, params=params)
+        return pd.read_sql(
+            query.as_string(connection), con=get_conn_string(), params=params
+        )
 
     def value_coverage(self, shape_type: Optional[Type] = None) -> float:
         if not self.is_loaded():
