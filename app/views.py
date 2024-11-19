@@ -1,11 +1,20 @@
 from django.contrib.gis.geos import Point
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_GET
 
 from datalayers.models import Datalayer
 from shapes.models import Shape, Type
+
+
+@require_GET
+def robots_txt(request):
+    txt = """User-agent: *
+Disallow: /api/
+"""
+    return HttpResponse(txt, content_type="text/plain")
 
 
 def home(request):
