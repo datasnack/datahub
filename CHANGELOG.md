@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3](https://github.com/datasnack/datahub/compare/v0.3.2..v0.3.3) - 2024-11-19
+
+### Added
+
+- Add json format for datalayer api ([44791fb](https://github.com/datasnack/datahub/commit/44791fb6b26f4d1c20d4524a43b0e9968e08d816))
+
+
+### Fixed
+
+- `robots.txt` to hint crawlers ([df7a06c](https://github.com/datasnack/datahub/commit/df7a06c746c5662faaa41cbd6103c797274b4a1f))
+- Sane date default formatting in ISO8601 for Django templates ([e69b364](https://github.com/datasnack/datahub/commit/e69b3642823149aedfab1102dc5ea5c00746168e))
+- Prevent pandas warning by using SQLAlchemy instead of psycopg Django connection object ([126fb04](https://github.com/datasnack/datahub/commit/126fb0450f955c172486e6e48ea26e3202bd6219))
+
 ## [0.3.2](https://github.com/datasnack/datahub/compare/v0.3.1..v0.3.2) - 2024-11-05
 
 ### Changed
