@@ -153,6 +153,11 @@ class DatalayerValue:
         return self.value
 
 
+class DatalayerManager(models.Manager):
+    def get_datalayers(self, keys: list[str]):
+        return self.filter(key__in=keys)
+
+
 class Datalayer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -198,6 +203,8 @@ class Datalayer(models.Model):
     )  # no date field. maybe only a year is known.
     date_last_accessed = models.DateField(blank=True, null=True)
     citation = models.TextField(blank=True)
+
+    objects = DatalayerManager()
 
     # creator       = models.CharField(max_length=255, blank=True)
     # type          = models.CharField(max_length=255, blank=True)

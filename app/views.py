@@ -1,3 +1,5 @@
+import datetime as dt
+
 from django.contrib.gis.geos import Point
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
@@ -84,12 +86,28 @@ def tools_picker(request):
 
     lat = request.GET.get("lat")
     lng = request.GET.get("lng")
+    shape_type = request.GET.get("shape_type")
+    temporal = request.GET.get("temporal")
+    datalayers = request.GET.get("datalayers")
+
+    if datalayers:
+        datalayers = [item.strip() for item in datalayers.split(",")]
 
     if lat is not None and lng is not None:
+        try:
+            dt_temporal = (
+                dt.datetime.strptime(temporal, "%Y-%m-%d").astimezone(dt.UTC).date()
+            )
+        except ValueError:
+            dt_temporal = None
+        context["dt_temporal"] = dt_temporal
+
         point = Point(float(lng), float(lat))
         shapes = Shape.objects.filter(geometry__contains=point).order_by(
             "type__position"
         )
+
+        valid_shape_types = [shape.type.key for shape in shapes]
 
         if not shapes:
             context["warning"] = _(
@@ -99,7 +117,19 @@ def tools_picker(request):
             context["shapes"] = shapes
             context["point"] = point
 
-            all_layers = Datalayer.objects.all()
+            if shape_type in valid_shape_types:
+                context["shape_type"] = shape_type
+                context["active_shape"] = next(
+                    shape for shape in shapes if shape.type.key == shape_type
+                )
+            else:
+                context["shape_type"] = valid_shape_types[0]
+                context["active_shape"] = shapes[0]
+
+            if datalayers:
+                all_layers = Datalayer.objects.get_datalayers(datalayers)
+            else:
+                all_layers = Datalayer.objects.all()
             context["datalayers"] = []
             for layer in all_layers:
                 if layer.is_available():

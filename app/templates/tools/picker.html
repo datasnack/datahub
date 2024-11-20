@@ -28,94 +28,145 @@
 		{% translate "The provided location is contained inside the following shapes:" %}
 	</p>
 
-	{% for shape in shapes %}
-	<details id="details{{ forloop.counter0 }}" class="card mb-3">
-        <summary class="card-header">
-            <a href="{{ shape.get_absolute_url }}">{{ shape.name }}</a>
-			<span class="text-muted">(<a href="{{ shape.type.get_absolute_url }}">{{ shape.type.name }}</a>)</span>
-		</summary>
-        <div class="card-body">
-			<div class="row">
-				<div class="col-12 col-lg-8">
+
+	<div class="card">
+		<div class="card-header">
 
 
-					<div class="mb-3">
-					<table class="table table-sm small table-striped" id="datalayers{{ forloop.counter0 }}">
-						<thead>
-							<tr>
-								<th>{% translate "Category" %}</th>
-								<th>{% translate "Data Layer" %}</th>
-								<th>{% translate "First" %}</th>
-								<th>{% translate "Last" %}</th>
-								<th>
-									{% translate "Latest value" %}
-								</th>
-								<th class="no-sort text-end">{% translate "Actions" %}</th>
-							</tr>
-						</thead>
-						<tbody>
-						{% for dl in datalayers %}
-							<tr>
-								<td class="align-middle">
-									{% with category=dl.category %}
-										{% if category %}
-											<a class="link-secondary" href="{{ category.get_absolute_url}}">
-												{{ category }}
-											</a>
-										{% else %}
-											-
-										{% endif %}
-									{% endwith %}
-								</td>
-								<td class="align-middle">
-									<a class="text-body" href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
-									{% include "datalayers/partials/tags.html" with datalayer=dl %}
-									<code class="visually-hidden">{{ dl.key }}</code>
-								</td>
 
-								{% with dlv=shape|datalayer_first_value:dl %}
-								<td class="align-middle text-nowrap">{{ dlv.date }}</td>
-								{% endwith %}
+	<ul class="nav nav-tabs card-header-tabs">
+		{% for shape in shapes %}
+		<li class="nav-item">
+		  <a class="nav-link{%if shape_type == shape.type.key %} active{%endif%}"{%if shape_type == shape.type.key %} aria-current="page"{%endif%} href="{% querystring shape_type=shape.type.key %}">
+			<span class="text-muted">{{ shape.type.name }}:</span>
+			<span class="">{{ shape.name }}</span>
+		  </a>
+		</li>
+		{% endfor %}
+	</ul>
 
-								{% with dlv=shape|datalayer_value:dl %}
-								<td class="align-middle text-nowrap">{{ dlv.date }}</td>
-								<td class="align-middle js-value" data-order="{{ dlv.value }}"
-								  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
-								  data-value-raw="{{ dlv.value }}">
-									{{ dlv.value|datalayerformat:dl }}
-								</td>
-								{% endwith %}
+</div>
+<div class="card-body">
 
-								<td>
-									<div class="d-flex justify-content-end">
-										<button
-										data-container="charts{{ forloop.parentloop.counter0 }}"
-										data-datalayer-key="{{ dl.key }}"
-										data-shape-id="{{shape.id}}"
-										data-datalayer-name="{{ dl.name }}"
-										title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
-										<a title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{shape.id}}&format=csv" class="ms-1 btn btn-sm btn-outline-primary">{% icon "download" %}</a>
-										<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="ms-1 btn btn-sm btn-link">{% icon "arrow-right" %}</a>
-									</div>
-								</td>
-							</tr>
-						{% endfor %}
-						</tbody>
-					</table>
-					</div>
 
-				</div>
-				<div class="col-12 col-lg-4">
-					<div id="map{{ forloop.counter0 }}" style="width: 100%; height: 250px"></div>
-				</div>
 
-				<div class="col-12">
-					<div id="charts{{ forloop.counter0 }}"></div>
-				</div>
+	<div class="row">
+		<div class="col-12 col-lg-8">
+
+			<div class="mb-3">
+
+				{% if dt_temporal %}
+
+				{{ dt_temporal}}
+
+				{% endif %}
+
 			</div>
+
+
+
+			<div class="mb-3">
+			<table class="table table-sm small table-striped" id="datalayers">
+				<thead>
+					<tr>
+						<th>{% translate "Category" %}</th>
+						<th>{% translate "Data Layer" %}</th>
+						<th>{% translate "First" %}</th>
+						<th>{% translate "Last" %}</th>
+						<th class="text-nowrap">
+							{% if dt_temporal %}
+								{{ dt_temporal}}
+							{% else %}
+								{% translate "Latest value" %}
+							{% endif %}
+						</th>
+						<th class="no-sort text-end">{% translate "Actions" %}</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for dl in datalayers %}
+					<tr>
+						<td class="align-middle">
+							{% with category=dl.category %}
+								{% if category %}
+									<a class="link-secondary" href="{{ category.get_absolute_url}}">
+										{{ category }}
+									</a>
+								{% else %}
+									-
+								{% endif %}
+							{% endwith %}
+						</td>
+						<td class="align-middle">
+							<a class="text-body" href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
+							{% include "datalayers/partials/tags.html" with datalayer=dl %}
+							<code class="visually-hidden">{{ dl.key }}</code>
+						</td>
+
+						{% with dlv=active_shape|datalayer_first_value:dl %}
+							<td class="align-middle text-nowrap">{{ dlv.date }}</td>
+						{% endwith %}
+
+						{% with dlv=active_shape|datalayer_last_value:dl %}
+							<td class="align-middle text-nowrap">{{ dlv.date }}</td>
+						{% endwith %}
+
+						{% datalayer_value active_shape dl dt_temporal as dlv %}
+						<td class="align-middle text-nowrap js-value {% if dlv.is_derived_value %} bg-info-subtle dlv-derived-cell{%endif %}" data-order="{{ dlv.value }}"
+						  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
+						  data-value-raw="{{ dlv.value }}">
+
+							{% if dlv.has_value %}
+							{% if dlv.is_derived_value %}
+								<button type="button" class="btn btn-sm dlv-derived-btn"
+									data-bs-toggle="popover"
+									data-bs-placement="top"
+									data-bs-title="{% translate "Derived value from…" %}"
+									data-bs-html="true"
+									data-bs-content="{% if dlv.is_derived_spatial%}
+											<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
+									{% endif %}
+									{% if dlv.is_derived_temporal %}
+										{{ dlv.date }}<br>
+									{% endif %}">
+									{% icon "info" %}
+								</button>
+							{% endif %}
+							{% endif %}
+
+							{{ dlv.value|datalayerformat:dl }}
+						</td>
+
+						<td>
+							<div class="d-flex justify-content-end">
+								<button
+								data-container="charts"
+								data-datalayer-key="{{ dl.key }}"
+								data-shape-id="{{active_shape.id}}"
+								data-datalayer-name="{{ dl.name }}"
+								title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
+								<a title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{active_shape.id}}&format=csv" class="ms-1 btn btn-sm btn-outline-primary">{% icon "download" %}</a>
+								<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="ms-1 btn btn-sm btn-link">{% icon "arrow-right" %}</a>
+							</div>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			</div>
+
 		</div>
-	</details>
-	{%endfor%}
+		<div class="col-12 col-lg-4">
+			<div id="map" style="width: 100%; height: 250px"></div>
+		</div>
+
+		<div class="col-12">
+			<div id="charts"></div>
+		</div>
+	</div>
+
+  </div>
+  </div>
 </div>
 </div>
 
@@ -136,7 +187,7 @@
 
 
 				<div class="mb-3">
-					<div id="map" style="width: 100%; height: 300px"></div>
+					<div id="map_picker" style="width: 100%; height: 300px"></div>
 					<div class="form-text">{% translate "Click on the map to set coordinates in the form." %}</div>
 				</div>
 
@@ -146,12 +197,18 @@
 							<label for="lat">{% translate "Latitude" %}</label>
 							<input type="number" class="form-control" id="lat" name="lat" step="any"  min="-90" max="90" placeholder="{% translate "Latitude" %}" required>
 						</div>
-						<div class="mb-3 col-6">
+						<div class="col-6 mb-3">
 							<label for="lng">{% translate "Longitude" %}</label>
 							<input type="number" class="form-control" id="lng" name="lng" step="any" min="-180" max="180" placeholder="{% translate "Longitude" %}" required>
 						</div>
 					</div>
 
+					<div class="row">
+						<div class="col-6 mb-3">
+							<label for="temporal">{% translate "Value at time" %} <span class="text-muted">{% translate "(optional)" %}</span></label>
+							<input type="date" class="form-control" id="temporal" name="temporal">
+						</div>
+					</div>
 
 					<div class="d-flex justify-content-end">
 							<button type="submit" class="btn btn-primary">
@@ -169,7 +226,7 @@
 
 {% block footer %}
 <script type="module">
-var picker = new MyMap('map');
+var picker = new MyMap('map_picker');
 
 var marker = false;
 picker.map.on("click", function (event) {
@@ -208,14 +265,13 @@ $('.js-add-datalayer-chart').on('click', function() {
 	});
 });
 
-{% if shapes %}
-{% for shape in shapes %}
-var map{{ forloop.counter0 }} = new MyMap('map{{ forloop.counter0 }}');
-map{{ forloop.counter0 }}.load_shape({shape_id: '{{ shape.id }}', name: '{{ shape.name }}'});
+{% if active_shape %}
+var map = new MyMap('map');
+map.load_shape({shape_id: '{{ active_shape.id }}', name: '{{ active_shape.name }}'});
 
-var marker{{ forloop.counter0 }} = L.marker([{{ point.y}}, {{point.x}}]).addTo(map{{ forloop.counter0 }}.map);
+var marker = L.marker([{{ point.y}}, {{point.x}}]).addTo(map.map);
 
-var $table{{ forloop.counter0 }} = $('#datalayers{{ forloop.counter0 }}').DataTable({
+var $table = $('#datalayers').DataTable({
 	pageLength: 10,
 	//order: [[0, 'asc']],
 	columnDefs: [
@@ -228,8 +284,6 @@ var $table{{ forloop.counter0 }} = $('#datalayers{{ forloop.counter0 }}').DataTa
 	map{{ forloop.counter0 }}.map.invalidateSize();
 	$('#datalayers{{ forloop.counter0 }}').DataTable().responsive.recalc();
 });*/
-
-{%endfor%}
 {% endif %}
 
 
