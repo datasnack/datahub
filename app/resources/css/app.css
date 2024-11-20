@@ -162,3 +162,16 @@ dh-chart {
 dh-chart .aa-Form {
 	border-radius: var(--bs-border-radius); /* no var in AA for this */
 }
+
+
+.dlv-derived-cell {
+	position: relative;
+	padding-left: 3em !important;
+}
+
+.dlv-derived-btn {
+	position: absolute;
+	left: 0.25em;
+	top: 50%;
+	transform: translateY(-50%);
+}

@@ -54,11 +54,57 @@ class DatalayerValue:
         self.result = row
         self.dl = datalayer
 
+        self.requested_shape = None
+        self.requested_ts = None
+
         self.value = None
+        self.shape_id = None
         self.time = None
 
         if row is not None and "value" in row:
             self.value = row["value"]
+            self.shape_id = row["shape_id"]
+
+    def has_value(self) -> bool:
+        return self.value is not None
+
+    def set_requested_ts(self, when: dt.date) -> None:
+        self.requested_ts = when
+
+    def set_requested_shape(self, shape: Shape) -> None:
+        self.requested_shape = shape
+
+    def is_derived_value(self) -> bool:
+        # check if either is derived!
+        return self.is_derived_temporal() or self.is_derived_spatial()
+
+    def is_derived_spatial(self) -> bool:
+        return (
+            self.requested_shape is not None
+            and self.requested_shape.id != self.shape_id
+        )
+
+    def is_derived_temporal(self):
+        if self.requested_ts is not None:
+            match self.dl.temporal_resolution:
+                case LayerTimeResolution.YEAR:
+                    if "year" in self.result:
+                        return self.requested_ts.year != int(self.result["year"])
+                    else:
+                        return False
+                case LayerTimeResolution.DAY:
+                    date1 = self.requested_ts
+                    date2 = self.result["date"]
+                    return not (
+                        date1.year == date2.year
+                        and date1.month == date2.month
+                        and date1.day == date2.day
+                    )
+                case _:
+                    msg = f"Unknown time_col={self.dl.temporal_resolution}"
+                    raise ValueError(msg)
+
+        return False
 
     def date(self):
         if self.result is None:
@@ -76,6 +122,11 @@ class DatalayerValue:
             case _:
                 msg = f"Unknown time_col={self.dl.temporal_resolution}"
                 raise ValueError(msg)
+
+    def shape(self) -> Shape | None:
+        if self.shape_id:
+            return Shape.objects.get(pk=self.shape_id)
+        return None
 
     def timestamp(self):
         if self.result is None:
@@ -396,6 +447,7 @@ class Datalayer(models.Model):
         fallback_parent=False,
         mode="down",
     ):
+        """Select a singel value of the Data Layer for a shape and optional timestamp."""
         if not self.is_loaded():
             return None
 

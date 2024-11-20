@@ -73,6 +73,9 @@ class Shape(models.Model):
     def get_absolute_url(self):
         return reverse("shapes:shape_detail", kwargs={"pk": self.id})
 
+    def has_parent(self) -> bool:
+        return self.parent is not None
+
     def is_parent_of(self, shape: Self) -> bool:
         if self.id == shape.id:
             return True
@@ -84,8 +87,14 @@ class Shape(models.Model):
 
         return False
 
-    def datalayer_value(self, dl, mode="down"):
-        # TODO: fallback to parent shape
-        value = dl.value(self, mode=mode)
+    def datalayer_value(self, dl, when=None, mode="down"):
+        value = dl.value(self, mode=mode, when=when)
+
+        if not value.has_value() and self.has_parent():
+            value = self.parent.datalayer_value(dl, when=when, mode=mode)
+
+            value.set_requested_shape(self)
+
+        value.set_requested_ts(when)
 
         return value

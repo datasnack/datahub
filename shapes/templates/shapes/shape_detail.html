@@ -188,14 +188,37 @@
 					<td class="align-middle text-nowrap">{{ dlv.date }}</td>
 					{% endwith %}
 
-					{% with dlv=shape|datalayer_value:dl %}
+					{% with dlv=shape|datalayer_last_value:dl %}
 					<td class="align-middle text-nowrap">{{ dlv.date }}</td>
-					<td class="align-middle js-value" data-order="{{ dlv.value }}"
-					  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
-					  data-value-raw="{{ dlv.value }}">
-						{{ dlv.value|datalayerformat:dl }}
-					</td>
 					{% endwith %}
+
+					{% datalayer_value shape dl as dlv %}
+					<td class="align-middle text-nowrap js-value {% if dlv.is_derived_value %} bg-info-subtle dlv-derived-cell{%endif %}" data-order="{{ dlv.value }}">
+
+						{% if dlv.has_value %}
+						{% if dlv.is_derived_value %}
+							<button type="button" class="btn float-start dlv-derived-btn"
+								data-bs-toggle="popover"
+								data-bs-placement="top"
+								data-bs-title="{% translate "Derived value from…" %}"
+								data-bs-html="true"
+								data-bs-content="{% if dlv.is_derived_spatial%}
+										<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
+								{% endif %}
+								{% if dlv.is_derived_temporal %}
+									{{ dlv.date }}<br>
+								{% endif %}">
+								{% icon "info" %}
+							</button>
+						{% endif %}
+						{% endif %}
+
+						<span class="js-value"
+						  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
+						  data-value-raw="{{ dlv.value }}">
+							{{ dlv.value|datalayerformat:dl }}
+						</span>
+					</td>
 
 					<td>
 						<div class="d-flex justify-content-end">
