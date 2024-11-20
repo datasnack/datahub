@@ -65,3 +65,9 @@ window.hljs = hljs;
 import "./search";
 import { MyMap } from "./map";
 window.MyMap  = MyMap;
+window.loadPlotly = async function() {
+	if (!window.Plotly) {
+		window.Plotly = await import('plotly.js-dist');
+	}
+	return Plotly;
+}
