@@ -63,7 +63,11 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-loglevel = "DEBUG" if DEBUG else env("LOGLEVEL").upper()
+loglevel_default = "INFO"
+if DEBUG:
+    loglevel_default = "DEBUG"
+loglevel = env("LOGLEVEL", default=loglevel_default).upper()
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
