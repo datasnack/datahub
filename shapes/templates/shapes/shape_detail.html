@@ -263,6 +263,7 @@ $(document).ready(function() {
 let charts = document.getElementById('charts');
 document.querySelectorAll('.js-add-datalayer-chart').forEach(el => el.addEventListener('click', (event) => {
 	let chart = document.createElement("dh-chart");
+	chart.setAttribute("show_remove", true);
 	chart.setAttribute("dl", event.currentTarget.dataset.datalayerKey);
 	chart.setAttribute("query", JSON.stringify({shape_id: event.currentTarget.dataset.shapeId}));
 	charts.insertBefore(chart, charts.firstChild);

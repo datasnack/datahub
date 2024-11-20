@@ -197,6 +197,7 @@ $('.js-add-datalayer-chart').on('click', function() {
 
 	var charts = document.getElementById(container);
 	var chart = document.createElement("dh-chart");
+	chart.setAttribute("show_remove", true);
 	chart.setAttribute("dl", datalayer_key);
 	chart.setAttribute("query", JSON.stringify({shape_id: shape_id}));
 

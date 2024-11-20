@@ -14,7 +14,9 @@
 
     export let dl;
     export let query = "";
+    export let show_remove = false;
 
+    let container; // reference to the DOM node of the component
 
     let Plotly;
     let datalayer = {
@@ -131,10 +133,10 @@
 
 </script>
 
-<div class="card bg-light mb-3">
+<div bind:this={container} class="card bg-light mb-3">
 
     <div class="rounded-top overflow-hidden">
-        <div bind:this={chart}></div>
+        <div style="min-height: 450px" bind:this={chart}></div>
     </div>
 
     <div class="card-body">
@@ -156,7 +158,7 @@
                 {/if}
             </div>
             <div class="col-8 col-md-4">
-                <select class="form-select" bind:value={shapeType} on:change={addShapeType}>
+                <select class="form-select mb-3 mb-md-0" bind:value={shapeType} on:change={addShapeType}>
                     <option value="">Add shape types…</option>
                     {#each datalayer.shape_types as shape_type}
                     <option value="{ shape_type.key }">{ shape_type.name }</option>
@@ -176,7 +178,7 @@
         <div class="row">
             <div class="col-12 col-md-6">
 
-                <div class="input-group">
+                <div class="input-group mb-3 mb-md-0">
                     {#if datalayer.temporal_resolution == 'year' }
                         <select class="form-select form-select-sm" bind:value={zoomStart}>
                             <!-- expand the array with [...var] and reverse, so we don't reverse the original array! -->
@@ -200,6 +202,11 @@
             <div class="col-12 col-md-6">
                 <div class="d-flex justify-content-end">
                     <button on:click={clearTraces} class="btn btn-sm btn-outline-secondary">Clear chart</button>
+
+                    {#if show_remove }
+                    <span class="ms-3 me-3 border-start d-inline-block"></span>
+                    <button on:click={() => container.parentNode.remove()} class="btn btn-sm btn-outline-danger">Delete chart</button>
+                    {/if}
                 </div>
             </div>
         </div>
