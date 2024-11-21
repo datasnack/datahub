@@ -112,7 +112,7 @@
 						{% endwith %}
 
 						{% datalayer_value active_shape dl dt_temporal as dlv %}
-						<td class="align-middle text-nowrap js-value {% if dlv.is_derived_value %} bg-info-subtle dlv-derived-cell{%endif %}" data-order="{{ dlv.value }}"
+						<td class="align-middle text-nowrap text-end js-value {% if dlv.is_derived_value %} bg-info-subtle dlv-derived-cell{%endif %}" data-order="{{ dlv.value }}"
 						  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
 						  data-value-raw="{{ dlv.value }}">
 
