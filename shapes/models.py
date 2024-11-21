@@ -1,5 +1,7 @@
 from typing import Self
 
+from shapely import wkt
+
 from django.contrib.gis.db import models
 from django.db import models as djmodels
 from django.urls import reverse
@@ -64,8 +66,23 @@ class Shape(models.Model):
         return self.area_sqm / 1000000
 
     @property
-    def has_properties(self):
+    def has_properties(self, default=None):
         return len(self.properties) > 0
+
+    def get_property(self, key: str):
+        if not self.has_properties:
+            raise Exception("Shape has no properties")
+
+        if key not in self.properties:
+            raise Exception("Shape has no property with key=%s", key)
+
+        return self.properties[key]
+
+    def shapely_geometry(self):
+        # todo: can this loose CRS?
+        # todo: why is even necessary, doesn't GeoDjango provide a sensible way to get
+        # the geometry for use with shapely?
+        return wkt.loads(self.geometry.wkt)
 
     def __str__(self) -> str:
         return str(self.name)
