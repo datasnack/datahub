@@ -77,10 +77,26 @@ class TiffLayer(BaseLayer):
                     else:
                         raise ValueError("No geometry found for given shape.")
 
-                    out_image, _ = rasterio.mask.mask(
-                        src, mask, crop=True, nodata=nodata
-                    )
-                    band1 = out_image[0]
+                    try:
+                        out_image, _ = rasterio.mask.mask(
+                            src, mask, crop=True, nodata=nodata
+                        )
+                        band1 = out_image[0]
+                    except ValueError as e:
+                        # in case the GeoTiff is not overlapping with the current shape
+                        if str(e) == "Input shapes do not overlap raster.":
+                            # print(f"{shape} is not covered by raster: {file}")
+                            continue
+
+                        # different error, rethrow
+                        raise
+
+                    # Get scale and offset from the metadata
+                    if src.scales and src.offsets:
+                        scale = src.scales[0]
+                        offset = src.offsets[0]
+                        band1 = band1.astype(float) * scale + offset
+                        band1[band1 == (nodata * scale + offset)] = np.nan
 
                     # To mask NoData cells we use np.nan so we can use np.nan*-methods.
                     # But np.nan is only available inside float arrays, not with
