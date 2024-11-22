@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0](https://github.com/datasnack/datahub/compare/v0.3.3..v0.4.0) - 2024-11-22
+
+This release brings derived values to the Data Layer table views. If a value is not present for a given timestamp + shape, a parent shape and/or older value is derived.
+
+### Changed
+
+- Mgmt command to create data layer table indices ([41e1338](https://github.com/datasnack/datahub/commit/41e13383f9c120ff4f808cf2289e527e6014760e))
+- Allow apps to append own items to navigation ([b477e06](https://github.com/datasnack/datahub/commit/b477e0626e1a591952cd815bd8fbe3a4443db7eb))
+- Properties and shape geometries getter in Shape model ([09da45b](https://github.com/datasnack/datahub/commit/09da45bad9deaa4febd886620baf71f6c976bd5a))
+- Rework picker layout and allow timestamp selection ([49156b8](https://github.com/datasnack/datahub/commit/49156b8ff57c9096a4a7da69add24efa33636cf2))
+- Show spatial and temporal derived values ([72832d9](https://github.com/datasnack/datahub/commit/72832d9e080b227f8661c59a9d5716162a795dcd))
+
+### Fixed
+
+- Don't save pandas index to Data Layer table ([c1d2750](https://github.com/datasnack/datahub/commit/c1d2750a9c12be19e90643aca76444471d62cd5d))
+- Catch uncovered tiff + handle GeoTiff scale factor ([bfbc262](https://github.com/datasnack/datahub/commit/bfbc26298256ccea201aacbabf4a3816056a661b))
+- Provide wrapper to dynamically load plotly from outside build process ([89cc1e4](https://github.com/datasnack/datahub/commit/89cc1e49a8ea8aa533ac81554c0e1df9bb94950f))
+
 ## [0.3.3](https://github.com/datasnack/datahub/compare/v0.3.2..v0.3.3) - 2024-11-19
 
 ### Added
