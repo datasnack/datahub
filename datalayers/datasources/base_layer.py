@@ -11,7 +11,7 @@ from psycopg import sql
 from django.db import connection
 from django.utils import formats
 
-from datalayers.utils import get_engine
+from datalayers.utils import get_conn_string, get_engine
 
 
 class LayerTimeResolution(Enum):
@@ -68,6 +68,10 @@ class BaseLayer:
 
         # Optional suffix for formatting human readable values
         self.format_suffix = None
+
+    @property
+    def key(self):
+        return self.layer.key
 
     def download(self):
         """Automatic download of data source files."""
@@ -213,3 +217,20 @@ class BaseLayer:
             return result[0]
 
         return None
+
+    def get_vector_data_df(self) -> pd.DataFrame:
+        if self.raw_vector_data_table is None:
+            raise Exception("Data Layer has no configures vecotr data table")
+
+        query = sql.SQL("SELECT * FROM {table}").format(
+            table=sql.Identifier(self.raw_vector_data_table)
+        )
+
+        languages = ["Java", "Python", "JavaScript"]
+        versions = [14, 3, 6]
+
+        result = zip(languages, versions)
+
+        return geopandas.read_postgis(
+            query.as_string(connection), con=get_conn_string(), geom_col="geometry"
+        )
