@@ -1,0 +1,19 @@
+{%comment%}
+Empty template to allow other "apps" overwriting it to append their own nav items
+
+Create the following template in your app: templates/app/nav.html:
+
+{% extends "app/nav.html" %}
+{% load i18n %}
+{% block nav %}
+	{{ block.super }}
+
+	<li class="nav-item">
+		<a class="nav-link pe-0" href="{% url 'your_app:url_name' %}">
+			{% translate "Your App" %}
+		</a>
+	</li>
+{% endblock %}
+
+{% endcomment %}
+{% block nav %}{% endblock nav %}
