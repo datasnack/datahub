@@ -98,7 +98,9 @@ class BaseLayer:
             self.df = pd.DataFrame(self.rows)
 
         if self.output == "db":
-            self.df.to_sql(self.layer.key, get_engine(), if_exists="replace")
+            self.df.to_sql(
+                self.layer.key, get_engine(), index=False, if_exists="replace"
+            )
         elif self.output == "fs":
             self.df.to_csv(self.get_data_path() / f"{self.layer.key}.csv", index=False)
         else:
