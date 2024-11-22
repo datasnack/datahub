@@ -25,7 +25,7 @@ def home(request):
         "app/home.html",
         {
             "shapes_count": Shape.objects.count(),
-            "shape_types": Type.objects.all(),
+            "shape_types": Type.objects.order_by("position").all(),
             "datalayers_count": Datalayer.objects.count(),
         },
     )
