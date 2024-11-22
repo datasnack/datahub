@@ -85,13 +85,11 @@ class DatalayerValue:
         )
 
     def is_derived_temporal(self):
-        if self.requested_ts is not None:
+        if self.requested_ts is not None and self.result is not None:
             match self.dl.temporal_resolution:
                 case LayerTimeResolution.YEAR:
                     if "year" in self.result:
                         return self.requested_ts.year != int(self.result["year"])
-                    else:
-                        return False
                 case LayerTimeResolution.DAY:
                     date1 = self.requested_ts
                     date2 = self.result["date"]
