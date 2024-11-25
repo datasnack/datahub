@@ -1,0 +1,183 @@
+{% load i18n %}
+{% load datalayer_value %}
+{% load datalayerformat %}
+{% load generate_uuid %}
+
+{# The snippet can be included multiple times on the same page, so we need to make sure IDs are unique #}
+{% if not id %}
+	{% generate_uuid as id %}
+{% endif %}
+
+<div id="datalayer-table-{{ id }}">
+
+<div class="form-check form-switch fw-normal d-inline-block small">
+	<input class="form-check-input" type="checkbox" role="switch" id="js-show-raw-data-{{ id }}">
+	<label class="form-check-label" for="js-show-raw-data-{{ id }}">{% translate "Show raw data" %}</label>
+</div>
+
+
+<div class="mb-3">
+
+<table class="table table-sm table-striped" id="datalayers-{{ id }}">
+	<thead>
+		<tr>
+			<th>{% translate "Category" %}</th>
+			<th>{% translate "Data Layer" %}</th>
+			{#<th>{% translate "Key" %}</th>#}
+			<th class="text-nowrap text-end">
+				{% if temporal %}
+					{{ temporal}}
+				{% else %}
+					{% translate "Latest value" %}
+				{% endif %}
+			</th>
+			<th class="text-end">{% translate "First" %}</th>
+			<th class="text-end">{% translate "Last" %}</th>
+			<th class="no-sort text-end">{% translate "Actions" %}</th>
+		</tr>
+	</thead>
+
+	<tbody>
+	{% for dl in datalayers %}
+		<tr>
+			<td class="align-middle">
+				{% with category=dl.category %}
+					{% if category %}
+						<a class="link-secondary" href="{{ category.get_absolute_url}}">
+							{{ category }}
+						</a>
+					{% else %}
+						-
+					{% endif %}
+				{% endwith %}
+			</td>
+			<td class="align-middle">
+				<a class="text-body" href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
+				{% include "datalayers/partials/tags.html" with datalayer=dl %}
+			</td>
+
+			{# <td class="align-middle"><code>{{ dl.key }}</code></td> #}
+
+			{% datalayer_value shape dl temporal as dlv %}
+			<td class="align-middle text-nowrap text-end js-value dlv-derived-cell {% if dlv.has_value %}{% if dlv.is_derived_value %}bg-warning-subtle{%else%}bg-success-subtle{%endif %}{%else%}bg-danger-subtle{%endif%}" data-order="{{ dlv.value }}">
+
+				{% if dlv.has_value %}
+					{% if dlv.is_derived_value %}
+						<button type="button" class="btn btn-sm float-start  dlv-derived-btn"
+							data-bs-toggle="popover"
+							data-bs-trigger="click"
+							data-bs-placement="top"
+							data-bs-title="{% translate "Data quality info" %}"
+							data-bs-html="true"
+							data-bs-content="{% translate "Data derived from:" %}<br>{% if dlv.is_derived_spatial%}
+									<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
+							{% endif %}
+							{% if dlv.is_derived_temporal %}
+								{{ dlv.date }}<br>
+							{% endif %}">
+							{% icon "info" %}
+						</button>
+					{% else %}
+					<button type="button" class="btn btn-sm float-start dlv-derived-btn"
+
+						data-bs-toggle="popover"
+						data-bs-placement="top"
+						data-bs-title="{% translate "Data quality info" %}"
+						data-bs-html="true"
+						data-bs-content="{% translate "Matching data available" %}"
+					>
+						{% icon "issue-closed" %}
+					</button>
+					{% endif %}
+				{% else %}
+					<button type="button" class="btn btn-sm float-start dlv-derived-btn"
+						data-bs-toggle="popover"
+						data-bs-placement="top"
+						data-bs-title="{% translate "Data quality info" %}"
+						data-bs-html="true"
+						data-bs-content="{% translate "No data available" %}"
+					>
+						{% icon "no-entry" %}
+					</button>
+				{% endif %}
+
+				<span class="js-value"
+				  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
+				  data-value-raw="{{ dlv.value }}">
+					{{ dlv.value|datalayerformat:dl }}
+				</span>
+			</td>
+
+			{% with dlv=shape|datalayer_first_value:dl %}
+			<td class="align-middle text-nowrap text-end">{{ dlv.date }}</td>
+			{% endwith %}
+
+			{% with dlv=shape|datalayer_last_value:dl %}
+			<td class="align-middle text-nowrap text-end">{{ dlv.date }}</td>
+			{% endwith %}
+
+			<td class="align-middle">
+				<div class="d-flex justify-content-end">
+					<button
+					data-datalayer-key="{{ dl.key }}"
+					data-shape-id="{{shape.id}}"
+					title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
+					<a title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{shape.id}}&format=csv" class="ms-1 btn btn-sm btn-outline-primary">{% icon "download" %}</a>
+					<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="ms-1 btn btn-sm btn-link">{% icon "arrow-right" %}</a>
+				</div>
+			</td>
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+</div>
+
+	{% if not own_chart_container %}
+	<div id="charts-{{ id }}" class="mb-3"></div>
+	{% endif %}
+
+</div>
+
+{% block footer %}
+<script type="module">
+	let table = document.getElementById('datalayers-{{ id }}');
+
+	$(document).ready(function() {
+		$('#js-show-raw-data-{{ id }}').on('change', function() {
+			var show_raw_values = $(this).is(':checked');
+			$('.js-value').each(function() {
+				var $cell = $(this);
+				if (show_raw_values) {
+					$cell.text($cell.attr('data-value-raw'));
+				} else {
+					$cell.text($cell.attr('data-value-formatted'));
+				}
+			});
+		});
+
+		$(table).DataTable({
+			pageLength: 10,
+			//order: [[0, 'asc']],
+			columnDefs: [
+				{targets: 'no-sort', orderable: false }
+			]
+		});
+	});
+
+	let charts = document.getElementById('charts-{{ id }}');
+	table.querySelectorAll('.js-add-datalayer-chart').forEach(el => el.addEventListener('click', (event) => {
+		let chart = document.createElement("dh-chart");
+
+		chart.setAttribute("show_remove", true);
+		chart.setAttribute("dl", event.currentTarget.dataset.datalayerKey);
+		chart.setAttribute("query", JSON.stringify({shape_id: event.currentTarget.dataset.shapeId}));
+
+		charts.insertBefore(chart, charts.firstChild);
+
+		chart.scrollIntoView({
+			block: 'end'
+		});
+
+	}));
+</script>
+{% endblock %}

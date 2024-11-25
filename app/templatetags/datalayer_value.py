@@ -10,6 +10,10 @@ register = template.Library()
 
 @register.simple_tag
 def datalayer_value(shape: Shape, datalayer: Datalayer, when: dt.date | None = None):
+    # coerce empty string
+    if when == "":
+        when = None
+
     return shape.datalayer_value(datalayer, when=when)
 
 

@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
-{% load humanize %}
 {% load i18n %}
-{% load datalayer_value %}
-{% load datalayerformat %}
+{% load generate_uuid %}
 
 {% block title %}{% translate "Location picker" %}{% endblock %}
 
@@ -23,153 +21,53 @@
 	</div>
 {% elif shapes %}
 <div class="row">
-<div class="col-12">
-	<p>
-		{% translate "The provided location is contained inside the following shapes:" %}
-	</p>
+	<div class="col-12">
+		<p>
+			{% translate "The provided location is contained inside the following shapes:" %}
+		</p>
 
 
-	<div class="card">
-		<div class="card-header">
-
-
-
-	<ul class="nav nav-tabs card-header-tabs">
-		{% for shape in shapes %}
-		<li class="nav-item">
-		  <a class="nav-link{%if shape_type == shape.type.key %} active{%endif%}"{%if shape_type == shape.type.key %} aria-current="page"{%endif%} href="{% querystring shape_type=shape.type.key %}">
-			<span class="text-muted">{{ shape.type.name }}:</span>
-			<span class="">{{ shape.name }}</span>
-		  </a>
-		</li>
-		{% endfor %}
-	</ul>
-
-</div>
-<div class="card-body">
-
-
-
-	<div class="row">
-		<div class="col-12 col-lg-8">
-
-			<div class="mb-3">
-
-				{% if dt_temporal %}
-
-				{{ dt_temporal}}
-
-				{% endif %}
-
+		<div class="card">
+			<div class="card-header">
+				<ul class="nav nav-tabs card-header-tabs">
+					{% for shape in shapes %}
+					<li class="nav-item">
+					<a class="nav-link{%if shape_type == shape.type.key %} active{%endif%}"{%if shape_type == shape.type.key %} aria-current="page"{%endif%} href="{% querystring shape_type=shape.type.key %}">
+						<span class="text-muted">{{ shape.type.name }}:</span>
+						<span class="">{{ shape.name }}</span>
+					</a>
+					</li>
+					{% endfor %}
+				</ul>
 			</div>
 
+			<div class="card-body">
+				<div class="row">
+					<div class="col-12 col-lg-8">
 
-
-			<div class="mb-3">
-			<table class="table table-sm small table-striped" id="datalayers">
-				<thead>
-					<tr>
-						<th>{% translate "Category" %}</th>
-						<th>{% translate "Data Layer" %}</th>
-						<th>{% translate "First" %}</th>
-						<th>{% translate "Last" %}</th>
-						<th class="text-nowrap">
+						<div class="mb-3">
 							{% if dt_temporal %}
-								{{ dt_temporal}}
-							{% else %}
-								{% translate "Latest value" %}
+							{{ dt_temporal}}
 							{% endif %}
-						</th>
-						<th class="no-sort text-end">{% translate "Actions" %}</th>
-					</tr>
-				</thead>
-				<tbody>
-				{% for dl in datalayers %}
-					<tr>
-						<td class="align-middle">
-							{% with category=dl.category %}
-								{% if category %}
-									<a class="link-secondary" href="{{ category.get_absolute_url}}">
-										{{ category }}
-									</a>
-								{% else %}
-									-
-								{% endif %}
-							{% endwith %}
-						</td>
-						<td class="align-middle">
-							<a class="text-body" href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
-							{% include "datalayers/partials/tags.html" with datalayer=dl %}
-							<code class="visually-hidden">{{ dl.key }}</code>
-						</td>
+						</div>
 
-						{% with dlv=active_shape|datalayer_first_value:dl %}
-							<td class="align-middle text-nowrap">{{ dlv.date }}</td>
-						{% endwith %}
+						{% generate_uuid as id %}
+						{% include "datalayers/partials/table.html" with id=id own_chart_container=True datalayers=datalayers shape=active_shape temporal=dt_temporal %}
 
-						{% with dlv=active_shape|datalayer_last_value:dl %}
-							<td class="align-middle text-nowrap">{{ dlv.date }}</td>
-						{% endwith %}
+					</div>
 
-						{% datalayer_value active_shape dl dt_temporal as dlv %}
-						<td class="align-middle text-nowrap text-end js-value {% if dlv.is_derived_value %} bg-info-subtle dlv-derived-cell{%endif %}" data-order="{{ dlv.value }}"
-						  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
-						  data-value-raw="{{ dlv.value }}">
+					<div class="col-12 col-lg-4">
+						<div id="map" style="width: 100%; height: 250px"></div>
+					</div>
 
-							{% if dlv.has_value %}
-							{% if dlv.is_derived_value %}
-								<button type="button" class="btn btn-sm dlv-derived-btn"
-									data-bs-toggle="popover"
-									data-bs-placement="top"
-									data-bs-title="{% translate "Derived value from…" %}"
-									data-bs-html="true"
-									data-bs-content="{% if dlv.is_derived_spatial%}
-											<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
-									{% endif %}
-									{% if dlv.is_derived_temporal %}
-										{{ dlv.date }}<br>
-									{% endif %}">
-									{% icon "info" %}
-								</button>
-							{% endif %}
-							{% endif %}
-
-							{{ dlv.value|datalayerformat:dl }}
-						</td>
-
-						<td>
-							<div class="d-flex justify-content-end">
-								<button
-								data-container="charts"
-								data-datalayer-key="{{ dl.key }}"
-								data-shape-id="{{active_shape.id}}"
-								data-datalayer-name="{{ dl.name }}"
-								title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
-								<a title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{active_shape.id}}&format=csv" class="ms-1 btn btn-sm btn-outline-primary">{% icon "download" %}</a>
-								<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="ms-1 btn btn-sm btn-link">{% icon "arrow-right" %}</a>
-							</div>
-						</td>
-					</tr>
-				{% endfor %}
-				</tbody>
-			</table>
+					<div class="col-12">
+						<div id="charts-{{ id }}"></div>
+					</div>
+				</div>
 			</div>
-
-		</div>
-		<div class="col-12 col-lg-4">
-			<div id="map" style="width: 100%; height: 250px"></div>
-		</div>
-
-		<div class="col-12">
-			<div id="charts"></div>
 		</div>
 	</div>
-
-  </div>
-  </div>
 </div>
-</div>
-
 
 <hr>
 {% endif %}
