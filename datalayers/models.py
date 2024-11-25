@@ -770,7 +770,7 @@ class DatalayerLogEntry(models.Model):
     # this might be more ore less the channel of the log statement
     datalayer = models.ForeignKey(
         Datalayer,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="logentries",
     )
 
