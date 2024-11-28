@@ -45,8 +45,30 @@ label {
       border: 1px solid #000;
       margin-top: 5px;
   }
-  .legend-labels {
+.legend-labels {
       display: flex;
       justify-content: space-between;
       font-size: 0.8em;
   }
+
+#datalayer-controls {
+    margin-top: 20px;
+    height: 350px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    overflow: hidden;
+}
+
+#datalayer-checkbox-container {
+    height: calc(100% - 60px);
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+#datalayer-checkbox-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
