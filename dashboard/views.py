@@ -46,9 +46,12 @@ def info_map_base(request):
 
     years = range(int(min_year), int(max_year) + 1)
 
+    types = Type.objects.order_by('position')
+
     context = {
         'datalayers': datalayers,
         'years': years,
+        'types': types,
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
         'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
@@ -57,43 +60,65 @@ def info_map_base(request):
     return render(request, 'info_map.html', context)
 
 
-PREPROCESSED_PATH = 'preprocessed_data.json'
-
-if os.path.exists(PREPROCESSED_PATH):
-    with open(PREPROCESSED_PATH, 'r') as f:
-        preprocessed_data = json.load(f)
-else:
-    preprocessed_data = {}
-
 def get_dl_count_for_year_shapes(request):
     data_layers = request.GET.get('data_layers', '')
     data_layers = data_layers.split(',') if data_layers else []
+    type_id = request.GET.get('type_id')
     year = int(request.GET['year'])
-    shape_id = request.GET.get('shape_id')
 
-    aggregated_data = {}
+    shapes = Shape.objects.filter(type_id=type_id)
 
-    # Filter data for selected data layers
-    for layer in data_layers:
-        layer_data = preprocessed_data.get(layer, {})
-        year_data = layer_data.get(str(year), {})
+    shape_dlcount_dict = {shape.id: 0 for shape in shapes}
+    shape_dl_dict = {shape.id: [] for shape in shapes}
 
-        for shape_id_key, shape_data in year_data.items():
-            if shape_id and str(shape_id) != shape_id_key:
-                continue  # Skip shapes not matching the filter
+    for data_layer_str in data_layers:
+        datalayer = Datalayer.objects.get(key=data_layer_str)
+        for shape in shapes:
+            try:
+                if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
+                    query = f"""
+                                SELECT COUNT(*)
+                                FROM {data_layer_str}
+                                WHERE shape_id = %s AND year = %s
+                    """
+                    with connection.cursor() as c:
+                        c.execute(query, [shape.id, year])
+                        rec_count = c.fetchone()[0]
 
-            if shape_id_key not in aggregated_data:
-                aggregated_data[shape_id_key] = {
-                    'dl_count': 0,
-                    'dl_names': [],
-                    'geometry': shape_data['geometry'],
-                    'name': shape_data['name'],
-                }
+                else:
+                    query = f"""
+                                SELECT COUNT(*)
+                                FROM {data_layer_str}
+                                WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
+                    """
+                    with connection.cursor() as c:
+                        c.execute(query, [shape.id, year])
+                        rec_count = c.fetchone()[0]
 
-            aggregated_data[shape_id_key]['dl_count'] += shape_data['count']
-            aggregated_data[shape_id_key]['dl_names'].append(layer)
+            except ProgrammingError as e:
+                rec_count = 0
 
-    return JsonResponse(aggregated_data, safe=False)
+            print(rec_count)
+
+            if rec_count > 0:
+                shape_dlcount_dict[shape.id] += 1
+                shape_dl_dict.get(shape.id).append(datalayer.name)
+
+    geometries = {}
+    names = {}
+    for shape in shapes:
+        geometries[shape.id] = shape.geometry.geojson
+        names[shape.id] = shape.name
+
+    context = {
+        'shape_dlcount_dict': shape_dlcount_dict,
+        'shape_dl_dict': shape_dl_dict,
+        'geometries': geometries,
+        'names': names,
+    }
+
+    return JsonResponse(context, safe=False)
+
 
 def temporal_trend_base(request):
     types = Type.objects.all().order_by('id')
@@ -263,6 +288,8 @@ def get_historical_data(shape_id, data_layer_key):
     return data
 
 
+
+
 def get_min_max_dl_value(request):
     data_layer_key = request.GET.get('data_layer_key')
     shape_type = request.GET.get('shape_type')
@@ -286,76 +313,3 @@ def get_min_max_dl_value(request):
     }
 
     return JsonResponse(context, safe=False)
-
-
-
-
-# def get_dl_count_for_year_shapes(request):
-#     data_layers = request.GET.get('data_layers', '')
-#     data_layers = data_layers.split(',') if data_layers else []
-#
-#     shape_id = request.GET['shape_id']
-#     load_children = request.GET.get('load_children', 'true').lower() == 'true'
-#     year = int(request.GET['year'])
-#
-#     if shape_id:
-#         if load_children:
-#             shapes = Shape.objects.filter(parent_id=shape_id)
-#         else:  # load the parent
-#             parent_id = Shape.objects.get(id=shape_id).parent_id
-#             parent_type = Shape.objects.get(id=parent_id).type_id
-#             shapes = Shape.objects.filter(type_id=parent_type)
-#     else:
-#         lowest_type = Type.objects.order_by('position').last()
-#         shapes = Shape.objects.filter(type_id=lowest_type.id)
-#
-#     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
-#     shape_dl_dict = {shape.id: [] for shape in shapes}
-#
-#     for data_layer_str in data_layers:
-#         datalayer = Datalayer.objects.get(key=data_layer_str)
-#         for shape in shapes:
-#             try:
-#                 if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
-#                     query = f"""
-#                                 SELECT COUNT(*)
-#                                 FROM {data_layer_str}
-#                                 WHERE shape_id = %s AND year = %s
-#                     """
-#                     with connection.cursor() as c:
-#                         c.execute(query, [shape.id, year])
-#                         rec_count = c.fetchone()[0]
-#
-#                 else:
-#                     query = f"""
-#                                 SELECT COUNT(*)
-#                                 FROM {data_layer_str}
-#                                 WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
-#                     """
-#                     with connection.cursor() as c:
-#                         c.execute(query, [shape.id, year])
-#                         rec_count = c.fetchone()[0]
-#
-#             except ProgrammingError as e:
-#                 rec_count = 0
-#
-#             print(rec_count)
-#
-#             if rec_count > 0:
-#                 shape_dlcount_dict[shape.id] += 1
-#                 shape_dl_dict.get(shape.id).append(datalayer.name)
-#
-#     geometries = {}
-#     names = {}
-#     for shape in shapes:
-#         geometries[shape.id] = shape.geometry.geojson
-#         names[shape.id] = shape.name
-#
-#     context = {
-#         'shape_dlcount_dict': shape_dlcount_dict,
-#         'shape_dl_dict': shape_dl_dict,
-#         'geometries': geometries,
-#         'names': names,
-#     }
-#
-#     return JsonResponse(context, safe=False)

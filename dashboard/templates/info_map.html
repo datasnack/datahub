@@ -14,6 +14,14 @@
 
     <h1>Information Density Map</h1>
 
+	<label for="type">Select Shape Type:</label>
+    <select id="type-dropdown">
+        <option value="">>>> Select Type <<<</option>
+        {% for type in types %}
+            <option value="{{ type.id }}">{{ type }}</option>
+        {% endfor %}
+    </select>
+
     <label for="year">Select Year:</label>
     <select id="year-dropdown">
         <option value="">>>> Select Year <<<</option>
@@ -70,10 +78,10 @@
 				addLegend();
 			}
             $('#select-all-btn').click(function() {
-                $('.layer-checkbox').prop('checked', true);
+                $('.datalayer-checkbox').prop('checked', true);
             });
             $('#clear-all-btn').click(function() {
-                $('.layer-checkbox').prop('checked', false);
+                $('.datalayer-checkbox').prop('checked', false);
             });
 		});
 
@@ -98,21 +106,20 @@
 
 		$('#load-button').on('click', update_map);
 
-		function update_map(shapeId, loadChildren = true) {
+		function update_map() {
 			$('#loading-message').show();
+			const type = $('#type-dropdown').val();
 			const year = $('#year-dropdown').val();
 			const selectedLayers = [];
             $('.datalayer-checkbox:checked').each(function() {
             	selectedLayers.push($(this).data('datalayer'));
             });
-			console.log(selectedLayers)
-			shapeId = parseInt(shapeId) || null;
 
 			if (year) {
 				setTimeout(() => {
 					$.ajax({
 						url: "{% url 'get_dl_count_for_year_shapes' %}",
-						data: { 'data_layers': selectedLayers.join(','), 'shape_id': shapeId, 'year': year, 'load_children': loadChildren},
+						data: { 'type_id': type, 'year': year, 'data_layers': selectedLayers.join(',') },
 						success: function (response) {
 							layerGroup.clearLayers();
 
@@ -160,9 +167,7 @@
 									}),
 									onEachFeature: (feature, layer) => {
 										layer.bindPopup(`<b>${feature.properties.name}</b>
-										<br>Available Data Layers: ${feature.properties.count}
-										<br><button onclick="update_map('${feature.properties.id}', false)">Navigate to parent</button>
-										<br><button onclick="update_map('${feature.properties.id}', true)">Navigate to children</button>`)
+										<br>Available Data Layers: ${feature.properties.count}`)
 									}
 								});
 
