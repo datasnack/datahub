@@ -1,12 +1,13 @@
-import os
-import json
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
-from django.db import connection, ProgrammingError
+from django.db import connection, ProgrammingError, DatabaseError
 import datetime as dt
 
+from pandas.io.sql import table_exists
+
+from dashboard.models import ShapeDataLayerYearStats
 from datalayers.datasources.base_layer import LayerTimeResolution
 from shapes.models import Type, Shape
 from datalayers.models import Datalayer
@@ -61,54 +62,26 @@ def info_map_base(request):
 
 
 def get_dl_count_for_year_shapes(request):
-    data_layers = request.GET.get('data_layers', '')
-    data_layers = data_layers.split(',') if data_layers else []
+    data_layers = request.GET.get('data_layers', '').split(',')
     type_id = request.GET.get('type_id')
     year = int(request.GET['year'])
 
     shapes = Shape.objects.filter(type_id=type_id)
-
     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
     shape_dl_dict = {shape.id: [] for shape in shapes}
 
-    for data_layer_str in data_layers:
-        datalayer = Datalayer.objects.get(key=data_layer_str)
+    for datalayer_str in data_layers:
         for shape in shapes:
             try:
-                if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
-                    query = f"""
-                                SELECT COUNT(*)
-                                FROM {data_layer_str}
-                                WHERE shape_id = %s AND year = %s
-                    """
-                    with connection.cursor() as c:
-                        c.execute(query, [shape.id, year])
-                        rec_count = c.fetchone()[0]
-
-                else:
-                    query = f"""
-                                SELECT COUNT(*)
-                                FROM {data_layer_str}
-                                WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
-                    """
-                    with connection.cursor() as c:
-                        c.execute(query, [shape.id, year])
-                        rec_count = c.fetchone()[0]
-
-            except ProgrammingError as e:
-                rec_count = 0
-
-            print(rec_count)
-
-            if rec_count > 0:
+                stat = ShapeDataLayerYearStats.objects.get(shape_id=shape.id, data_layer=datalayer_str, year=year)
                 shape_dlcount_dict[shape.id] += 1
-                shape_dl_dict.get(shape.id).append(datalayer.name)
+                shape_dl_dict[shape.id].append(datalayer_str)
+            except ObjectDoesNotExist:
+                continue
 
-    geometries = {}
-    names = {}
-    for shape in shapes:
-        geometries[shape.id] = shape.geometry.geojson
-        names[shape.id] = shape.name
+
+    geometries = {shape.id: shape.geometry.geojson for shape in shapes}
+    names = {shape.id: shape.name for shape in shapes}
 
     context = {
         'shape_dlcount_dict': shape_dlcount_dict,
@@ -188,7 +161,6 @@ def get_dl_value_for_year_shapes(request):
     year = request.GET.get('year')
     shape_type = request.GET.get('shape_type')
 
-
     data_layer = Datalayer.objects.get(key=data_layer_key)
     shapes = Shape.objects.filter(type_id=shape_type)
 
@@ -199,32 +171,14 @@ def get_dl_value_for_year_shapes(request):
     names = {}
     dl_values = {}
 
-    if data_layer:
-        for shape in shapes:
-            geometries[shape.id] = shape.geometry.geojson
-            names[shape.id] = shape.name
-            if data_layer.temporal_resolution == LayerTimeResolution.YEAR:
-                query = f"""
-                            SELECT value
-                            FROM {data_layer_key}
-                            WHERE shape_id = %s AND year = %s
-                        """
-                with connection.cursor() as c:
-                    c.execute(query, [shape.id, year])
-                    res = c.fetchone()
-            else:
-                query = f"""
-                            SELECT AVG(value)
-                            FROM {data_layer_key}
-                            WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
-                        """
-                with connection.cursor() as c:
-                    c.execute(query, [shape.id, year])
-                    res = c.fetchone()
-
-            if res is not None:
-                value = res[0]
-                dl_values[shape.id] = value
+    for shape in shapes:
+        geometries[shape.id] = shape.geometry.geojson
+        names[shape.id] = shape.name
+        try:
+            dl_value = ShapeDataLayerYearStats.objects.get(shape_id=shape.id, data_layer=data_layer_key, year=year).value
+            dl_values[shape.id] = dl_value
+        except ObjectDoesNotExist:
+            continue
 
     context = {
         'geometries': geometries,
@@ -288,8 +242,6 @@ def get_historical_data(shape_id, data_layer_key):
     return data
 
 
-
-
 def get_min_max_dl_value(request):
     data_layer_key = request.GET.get('data_layer_key')
     shape_type = request.GET.get('shape_type')
@@ -313,3 +265,103 @@ def get_min_max_dl_value(request):
     }
 
     return JsonResponse(context, safe=False)
+
+
+# def get_dl_count_for_year_shapes(request):
+#     data_layers = request.GET.get('data_layers', '').split(',')
+#     type_id = request.GET.get('type_id')
+#     year = int(request.GET['year'])
+#
+#     shapes = Shape.objects.filter(type_id=type_id)
+#     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
+#     shape_dl_dict = {shape.id: [] for shape in shapes}
+#
+#     for datalayer_str in data_layers:
+#         datalayer = Datalayer.objects.get(key=datalayer_str)
+#         if datalayer:
+#             if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
+#                 for shape in shapes:
+#                     dlv = datalayer.value(
+#                         shape=shape,
+#                         when=dt.datetime(year, 1, 1),
+#                         mode="exact",
+#                     )
+#                     if dlv and dlv.value is not None and dlv.value > 0:
+#                         shape_dlcount_dict[shape.id] += 1
+#                         shape_dl_dict[shape.id].append(datalayer.name)
+#             else:
+#                 for shape in shapes:
+#                     start_date = dt.datetime(year, 1, 1)
+#                     end_date = dt.datetime(year, 12, 31)
+#
+#                     df = datalayer.data(
+#                         shape=shape,
+#                         start_date=start_date,
+#                         end_date=end_date,
+#                     )
+#                     if not df.empty:
+#                         shape_dlcount_dict[shape.id] += 1
+#                         shape_dl_dict[shape.id].append(datalayer.name)
+#
+#     geometries = {shape.id: shape.geometry.geojson for shape in shapes}
+#     names = {shape.id: shape.name for shape in shapes}
+#
+#     context = {
+#         'shape_dlcount_dict': shape_dlcount_dict,
+#         'shape_dl_dict': shape_dl_dict,
+#         'geometries': geometries,
+#         'names': names,
+#     }
+#
+#     return JsonResponse(context, safe=False)
+
+
+# def get_dl_value_for_year_shapes(request):
+#     data_layer_key = request.GET.get('data_layer_key')
+#     year = request.GET.get('year')
+#     shape_type = request.GET.get('shape_type')
+#
+#     data_layer = Datalayer.objects.get(key=data_layer_key)
+#     shapes = Shape.objects.filter(type_id=shape_type)
+#
+#     if not year:
+#         year = data_layer.get_available_years[0]
+#
+#     geometries = {}
+#     names = {}
+#     dl_values = {}
+#
+#     if data_layer:
+#         for shape in shapes:
+#             geometries[shape.id] = shape.geometry.geojson
+#             names[shape.id] = shape.name
+#             if data_layer.temporal_resolution == LayerTimeResolution.YEAR:
+#                 query = f"""
+#                             SELECT value
+#                             FROM {data_layer_key}
+#                             WHERE shape_id = %s AND year = %s
+#                         """
+#                 with connection.cursor() as c:
+#                     c.execute(query, [shape.id, year])
+#                     res = c.fetchone()
+#             else:
+#                 query = f"""
+#                             SELECT AVG(value)
+#                             FROM {data_layer_key}
+#                             WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
+#                         """
+#                 with connection.cursor() as c:
+#                     c.execute(query, [shape.id, year])
+#                     res = c.fetchone()
+#
+#             if res is not None:
+#                 value = res[0]
+#                 dl_values[shape.id] = value
+#
+#     context = {
+#         'geometries': geometries,
+#         'names': names,
+#         'dl_values': dl_values
+#     }
+#
+#     return JsonResponse(context, safe=False)
