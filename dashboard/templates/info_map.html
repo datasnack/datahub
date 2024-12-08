@@ -169,7 +169,8 @@
 							layerGroup.clearLayers();
 
 							const dlCounts = response.shape_dlcount_dict;
-							const dls = response.shape_dl_dict;
+							const availableDlDict = response.shape_dl_dict;
+							const missingDlDict = response.shape_missing_dl_dict;
 							const geometries = response.geometries;
 							const names = response.names;
 
@@ -181,10 +182,11 @@
 
 							const shapeData = [];
 							for (const shapeId in geometries) {
-								const availableDls = dls[shapeId] || 'No available data layer';
+								const availableDls = availableDlDict[shapeId] || 'No available data layer';
+								const missingDls = missingDlDict[shapeId] || 'No missing data layer';
 								const count = dlCounts[shapeId] || 0;
 								const name = names[shapeId] || 'Unknown';
-								shapeData.push({ id: shapeId, name, count, availableDls });
+								shapeData.push({ id: shapeId, name, count, availableDls, missingDls });
 
 								let geometry;
 
@@ -227,26 +229,49 @@
 							shapeData.forEach((shape, index) => {
 								let availableDl;
 								if (Array.isArray(shape.availableDls)) {
-									availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-lighter">${dl}</li>`).join('');
+									availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-light">${dl}</li>`).join('');
 								} else {
-									availableDl = `<li class="list-group-item fw-lighter">${shape.availableDls}</li>`;
+									availableDl = `<li class="list-group-item fw-light">${shape.availableDls}</li>`;
 								}
+								let missingDl;
+								if (Array.isArray(shape.missingDls)) {
+									missingDl = shape.missingDls.map(dl => `<li class="list-group-item fw-light">${dl}</li>`).join('');
+								} else {
+									missingDl = `<li class="list-group-item fw-light">${shape.missingDls}</li>`;
+								}
+
 								rankingList.append(`
 									<li class="list-group-item">
-										<b class="shape-name" data-index="${index}" style="cursor: pointer;">${shape.name}
-										<span class="badge text-bg-primary rounded-pill">${shape.count}</span>
-										<ul class="available-dls m-1 p-1 list-group list-group-flush" style="display: none;">
-											${availableDl}
-										</ul>
+										<b class="shape-name" data-index="${index}" style="cursor: pointer;">
+											${shape.name}
+											<span class="badge text-bg-primary rounded-pill">${shape.count}</span>
+										</b>
+										<div class="details-dls container text-center m-3" style="display: none;">
+											<div class="row">
+												<div class="col">
+													<label class="form-label fw-bold">Available Data Layers</label>
+													<ul class="available-dls m-1 p-1 list-group list-group-flush">
+														${availableDl}
+													</ul>
+												</div>
+												<div class="col">
+													<label class="form-label fw-bold">Missing Data Layers</label>
+													<ul class="missing-dls m-1 p-1 list-group list-group-flush">
+														${missingDl}
+													</ul>
+												</div>
+											</div>
+										</div>
 									</li>
 								`);
 							});
 
 							$('.shape-name').on('click', function () {
-								const index = $(this).data('index');
-								$(`.available-dls:eq(${index})`).toggle();
+								$(this).next('.details-dls').toggle();
 							});
+
 							$('#loading-message').hide();
+
 						},
 						error: function (xhr, status, error) {
 							console.error('Error fetching data layer count:', error);

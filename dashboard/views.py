@@ -44,6 +44,7 @@ def get_dl_count_for_year_shapes(request):
     shapes = Shape.objects.filter(type_id=type_id)
     shape_dlcount_dict = {shape.id: 0 for shape in shapes}
     shape_dl_dict = {shape.id: [] for shape in shapes}
+    shape_missing_dl_dict = {shape.id: [] for shape in shapes}
 
     for datalayer_str in data_layers:
         datalayer_name = Datalayer.objects.get(key=datalayer_str).name
@@ -53,6 +54,7 @@ def get_dl_count_for_year_shapes(request):
                 shape_dlcount_dict[shape.id] += 1
                 shape_dl_dict[shape.id].append(datalayer_name)
             except ObjectDoesNotExist:
+                shape_missing_dl_dict[shape.id].append(datalayer_name)
                 continue
 
 
@@ -62,6 +64,7 @@ def get_dl_count_for_year_shapes(request):
     context = {
         'shape_dlcount_dict': shape_dlcount_dict,
         'shape_dl_dict': shape_dl_dict,
+        'shape_missing_dl_dict': shape_missing_dl_dict,
         'geometries': geometries,
         'names': names,
     }
@@ -108,11 +111,11 @@ def get_shapes_by_shape_id(request):
 
 
 def slider_base(request):
-    shape_types = Type.objects.order_by('position')[1:]
+    types = Type.objects.order_by('position')[1:]
     datalayers = Datalayer.objects.all()
 
     context = {
-        "shape_types": shape_types,
+        'types': types,
         "datalayers": datalayers,
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
