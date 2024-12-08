@@ -14,7 +14,7 @@ def home(request):
 
 
 def info_map_base(request):
-    datalayers = Datalayer.objects.all()
+    datalayers = Datalayer.objects.order_by('name')
 
     first_entry = ShapeDataLayerYearStats.objects.order_by('year').first()
     min_year = first_entry.year if first_entry else None
@@ -57,14 +57,13 @@ def get_dl_count_for_year_shapes(request):
                 shape_missing_dl_dict[shape.id].append(datalayer_name)
                 continue
 
-
     geometries = {shape.id: shape.geometry.geojson for shape in shapes}
     names = {shape.id: shape.name for shape in shapes}
 
     context = {
         'shape_dlcount_dict': shape_dlcount_dict,
-        'shape_dl_dict': shape_dl_dict,
-        'shape_missing_dl_dict': shape_missing_dl_dict,
+        'shape_dl_dict': dict(sorted(shape_dl_dict.items(), key=lambda item: item[1])),
+        'shape_missing_dl_dict': dict(sorted(shape_missing_dl_dict.items(), key=lambda item: item[1])),
         'geometries': geometries,
         'names': names,
     }
