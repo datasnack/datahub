@@ -2,13 +2,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
-from django.db import connection, ProgrammingError, DatabaseError
-import datetime as dt
-
-from pandas.io.sql import table_exists
+from django.db import connection
 
 from dashboard.models import ShapeDataLayerYearStats
-from datalayers.datasources.base_layer import LayerTimeResolution
 from shapes.models import Type, Shape
 from datalayers.models import Datalayer
 
@@ -20,38 +16,17 @@ def home(request):
 def info_map_base(request):
     datalayers = Datalayer.objects.all()
 
-    min_year = dt.date.today().year
-    max_year = 0
-
-    for dl in datalayers:
-        table_name = dl.key
-        try:
-            query = f"""
-                        SELECT MIN(year), MAX(year)
-                        FROM {table_name}
-                    """
-            with connection.cursor() as c:
-                c.execute(query)
-                res = c.fetchone()
-            min_available_year = res[0]
-            max_available_year = res[1]
-
-        except ProgrammingError as e:
-            min_available_year = dt.date.today().year
-            max_available_year = 0
-
-        if min_year > min_available_year:
-            min_year = min_available_year
-        if max_year < max_available_year:
-            max_year = max_available_year
-
-    years = range(int(min_year), int(max_year) + 1)
+    first_entry = ShapeDataLayerYearStats.objects.order_by('year').first()
+    min_year = first_entry.year if first_entry else None
+    last_entry = ShapeDataLayerYearStats.objects.order_by('year').last()
+    max_year = last_entry.year if last_entry else None
 
     types = Type.objects.order_by('position')
 
     context = {
         'datalayers': datalayers,
-        'years': years,
+        'min_year': min_year,
+        'max_year': max_year,
         'types': types,
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
@@ -71,11 +46,12 @@ def get_dl_count_for_year_shapes(request):
     shape_dl_dict = {shape.id: [] for shape in shapes}
 
     for datalayer_str in data_layers:
+        datalayer_name = Datalayer.objects.get(key=datalayer_str).name
         for shape in shapes:
             try:
                 stat = ShapeDataLayerYearStats.objects.get(shape_id=shape.id, data_layer=datalayer_str, year=year)
                 shape_dlcount_dict[shape.id] += 1
-                shape_dl_dict[shape.id].append(datalayer_str)
+                shape_dl_dict[shape.id].append(datalayer_name)
             except ObjectDoesNotExist:
                 continue
 
@@ -209,35 +185,20 @@ def get_historical_data(shape_id, data_layer_key):
     data_layer = get_object_or_404(Datalayer, key=data_layer_key)
 
     years = data_layer.get_available_years
-    table_name = data_layer_key
     data = []
 
     for year in years:
-        if data_layer.temporal_resolution == LayerTimeResolution.YEAR:
-            query = f"""
-                            SELECT value
-                            FROM {table_name}
-                            WHERE shape_id = %s AND year = %s
-                        """
-            with connection.cursor() as c:
-                c.execute(query, [shape_id, year])
-                res = c.fetchone()
-        else:
-            query = f"""
-                            SELECT AVG(value)
-                            FROM {table_name}
-                            WHERE shape_id = %s AND EXTRACT(year FROM date) = %s
-                        """
-            with connection.cursor() as c:
-                c.execute(query, [shape_id, year])
-                res = c.fetchone()
-
-        if res is not None:
-            value = res[0]
+        try:
+            stat = ShapeDataLayerYearStats.objects.get(shape_id=shape_id,
+                                                       data_layer=data_layer_key,
+                                                       year=year)
+            value = stat.value
             data.insert(0, {
                 'year': year,
                 'value': value
             })
+        except ObjectDoesNotExist:
+            continue
 
     return data
 

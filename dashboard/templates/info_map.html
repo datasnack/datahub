@@ -2,67 +2,78 @@
 {% load humanize %}
 {% load static %}
 
-{% block title %}Home{% endblock %}
-
 {% block content %}
     <link rel="stylesheet" type="text/css" href="{% static 'info_map.css' %}">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <h1>Information Density Map</h1>
 
-	<label for="type">Select Shape Type:</label>
-    <select id="type-dropdown">
-        <option value="">>>> Select Type <<<</option>
-        {% for type in types %}
-            <option value="{{ type.id }}">{{ type }}</option>
-        {% endfor %}
-    </select>
+	<div class="mt-3">
+		<label for="type-dropdown" class="form-label fw-bold">Select Shape Type:</label>
+		<select id="type-dropdown" class="form-select">
+			<option value="">Select Type</option>
+			{% for type in types %}
+				<option value="{{ type.id }}">{{ type }}</option>
+			{% endfor %}
+		</select>
+	</div>
 
-    <label for="year">Select Year:</label>
-    <select id="year-dropdown">
-        <option value="">>>> Select Year <<<</option>
-        {% for year in years %}
-            <option value="{{ year }}">{{ year }}</option>
-        {% endfor %}
-    </select>
+	<label class="form-label fw-bold mt-3">Select Layers:</label>
+    <div id="datalayer-controls" class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+		<div class="btn-group" role="group">
+			<button id="select-all-btn" type="button" class="btn btn-primary btn-sm">Select All</button>
+			<button id="clear-all-btn" type="button" class="btn btn-secondary btn-sm">Clear All</button>
+		</div>
+		<hr>
+		<div id="datalayer-checkbox">
+			{% for datalayer in datalayers %}
+				<div class="form-check">
+				  <input class="form-check-input" type="checkbox" id="datalayer-{{ datalayer.key }}" data-datalayer="{{ datalayer.key }}">
+				  <label class="form-check-label" for="datalayer-{{ datalayer.key }}">
+					{{ datalayer.name }}
+				  </label>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
 
-    <div id="datalayer-controls">
-    <h3>Select Layers</h3>
-    <button id="select-all-btn" style="margin-right: 10px;">Select All</button>
-    <button id="clear-all-btn">Clear All</button>
-    <hr>
-    <div id="datalayer-checkbox-container">
-        {% for datalayer in datalayers %}
-            <label>
-                <input type="checkbox" class="datalayer-checkbox" data-datalayer="{{ datalayer.key }}">
-                {{ datalayer.name }}
-            </label>
-        {% endfor %}
-    </div>
+	<button id="load-button" type="button" class="m-3 btn btn-secondary">Load</button>
+
+	<div id="map" style="height: 600px; width: 100%; margin-top: 20px;">
+		<div id="loading-message">
+			<div class="d-flex justify-content-center">
+				<div class="spinner-border" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
+		</div>
 	</div>
 
 
-	<button id="load-button">Load</button>
+	<div class="border rounded m-3 p-2 h-auto">
+		<div id="year-slider" class="m-5"></div>
+		<span id="year-slider-value"></span>
+	</div>
 
-    <div id="map" style="height: 600px; width: 100%; margin-top: 20px;">
-        <div id="loading-message">Loading, please wait...</div>
-    </div>
-
-	<h2>Information Ranking</h2>
-	<ol id="ranking-list"></ol>
+	<div class="border rounded m-3 p-3">
+		<h4>Information Ranking</h4>
+		<ol id="ranking-list" class="list-group list-group-numbered"></ol>
+	</div>
 
     <script>
         let map;
 		let layerGroup = L.layerGroup();
 
 		$(document).ready(function() {
-			$('#year-dropdown').prop('selectedIndex', 0);
+			$('#type-dropdown').prop('selectedIndex', 0);
+			$('.form-check-input').prop('checked', false);
 			$('#loading-message').hide();
-			$('.datalayer-checkbox').prop('checked', false);
 			if (!map) {
 				map = L.map('map').setView(
 					[parseFloat("{{ datahub_center_y }}"), parseFloat("{{ datahub_center_x }}")],
@@ -78,12 +89,45 @@
 				addLegend();
 			}
             $('#select-all-btn').click(function() {
-                $('.datalayer-checkbox').prop('checked', true);
-            });
-            $('#clear-all-btn').click(function() {
-                $('.datalayer-checkbox').prop('checked', false);
-            });
+				$('.form-check-input').prop('checked', true);
+			});
+
+			$('#clear-all-btn').click(function() {
+				$('.form-check-input').prop('checked', false);
+			});
+
+			initializeSlider({{ min_year }}, {{ max_year }})
 		});
+
+		function initializeSlider(minYear, maxYear) {
+			const slider = document.getElementById('year-slider');
+			if(slider && slider.noUiSlider){
+				slider.noUiSlider.destroy();
+			}
+			noUiSlider.create(slider, {
+				start: minYear,
+				step: 1,
+				range: {
+					'min': minYear,
+					'max': maxYear
+				},
+				tooltips: {
+					to: function(value) {
+						return value.toFixed(0);
+					},
+					from: function(value) {
+						return Number(value);
+					}
+				},
+				pips: {
+					mode: 'values',
+					values: [minYear, maxYear],
+					density: 10
+				}
+			});
+
+			slider.noUiSlider.on('change', updateMap);
+		}
 
 		function addLegend() {
 			const legend = L.control({ position: 'bottomright' });
@@ -103,19 +147,20 @@
 			legend.addTo(map);
 		}
 
+		$('#load-button').on('click', updateMap);
 
-		$('#load-button').on('click', update_map);
-
-		function update_map() {
+		function updateMap() {
 			$('#loading-message').show();
 			const type = $('#type-dropdown').val();
-			const year = $('#year-dropdown').val();
+			const year = parseInt(document.getElementById('year-slider').noUiSlider.get());
+			{#const year = $('#year-dropdown').val();#}
 			const selectedLayers = [];
-            $('.datalayer-checkbox:checked').each(function() {
-            	selectedLayers.push($(this).data('datalayer'));
-            });
+            $('.form-check-input:checked').each(function() {
+				selectedLayers.push($(this).data('datalayer'));
+			});
 
-			if (year) {
+
+			if (year && selectedLayers.length > 0 && type) {
 				setTimeout(() => {
 					$.ajax({
 						url: "{% url 'get_dl_count_for_year_shapes' %}",
@@ -163,7 +208,7 @@
 										weight: 2,
 										opacity: 1,
 										color: 'black',
-										fillOpacity: 0.7
+										fillOpacity: 1
 									}),
 									onEachFeature: (feature, layer) => {
 										layer.bindPopup(`<b>${feature.properties.name}</b>
@@ -182,15 +227,15 @@
 							shapeData.forEach((shape, index) => {
 								let availableDl;
 								if (Array.isArray(shape.availableDls)) {
-									availableDl = shape.availableDls.map(dl => `<li>${dl}</li>`).join('');
+									availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-lighter">${dl}</li>`).join('');
 								} else {
-									availableDl = `<li>${shape.availableDls}</li>`;
+									availableDl = `<li class="list-group-item fw-lighter">${shape.availableDls}</li>`;
 								}
 								rankingList.append(`
-									<li>
-										<b class="shape-name" data-index="${index}" style="cursor: pointer;">
-											${shape.name}:</b> ${shape.count}
-										<ul class="available-dls" style="display: none; padding-left: 20px;">
+									<li class="list-group-item">
+										<b class="shape-name" data-index="${index}" style="cursor: pointer;">${shape.name}
+										<span class="badge text-bg-primary rounded-pill">${shape.count}</span>
+										<ul class="available-dls m-1 p-1 list-group list-group-flush" style="display: none;">
 											${availableDl}
 										</ul>
 									</li>
@@ -201,7 +246,6 @@
 								const index = $(this).data('index');
 								$(`.available-dls:eq(${index})`).toggle();
 							});
-
 							$('#loading-message').hide();
 						},
 						error: function (xhr, status, error) {
@@ -211,7 +255,7 @@
 					});
 				}, 300);
 			} else {
-				alert('Please select the year.');
+				alert('Missing input. Please make sure that the type and data layers are selected.');
 				$('#loading-message').hide();
 			}
 		}
@@ -224,11 +268,11 @@
 
         function getColor(value, minValue, maxValue) {
             const norm_val = (value - minValue) / (maxValue - minValue);
-            if (norm_val > 0.8) return '#0c5143';
-            if (norm_val > 0.6) return '#11735f';
-            if (norm_val > 0.4) return '#16957c';
-            if (norm_val > 0.2) return '#1bb898';
-            return '#20dab4';
+            if (norm_val > 0.8) return '#e41a1c';
+            if (norm_val > 0.6) return '#ff7f00';
+            if (norm_val > 0.4) return '#ffdc00';
+            if (norm_val > 0.2) return '#4daf4a';
+            return '#377eb8';
         }
     </script>
 {% endblock %}
