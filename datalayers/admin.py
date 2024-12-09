@@ -16,6 +16,19 @@ class DatalayerSourceAdminInline(admin.TabularInline):
 
 class DatalayerAdmin(admin.ModelAdmin):
     list_display = ["name", "key"]
+    list_display = ["name", "key", "has_class", "is_loaded"]
+
+    def has_class(self, obj):
+        return obj.has_class()
+
+    has_class.short_description = "Class"
+    has_class.boolean = True
+
+    def is_loaded(self, obj):
+        return obj.is_loaded()
+
+    is_loaded.short_description = "Loaded"
+    is_loaded.boolean = True
 
     inlines = (DatalayerSourceAdminInline,)
 
