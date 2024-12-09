@@ -61,46 +61,48 @@
 
 			{% datalayer_value shape dl temporal as dlv %}
 			<td class="align-middle text-nowrap text-end js-value dlv-derived-cell {% if dlv.has_value %}{% if dlv.is_derived_value %}bg-warning-subtle{%else%}bg-success-subtle{%endif %}{%else%}bg-danger-subtle{%endif%}" data-order="{{ dlv.value }}">
+				<div class="dlv">
 
-				{% if dlv.has_value %}
-					{% if dlv.is_derived_value %}
-						<button type="button" class="btn btn-sm float-start  dlv-derived-btn"
-							data-bs-toggle="popover"
-							data-bs-trigger="click"
-							data-bs-placement="top"
-							data-bs-title="{% translate "Data quality info" %}"
-							data-bs-html="true"
-							data-bs-content="{% translate "Data derived from:" %}<br>{% if dlv.is_derived_spatial%}
-									<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
+					{% comment %}
+					Investigate Popover API further:
+					on trigger button: button[popovertarget="popover_{{dl.key}}"]
+					on popover div: div[popover] + div[id="popover_{{dl.key}}"]
+					{% endcomment %}
+
+					<button type="button" class="btn btn-sm float-start dlv-derived-btn">
+						{% if dlv.has_value %}
+							{% if dlv.is_derived_value %}
+									{% icon "info" %}
+							{% else %}
+								{% icon "issue-closed" %}
 							{% endif %}
-							{% if dlv.is_derived_temporal %}
-								{{ dlv.date }}<br>
-							{% endif %}">
-							{% icon "info" %}
-						</button>
-					{% else %}
-					<button type="button" class="btn btn-sm float-start dlv-derived-btn"
+						{% else %}
+								{% icon "no-entry" %}
+						{% endif %}
+					</button>
 
-						data-bs-toggle="popover"
-						data-bs-placement="top"
-						data-bs-title="{% translate "Data quality info" %}"
-						data-bs-html="true"
-						data-bs-content="{% translate "Matching data available" %}"
-					>
-						{% icon "issue-closed" %}
-					</button>
-					{% endif %}
-				{% else %}
-					<button type="button" class="btn btn-sm float-start dlv-derived-btn"
-						data-bs-toggle="popover"
-						data-bs-placement="top"
-						data-bs-title="{% translate "Data quality info" %}"
-						data-bs-html="true"
-						data-bs-content="{% translate "No data available" %}"
-					>
-						{% icon "no-entry" %}
-					</button>
-				{% endif %}
+					<div class="popover bs-popover-top">
+						<div class="popover-arrow"></div>
+						<h3 class="popover-header">{% translate "Data quality info" %}</h3>
+						<div class="popover-body">
+							{% if dlv.has_value %}
+								{% if dlv.is_derived_value %}
+									{% translate "Data derived from:" %}<br>
+									{% if dlv.is_derived_spatial%}
+										<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
+									{% endif %}
+									{% if dlv.is_derived_temporal %}
+										{{ dlv.date }}<br>
+									{% endif %}
+								{% else %}
+									{% translate "Matching data available" %}
+								{% endif %}
+							{% else %}
+								{% translate "No data available" %}
+							{% endif %}
+						</div>
+					</div>
+				</div>
 
 				<span class="js-value"
 				  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"

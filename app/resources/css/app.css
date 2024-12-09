@@ -175,3 +175,23 @@ dh-chart .aa-Form {
 	top: 50%;
 	transform: translateY(-50%);
 }
+
+.dlv > .popover {
+	display: none;
+	min-width: 200px;
+}
+
+.dlv > .popover > .popover-arrow {
+	position: absolute;
+	left: 0;
+	transform: translate3d(84px, 0px, 0px);
+}
+
+.dlv:hover .popover {
+	position: absolute;
+	display: block;
+	bottom: 100.25%;
+	left: 2em;
+	transform: translateX(-50%);
+}
+
