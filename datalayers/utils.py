@@ -1,6 +1,88 @@
+import json
+
 from sqlalchemy import create_engine
 
 from django.conf import settings
+from django.contrib import messages
+from django.core import serializers
+
+
+def dumpdata(datalayers) -> str:
+    """Serialize a list of Data Layers with their dependant models."""
+    categories = {}
+    sources = []
+    tags = []
+    tagged_items = []
+
+    for dl in datalayers:
+        # aggregate categories over a dict, to prevent multiple same category entries
+        if dl.category:
+            categories[dl.category.key] = dl.category
+
+        for source in dl.sources.all():
+            sources.append(source)
+
+        if False:
+            for tag in dl.tags.all():
+                tags.append(tag)
+
+                tagged_items.append(
+                    TaggedItem(tag_id=tag.id, object_id=dl.id, content_type_id=7)
+                )
+
+    objects = list(categories.values()) + tags + datalayers + sources + tagged_items
+
+    return serializers.serialize(
+        "json",
+        objects,
+        indent=2,
+        use_natural_foreign_keys=True,
+        use_natural_primary_keys=True,
+    )
+
+
+def loaddata(data: str):
+    msgs = []
+
+    objs = json.loads(data)
+
+    for obj in objs:
+        # relation does potentially not exist in current hub, so we can't import those
+        # in a safe manner for now we strip relations completely and alert the user.
+        if obj["model"] == "datalayers.datalayer":
+            for relation in obj["fields"]["related_to"]:
+                msgs.append(
+                    {
+                        "level": messages.ERROR,
+                        "message": f"Relation {obj['fields']['key']} -> {relation[0]} needs to be created manually.",
+                    }
+                )
+            del obj["fields"]["related_to"]
+
+    data = json.dumps(objs)
+
+    for obj in serializers.deserialize("json", data, ignorenonexistent=True):
+        obj_class = obj.object.__class__.__name__
+        already_exists = obj.object.pk is not None
+
+        if already_exists:
+            msgs.append(
+                {
+                    "level": messages.WARNING,
+                    "message": f"Existing {obj_class} with key={obj.object.natural_key()} will be used.",
+                }
+            )
+        else:
+            msgs.append(
+                {
+                    "level": messages.SUCCESS,
+                    "message": f"Creating {obj_class} with key={obj.object.natural_key()}.",
+                }
+            )
+
+            obj.save()
+
+    return msgs
 
 
 def get_conn_string(sqlalchemy=True) -> str:

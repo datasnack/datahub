@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">{% endblock %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <p>{% translate "With this upload you can import a previously created export of Data Layers. This can also be from a different Data Hub instance." %}</p>
+  <p>{% translate "Data Layer objects will be created if the key is not present in this Data Hub. If the key is already present, no update/change will be performed." %}</p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+	<div class="submit-row">
+		<input type="submit" value="{% translate "Import" %}" class="default" />
+	</div>
+
+  </form>
+
+  <br>
+  <a href="{% url 'admin:datalayers_datalayer_changelist' %}">{% translate "Back to overview" %}</a>
+{% endblock %}

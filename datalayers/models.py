@@ -29,6 +29,11 @@ def camel(s):
     return string.capwords(s).replace(" ", "")
 
 
+class CategoryManager(models.Manager):
+    def get_by_natural_key(self, key):
+        return self.get(key=key)
+
+
 class Category(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -36,6 +41,8 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     key = models.SlugField(max_length=255, null=False, unique=True)
     description = models.TextField(blank=True)
+
+    objects = CategoryManager()
 
     class Meta:
         verbose_name_plural = "categories"
@@ -47,6 +54,9 @@ class Category(models.Model):
         return reverse(
             "datalayers:datalayer_index_category", kwargs={"category_id": self.id}
         )
+
+    def natural_key(self):
+        return (self.key,)
 
 
 class DatalayerValue:
@@ -155,6 +165,9 @@ class DatalayerManager(models.Manager):
     def get_datalayers(self, keys: list[str]):
         return self.filter(key__in=keys)
 
+    def get_by_natural_key(self, key):
+        return self.get(key=key)
+
 
 class Datalayer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -213,6 +226,9 @@ class Datalayer(models.Model):
 
     def get_absolute_url(self):
         return reverse("datalayers:datalayer_detail", kwargs={"key": self.key})
+
+    def natural_key(self):
+        return (self.key,)
 
     # --
 
@@ -726,6 +742,9 @@ class DatalayerSource(models.Model):
     # in case of DOI
     datacite = models.JSONField(null=True, blank=True, editable=False)
     datacite_fetched_at = models.DateTimeField(null=True, blank=True, editable=False)
+
+    def natural_key(self):
+        return (self.datalayer.key,)
 
     def get_pid_url(self):
         match self.pid_type:
