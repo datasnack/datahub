@@ -52,7 +52,7 @@ DATAHUB_DATA_DIR = BASE_DIR / env("DATAHUB_DATA_DIR")
 LOG_DIR = DATAHUB_DATA_DIR / "logs"
 
 
-Path(LOG_DIR).mkdir(parents=False, exist_ok=True)
+Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
