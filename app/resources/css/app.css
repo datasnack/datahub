@@ -195,3 +195,8 @@ dh-chart .aa-Form {
 	transform: translateX(-50%);
 }
 
+
+.leaflet-popup-content-wrapper {
+	max-height: 250px;
+	overflow: scroll;
+}
