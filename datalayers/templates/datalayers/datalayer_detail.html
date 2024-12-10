@@ -4,6 +4,7 @@
 {% load percentageformat %}
 {% load l10n %}
 {% load coverage %}
+{% load markdown %}
 {% block title %}{{ datalayer.name }}{% endblock %}
 
 {% block content %}
@@ -47,7 +48,7 @@
 		</div>
 
 		<div class="mb-3">
-			{{ datalayer.description }}
+			{% markdown datalayer.description %}
 		</div>
 
 		{% with related=datalayer.related_to.all %}

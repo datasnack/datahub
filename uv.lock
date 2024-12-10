@@ -181,6 +181,7 @@ dependencies = [
     { name = "geopandas" },
     { name = "gunicorn" },
     { name = "meteostat" },
+    { name = "mistune" },
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "osmnx" },
@@ -211,6 +212,7 @@ requires-dist = [
     { name = "geopandas", specifier = "==1.0.1" },
     { name = "gunicorn", specifier = "==23.0.0" },
     { name = "meteostat", specifier = "==1.6.8" },
+    { name = "mistune", specifier = ">=3.0.2" },
     { name = "numpy", specifier = "==2.1.3" },
     { name = "openpyxl", specifier = "==3.1.2" },
     { name = "osmnx", specifier = "==1.9.3" },
@@ -525,6 +527,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/7f/2f/06c2ec2c82341d76857d82359e12e49d94f45ed54169ae59f051ae288933/meteostat-1.6.8.tar.gz", hash = "sha256:e4e1e3df79e52d45116a12a5ac703acf75d521356de072052c1f60e42160a74d", size = 19188 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/90/23/34e8913fa75d064be09303914ea0056ef2968b639ebc8e70decfecd8299b/meteostat-1.6.8-py3-none-any.whl", hash = "sha256:859a7f2cbf3d902e9ce48363ff9490385a22296742ced7070360d06d3415ef97", size = 31436 },
+]
+
+[[package]]
+name = "mistune"
+version = "3.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ef/c8/f0173fe3bf85fd891aee2e7bcd8207dfe26c2c683d727c5a6cc3aec7b628/mistune-3.0.2.tar.gz", hash = "sha256:fc7f93ded930c92394ef2cb6f04a8aabab4117a91449e72dcc8dfa646a508be8", size = 90840 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/74/c95adcdf032956d9ef6c89a9b8a5152bf73915f8c633f3e3d88d06bd699c/mistune-3.0.2-py3-none-any.whl", hash = "sha256:71481854c30fdbc938963d3605b72501f5c10a9320ecd412c121c163a1c7d205", size = 47958 },
 ]
 
 [[package]]

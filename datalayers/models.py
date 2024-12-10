@@ -173,9 +173,21 @@ class Datalayer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    key = models.SlugField(max_length=255, null=False, unique=True)
+    key = models.SlugField(
+        max_length=255,
+        null=False,
+        unique=True,
+        help_text=_(
+            "Unique key identifying this Data Layer, use only <code>a-z</code>, <code>0-9</code> and <code>_</code>. Follow the convention of <code>&lt;source&gt;_&lt;parameter&gt;</code>."
+        ),
+    )
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        blank=True,
+        help_text=_(
+            'You can use <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank">Markdown</a> for text formatting, including tables and footnotes.'
+        ),
+    )
 
     category = models.ForeignKey(
         Category,
