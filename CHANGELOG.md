@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2](https://github.com/datasnack/datahub/compare/v0.5.1..v0.5.2) - 2024-12-10
+
+### Fixed
+
+- Allow graceful default for get_property ([4d352a9](https://github.com/datasnack/datahub/commit/4d352a93df5bcbcdd8a324ab7c0b01ceaf57ff40))
+- dl_init command handles case if data is already present in DB ([020a576](https://github.com/datasnack/datahub/commit/020a57674917c18da3175d16305b0e30626fee1c))
+- Make sure leaflet popup is not larger than map area ([08bb6b5](https://github.com/datasnack/datahub/commit/08bb6b53f90c917b906ff2e6b5d5ab586024c524))
+
 ## [0.5.1](https://github.com/datasnack/datahub/compare/v0.4.2..v0.5.1) - 2024-12-10
 
 This release brings a date picker on top of the Data Layer value list. Additionally, a simple import/export system for Data Layer specifications in the backend is provided.

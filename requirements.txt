@@ -160,7 +160,7 @@ sqlalchemy==2.0.31
     # via
     #   datahub (pyproject.toml)
     #   geoalchemy2
-sqlparse==0.5.2
+sqlparse==0.5.3
     # via django
 tqdm==4.67.1
     # via
