@@ -3,6 +3,7 @@ import logging
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import DetailView, ListView
 
+from app.utils import prase_date_or_today
 from datalayers.models import Datalayer
 
 from .models import Shape, Type
@@ -49,6 +50,8 @@ class ShapeDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        context["temporal"] = prase_date_or_today(self.request.GET.get("temporal"))
 
         all_layers = Datalayer.objects.all()
         context["datalayers"] = []

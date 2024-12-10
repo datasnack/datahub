@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET
 
+from app.utils import prase_date_or_today
 from datalayers.models import Datalayer
 from shapes.models import Shape, Type
 
@@ -94,13 +95,7 @@ def tools_picker(request):
         datalayers = [item.strip() for item in datalayers.split(",")]
 
     if lat is not None and lng is not None:
-        try:
-            dt_temporal = (
-                dt.datetime.strptime(temporal, "%Y-%m-%d").astimezone(dt.UTC).date()
-            )
-        except ValueError:
-            dt_temporal = None
-        context["dt_temporal"] = dt_temporal
+        context["dt_temporal"] = prase_date_or_today(temporal)
 
         point = Point(float(lng), float(lat))
         shapes = Shape.objects.filter(geometry__contains=point).order_by(

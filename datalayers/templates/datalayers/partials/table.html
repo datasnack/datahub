@@ -10,11 +10,42 @@
 
 <div id="datalayer-table-{{ id }}">
 
-<div class="form-check form-switch fw-normal d-inline-block small">
-	<input class="form-check-input" type="checkbox" role="switch" id="js-show-raw-data-{{ id }}">
-	<label class="form-check-label" for="js-show-raw-data-{{ id }}">{% translate "Show raw data" %}</label>
-</div>
+<div class="row align-items-center">
 
+	<div class="col">
+		<form action="{{ request.path }}" method="get">
+
+			{# keep existing query parameters, except temporal, we set it new #}
+			{% for key, value in request.GET.items %}
+				{% if key != "temporal" %}
+					<input type="hidden" name="{{ key }}" value="{{ value }}">
+				{% endif %}
+			{% endfor %}
+
+			<div class="row g-3 align-items-center">
+				<div class="col-auto">
+					<label for="datalayer-table-{{ id }}-date" class="col-form-label">{% translate "Show values at date:" %}</label>
+				</div>
+				<div class="col-auto">
+					<div class="input-group" style="width: 12em">
+						<input name="temporal" value="{{ temporal }}" type="date" required id="datalayer-table-{{ id }}-date" class="form-control form-control-sm" aria-describedby="passwordHelpInline">
+						<button class="btn btn-sm btn-outline-secondary" type="submit">{% translate "Update" %}</button>
+					</div>
+				</div>
+			  </div>
+		</form>
+	</div>
+
+
+	<div class="col">
+		<div class="d-flex justify-content-end">
+			<div class="form-check form-switch fw-normal d-inline-block small">
+				<input class="form-check-input" type="checkbox" role="switch" id="js-show-raw-data-{{ id }}">
+				<label class="form-check-label" for="js-show-raw-data-{{ id }}">{% translate "Show raw data" %}</label>
+			</div>
+		</div>
+	</div>
+</div>
 
 <div class="mb-3">
 
