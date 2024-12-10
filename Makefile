@@ -1,9 +1,9 @@
-update_python:
+update_python_deps:
 	# Without --upgrade uv will reuse the already pinnend version from the requirements.txt.
 	# https://docs.astral.sh/uv/pip/compile/#upgrading-requirements
 	uv pip compile pyproject.toml -o requirements.txt --upgrade
 
-release:
+release: update_python_deps
 	@# Ensure VERSION is provided and follows the correct format
 	@if [ -z "$(VERSION)" ]; then echo "Error: VERSION is not set. Please use VERSION=vX.Y.Z format."; exit 1; fi
 	@if ! echo $(VERSION) | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then echo "Error: VERSION must be in format vX.Y.Z"; exit 1; fi
