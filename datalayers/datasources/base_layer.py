@@ -207,7 +207,7 @@ class BaseLayer:
             )
         ) AS geojson
         FROM data
-        """).format(table=sql.Identifier(self.raw_vector_data_table))
+        """).format(table=sql.Identifier(self.get_vector_data_table()))
 
         with connection.cursor() as c:
             c.execute(query)
@@ -218,18 +218,24 @@ class BaseLayer:
 
         return None
 
-    def get_vector_data_df(self) -> pd.DataFrame:
-        if self.raw_vector_data_table is None:
-            raise Exception("Data Layer has no configures vecotr data table")
+    def get_vector_data_table(self) -> str | None:
+        if not self.raw_vector_data_table:
+            return None
 
-        query = sql.SQL("SELECT * FROM {table}").format(
-            table=sql.Identifier(self.raw_vector_data_table)
+        return f"data_{self.key}"
+
+    def write_vector_data_to_db(self, gdf):
+        gdf.to_postgis(
+            self.get_vector_data_table(), con=get_engine(), if_exists="replace"
         )
 
-        languages = ["Java", "Python", "JavaScript"]
-        versions = [14, 3, 6]
+    def get_vector_data_df(self) -> pd.DataFrame:
+        if self.raw_vector_data_table is None:
+            raise Exception("Data Layer has no configures vector data table")
 
-        result = zip(languages, versions)
+        query = sql.SQL("SELECT * FROM {table}").format(
+            table=sql.Identifier(self.get_vector_data_table())
+        )
 
         return geopandas.read_postgis(
             query.as_string(connection), con=get_conn_string(), geom_col="geometry"
