@@ -78,6 +78,8 @@ lxml==5.3.0
     # via datacite
 meteostat==1.6.8
     # via datahub (pyproject.toml)
+mistune==3.0.2
+    # via datahub (pyproject.toml)
 multiurl==0.3.3
     # via datapi
 networkx==3.4.2
@@ -143,7 +145,7 @@ requests==2.32.3
     #   datapi
     #   multiurl
     #   osmnx
-rpds-py==0.22.1
+rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
@@ -152,7 +154,7 @@ shapely==2.0.6
     #   datahub (pyproject.toml)
     #   geopandas
     #   osmnx
-six==1.16.0
+six==1.17.0
     # via python-dateutil
 sqlalchemy==2.0.31
     # via
