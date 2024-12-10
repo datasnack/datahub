@@ -44,16 +44,8 @@
 			<div class="card-body">
 				<div class="row">
 					<div class="col-12 col-lg-8">
-
-						<div class="mb-3">
-							{% if dt_temporal %}
-							{{ dt_temporal}}
-							{% endif %}
-						</div>
-
 						{% generate_uuid as id %}
 						{% include "datalayers/partials/table.html" with id=id own_chart_container=True datalayers=datalayers shape=active_shape temporal=dt_temporal %}
-
 					</div>
 
 					<div class="col-12 col-lg-4">
