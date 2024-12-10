@@ -32,6 +32,9 @@ class MyManager(models.Manager):
         return super(MyManager, self).get_queryset(*args, **kwargs).defer("geometry")
 
 
+NO_DEFAULT = object()  # Sentinel value to detect if no default was provided
+
+
 # Create your models here.
 class Shape(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,14 +72,14 @@ class Shape(models.Model):
     def has_properties(self, default=None):
         return len(self.properties) > 0
 
-    def get_property(self, key: str):
-        if not self.has_properties:
-            raise Exception("Shape has no properties")
+    def get_property(self, key: str, default=NO_DEFAULT):
+        if self.has_properties and key in self.properties:
+            return self.properties[key]
 
-        if key not in self.properties:
+        if default is NO_DEFAULT:
             raise Exception("Shape has no property with key=%s", key)
 
-        return self.properties[key]
+        return default
 
     def shapely_geometry(self):
         # todo: can this loose CRS?
