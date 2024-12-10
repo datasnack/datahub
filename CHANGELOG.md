@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/datasnack/datahub/compare/v0.4.2..v0.5.0) - 2024-12-10
+
+This release brings a date picker on top of the Data Layer value list. Additionally, a simple import/export system for Data Layer specifications in the backend ist provided.
+
+### Changed
+
+- Markdown parsing for descriptions ([861cf73](https://github.com/datasnack/datahub/commit/861cf737c788e785fb45f8e4a0fbc3b895107cda))
+- Value table allows temporal selection ([d6ae0f2](https://github.com/datasnack/datahub/commit/d6ae0f2c710ffabda22f974f397272ef759fa2ad))
+- Allow import/export based on django serialization ([d8b748b](https://github.com/datasnack/datahub/commit/d8b748b75a15201bcea1330d83217a1ce8875266))
+
+### Fixed
+
+- If no data directory is present, the creation of the log dir would raise an exception. Make sure intermediate folders are created ([d8868f2](https://github.com/datasnack/datahub/commit/d8868f268ea65b2dec26b3bdd89fe3a60ff71618))
+
 ## [0.4.2](https://github.com/datasnack/datahub/compare/v0.4.1..v0.4.2) - 2024-11-25
 
 ### Fixed
