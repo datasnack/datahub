@@ -43,15 +43,28 @@
 		</div>
 	</div>
 
-	<button id="load-button" type="button" class="m-3 btn btn-secondary">Load</button>
+	<button id="load-button" type="button" class="m-3 btn btn-primary">Load</button>
 
 	<div id="map" style="height: 600px; width: 100%; margin-top: 20px;">
 		<div id="loading-message">
-			<div class="d-flex justify-content-center">
-				<div class="spinner-border" role="status">
-					<span class="visually-hidden">Loading...</span>
-				</div>
+			<div class="loader"></div>
+{#			<div class="d-flex justify-content-center">#}
+{#				<div class="spinner-border" role="status">#}
+{#					<span class="visually-hidden">Loading...</span>#}
+{#				</div>#}
+{#			</div>#}
+		</div>
+		<div id="legend-popup" class="border rounded p-3">
+			<h5>Customize Legend</h5>
+			<div>
+				<label for="preset-select" class="form-label">Choose Preset:</label>
+				<select id="preset-select" class="form-control">
+
+				</select>
 			</div>
+
+			<button id="apply-legend-btn" class="btn btn-primary mt-2">Apply</button>
+			<button id="close-legend-btn" class="btn btn-secondary mt-2">Close</button>
 		</div>
 	</div>
 
@@ -88,19 +101,20 @@
 
 				addLegend();
 			}
-            $('#select-all-btn').click(function() {
+			$('#select-all-btn').click(function () {
 				$('.form-check-input').prop('checked', true);
 			});
 
-			$('#clear-all-btn').click(function() {
+			$('#clear-all-btn').click(function () {
 				$('.form-check-input').prop('checked', false);
 			});
 
-			initializeSlider({{ min_year }}, {{ max_year }})
+			initializeSlider({{ min_year }}, {{ max_year }});
+			populateLegendSelect();
 		});
 
 		function initializeSlider(minYear, maxYear) {
-			const slider = document.getElementById('year-slider');
+			const slider = $('#year-slider')[0];
 			if(slider && slider.noUiSlider){
 				slider.noUiSlider.destroy();
 			}
@@ -135,7 +149,8 @@
 			legend.onAdd = function (map) {
 				const div = L.DomUtil.create('div', 'info legend');
 				div.innerHTML = `
-					<div class="legend-bar"></div>
+					<button id="customize-legend-btn" class="btn btn-sm btn-primary" style="z-index: 500">Customize Legend</button>
+					<div class="legend-bar p-2"></div>
 					<div class="legend-labels">
 						<span id="min-label"></span>
 						<span id="max-label"></span>
@@ -145,6 +160,14 @@
 			};
 
 			legend.addTo(map);
+
+			$('#customize-legend-btn').on('click', function () {
+				$('#legend-popup').toggle();
+			});
+
+			$('#close-legend-btn').on('click', function () {
+				$('#legend-popup').css('display', 'none');
+			});
 		}
 
 		$('#load-button').on('click', updateMap);
@@ -152,13 +175,11 @@
 		function updateMap() {
 			$('#loading-message').show();
 			const type = $('#type-dropdown').val();
-			const year = parseInt(document.getElementById('year-slider').noUiSlider.get());
-			{#const year = $('#year-dropdown').val();#}
+			const year = parseInt($('#year-slider')[0].noUiSlider.get());
 			const selectedLayers = [];
             $('.form-check-input:checked').each(function() {
 				selectedLayers.push($(this).data('datalayer'));
 			});
-
 
 			if (year && selectedLayers.length > 0 && type) {
 				setTimeout(() => {
@@ -174,11 +195,7 @@
 							const geometries = response.geometries;
 							const names = response.names;
 
-							const values = Object.values(dlCounts);
-							const minValue = Math.min(...values);
-							const maxValue = Math.max(...values);
-
-							updateLegend(minValue, maxValue);
+							updateLegend(0, selectedLayers.length);
 
 							const shapeData = [];
 							for (const shapeId in geometries) {
@@ -196,7 +213,7 @@
 									geometry = geometries[shapeId];
 								}
 
-								const color = getColor(count, minValue, maxValue);
+								const color = getColor(count, 0, selectedLayers.length);
 
 								const geoJsonFeature = {
 									type: 'Feature',
@@ -285,19 +302,57 @@
 			}
 		}
 
+		const presets = {{ presets|safe }};
+
+		let currentPreset = presets[Object.keys(presets)[0]].colors;
+
+		$('#apply-legend-btn').on('click', function () {
+			const selectedPreset = $('#preset-select').val();
+			if (presets[selectedPreset]) {
+				currentPreset = presets[selectedPreset].colors;
+				updateMap();
+				$('#legend-popup').css('display', 'none');
+			} else {
+				alert('Invalid preset selected.');
+			}
+		});
+
+		function populateLegendSelect() {
+			const presetSelect = $('#preset-select');
+			Object.keys(presets).forEach(presetKey => {
+				const option = $('<option>')
+					.attr('value', presetKey)
+					.text(presets[presetKey].name);
+				presetSelect.append(option);
+			});
+		}
+
 		function updateLegend(minValue, maxValue) {
-			document.getElementById('min-label').textContent = Math.round(minValue);
-			document.getElementById('max-label').textContent = Math.round(maxValue);
+			$('#min-label').text(Math.round(minValue));
+			$('#max-label').text(Math.round(maxValue));
+			const legendBar = $('.legend-bar');
+			legendBar.empty();
+			const row = $('<div>').addClass('d-flex w-100 flex-row');
+			currentPreset.forEach(color => {
+				const col = $('<div>')
+					.addClass('flex-fill')
+					.css({
+						background: color,
+						height: '10px',
+					});
+				row.append(col);
+			});
+			legendBar.append(row);
 		}
 
 
-        function getColor(value, minValue, maxValue) {
-            const norm_val = (value - minValue) / (maxValue - minValue);
-            if (norm_val > 0.8) return '#e41a1c';
-            if (norm_val > 0.6) return '#ff7f00';
-            if (norm_val > 0.4) return '#ffdc00';
-            if (norm_val > 0.2) return '#4daf4a';
-            return '#377eb8';
-        }
+		function getColor(value, minValue, maxValue) {
+			const norm_val = (value - minValue) / (maxValue - minValue);
+			if (norm_val > 0.8) return currentPreset[4];
+			if (norm_val > 0.6) return currentPreset[3];
+			if (norm_val > 0.4) return currentPreset[2];
+			if (norm_val > 0.2) return currentPreset[1];
+			return currentPreset[0];
+		}
     </script>
 {% endblock %}

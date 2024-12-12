@@ -1,8 +1,11 @@
+import json
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 from django.db import connection
+from django.utils.safestring import mark_safe
 
 from dashboard.models import ShapeDataLayerYearStats
 from shapes.models import Type, Shape
@@ -11,6 +14,21 @@ from datalayers.models import Datalayer
 
 def home(request):
     return render(request, 'home.html')
+
+
+def get_preset():
+    return {
+        'preset1': {'name': 'Diverging 1',
+                    'colors': ['#2c7bb6', '#abd9e9', '#ffffbf', '#fdae61', '#d7191c']},
+        'preset2': {'name': 'Diverging 2',
+                    'colors': ['#018571', '#80cdc1', '#f5f5f5', '#dfc27d', '#a6611a']},
+        'preset3': {'name': 'Sequential',
+                    'colors': ['#f0f9e8', '#bae4bc', '#7bccc4', '#43a2ca', '#0868ac']},
+        'preset4': {'name': 'Qualitative',
+                    'colors': ['#7fc97f', '#beaed4', '#fdc086', '#ffff99', '#386cb0']},
+        'preset5': {'name': 'Monochrome',
+                    'colors': ['#eeeeee', '#bbbbbb', '#888888', '#555555', '#222222']}
+    }
 
 
 def info_map_base(request):
@@ -30,7 +48,8 @@ def info_map_base(request):
         'types': types,
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
-        'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
+        'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM,
+        'presets': get_preset()
     }
 
     return render(request, 'info_map.html', context)
@@ -111,7 +130,7 @@ def get_shapes_by_shape_id(request):
 
 def slider_base(request):
     types = Type.objects.order_by('position')[1:]
-    datalayers = Datalayer.objects.all()
+    datalayers = Datalayer.objects.order_by('name')
 
     context = {
         'types': types,
