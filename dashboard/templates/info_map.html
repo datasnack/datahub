@@ -310,7 +310,7 @@
 			const selectedPreset = $('#preset-select').val();
 			if (presets[selectedPreset]) {
 				currentPreset = presets[selectedPreset].colors;
-				updateMap();
+				applyPreset();
 				$('#legend-popup').css('display', 'none');
 			} else {
 				alert('Invalid preset selected.');
@@ -330,6 +330,10 @@
 		function updateLegend(minValue, maxValue) {
 			$('#min-label').text(Math.round(minValue));
 			$('#max-label').text(Math.round(maxValue));
+			updateLegendBar()
+		}
+
+		function updateLegendBar() {
 			const legendBar = $('.legend-bar');
 			legendBar.empty();
 			const row = $('<div>').addClass('d-flex w-100 flex-row');
@@ -345,6 +349,24 @@
 			legendBar.append(row);
 		}
 
+		function applyPreset() {
+			updateLegendBar()
+			layerGroup.eachLayer(layer => {
+				if (layer._layers) {
+					Object.values(layer._layers).forEach(subLayer => {
+						if (subLayer.feature && subLayer.feature.properties) {
+							const count = subLayer.feature.properties.count;
+							const color = getColor(count, 0, $('#datalayer-checkbox .form-check-input:checked').length);
+							subLayer.setStyle({
+								fillColor: color
+							});
+						} else {
+							console.warn('Sub-layer lacks feature or properties:', subLayer);
+						}
+					});
+				}
+			});
+		}
 
 		function getColor(value, minValue, maxValue) {
 			const norm_val = (value - minValue) / (maxValue - minValue);
