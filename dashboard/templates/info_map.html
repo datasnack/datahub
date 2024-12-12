@@ -59,10 +59,10 @@
 			<div>
 				<label for="preset-select" class="form-label">Choose Preset:</label>
 				<select id="preset-select" class="form-control">
-
 				</select>
+				<label for="transparency-input" class="form-label mt-2">Transparency (0-1):</label>
+				<input class="form-control" id="transparency-input">
 			</div>
-
 			<button id="apply-legend-btn" class="btn btn-primary mt-2">Apply</button>
 			<button id="close-legend-btn" class="btn btn-secondary mt-2">Close</button>
 		</div>
@@ -351,6 +351,8 @@
 
 		function applyPreset() {
 			updateLegendBar()
+			const transparencyInput = $('#transparency-input').val()
+			const transparency = transparencyInput ? parseFloat(transparencyInput) : 1;
 			layerGroup.eachLayer(layer => {
 				if (layer._layers) {
 					Object.values(layer._layers).forEach(subLayer => {
@@ -358,7 +360,8 @@
 							const count = subLayer.feature.properties.count;
 							const color = getColor(count, 0, $('#datalayer-checkbox .form-check-input:checked').length);
 							subLayer.setStyle({
-								fillColor: color
+								fillColor: color,
+								fillOpacity: transparency,
 							});
 						} else {
 							console.warn('Sub-layer lacks feature or properties:', subLayer);
