@@ -13,12 +13,6 @@
     font-size: 20px;
 }
 
-.legend-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8em;
-}
-
 #legend-popup {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	display: none;
@@ -28,10 +22,6 @@
 	background: white;
 	z-index: 2000;
 	width: 250px;
-}
-
-.legend-bar div {
-    display: inline-block;
 }
 
 /* HTML: <div class="loader"></div> */
