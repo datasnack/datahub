@@ -137,7 +137,8 @@ def slider_base(request):
         "datalayers": datalayers,
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
-        'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
+        'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM,
+        'presets': get_preset()
     }
 
     return render(request, 'slider.html', context)
@@ -230,16 +231,24 @@ def get_min_max_dl_value(request):
 
     query = f"""
                 SELECT MIN(value), MAX(value)
-                FROM {data_layer_key} JOIN shapes_shape ON {data_layer_key}.shape_id = shapes_shape.id JOIN shapes_type ON shapes_shape.type_id = shapes_type.id
+                FROM {data_layer_key} JOIN shapes_shape ON
+                {data_layer_key}.shape_id = shapes_shape.id
+                JOIN shapes_type ON shapes_shape.type_id = shapes_type.id
                 WHERE shapes_type.id = {shape_type}
-
                 """
-    with connection.cursor() as c:
-        c.execute(query)
-        res = c.fetchone()
 
-    min_value = res[0]
-    max_value = res[1]
+    try:
+        with connection.cursor() as c:
+            c.execute(query)
+            res = c.fetchone()
+
+        min_value = res[0]
+        max_value = res[1]
+
+    except ObjectDoesNotExist:
+        min_value = 0
+        max_value = 0
+
 
     context = {
         'min_value': min_value,

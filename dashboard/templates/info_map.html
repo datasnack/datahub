@@ -151,7 +151,7 @@
 				div.innerHTML = `
 					<button id="customize-legend-btn" class="btn btn-sm btn-primary" style="z-index: 500">Customize Legend</button>
 					<div class="legend-bar p-2"></div>
-					<div class="legend-labels">
+					<div class="legend-labels d-flex justify-content-between"">
 						<span id="min-label"></span>
 						<span id="max-label"></span>
 					</div>
@@ -259,11 +259,15 @@
 
 								rankingList.append(`
 									<li class="list-group-item">
-										<b class="shape-name" data-index="${index}" style="cursor: pointer;">
+										<b class="shape-name"
+										   data-bs-toggle="collapse"
+										   data-bs-target="#details-dls-${index}"
+										   data-index="${index}"
+										   style="cursor: pointer;">
 											${shape.name}
 											<span class="badge text-bg-primary rounded-pill">${shape.count}</span>
 										</b>
-										<div class="details-dls container text-center m-4" style="display: none;">
+										<div id="details-dls-${index}" class="details-dls collapse container text-center m-4">
 											<div class="row">
 												<div class="col">
 													<label class="form-label fw-bold">Available Data Layers</label>
@@ -281,10 +285,6 @@
 										</div>
 									</li>
 								`);
-							});
-
-							$('.shape-name').on('click', function () {
-								$(this).next('.details-dls').toggle();
 							});
 
 							$('#loading-message').hide();

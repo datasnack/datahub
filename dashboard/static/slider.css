@@ -13,16 +13,5 @@
     font-size: 20px;
 }
 
-.legend-bar {
-      width: 150px;
-      height: 20px;
-      background: linear-gradient(to right, #ebf2f9, #b1cee8, #77a9d7, #3d85c6);
-      border: 1px solid #000;
-      margin-top: 5px;
-  }
-  .legend-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8em;
-  }
+
 

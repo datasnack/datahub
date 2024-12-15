@@ -32,7 +32,7 @@
 		<div class="row">
 			<div class="col border-end">
 				<label class="form-label fw-bold">Available Data Layers:</label>
-				<div id="available-datalayers">
+				<div id="available-datalayers" style="max-height: 250px; overflow-y: auto;">
 					{% for datalayer in datalayers %}
 						<div class="datalayer-item">
 							<button class="btn btn-sm btn-outline-success add-datalayer m-1" data-datalayer="{{ datalayer.key }}">
@@ -44,7 +44,7 @@
 			</div>
 			<div class="col-7">
 				<label class="form-label fw-bold">Selected Data Layers:</label>
-				<div id="selected-datalayers">
+				<div id="selected-datalayers" style="max-height: 250px; overflow-y: auto;">
 				</div>
 			</div>
 		</div>
@@ -87,12 +87,14 @@
 				let datalayerName = $(this).text();
 
 				let selectedItem = `
-						<div class="datalayer-item border rounded m-2 p-2" id="selected-${datalayerKey}">
-							<h6> ${datalayerName} </h6>
-							<div class="datalayer-item-util d-none" id="selected-${datalayerKey}-util">
-							</div>
+					<div class="datalayer-item border rounded m-2 p-2" id="selected-${datalayerKey}">
+						<label class="col-form-label-sm" data-bs-toggle="collapse" data-bs-target="#selected-${datalayerKey}-util" style="cursor: pointer;">
+							${datalayerName}
+						</label>
+						<div class="collapse" id="selected-${datalayerKey}-util">
 						</div>
-					`;
+					</div>
+				`;
 				$('#selected-datalayers').append(selectedItem);
 				$(this).prop('disabled', true);
 				processObjects(datalayerKey)
@@ -100,7 +102,6 @@
 				alert("Please select the type!");
 			}
 		});
-
 
 
 		function processObjects(dataLayerKey) {
@@ -159,161 +160,231 @@
 			});
 		}
 
-		function createNewLayer(slider, dataLayerKey) {
-			$('#loading-message').show();
-			const shapeType = $('#type-dropdown').val();
-			const selectedYear = parseInt(slider.noUiSlider.get());
-
-			let minValue = 0;
-			let maxValue = 0;
-
-			$.ajax({
-				url: "{% url 'get_min_max_dl_value' %}",
-				data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType},
-				success: function(data) {
-					minValue = data.min_value;
-					maxValue = data.max_value;
-				},
-				error: function(error) {
-					console.error('Error finding min and max values of datalayer:', error);
-				}
-			});
-
-			$.ajax({
-				url: "{% url 'get_dl_value_for_year_shapes' %}",
-				data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType, 'year': selectedYear},
-				success: function(data) {
-					const newLayerGroup = L.layerGroup();
-					layerGroups[dataLayerKey] = newLayerGroup;
-
-					const names = data.names;
-					const geometries = data.geometries;
-					const dlValues = data.dl_values;
-
-					for (const shapeId in geometries) {
-						const value = dlValues[shapeId];
-						const name = names[shapeId] || 'Unknown';
-
-						let geometry;
-						if (typeof geometries[shapeId] === 'string') {
-							geometry = JSON.parse(geometries[shapeId]);
-						} else {
-							geometry = geometries[shapeId];
-						}
-
-						const color = getColor(value, minValue, maxValue);
-
-						const geoJsonFeature = {
-							type: 'Feature',
-							geometry: geometry,
-							properties: { id: shapeId, name, value }
-						};
-
-						const geoJsonLayer = L.geoJSON(geoJsonFeature, {
-							style: () => ({
-								fillColor: color,
-								weight: 2,
-								opacity: 1,
-								color: 'black',
-								fillOpacity: 0.9
-							}),
-							{#onEachFeature: (feature, layer) => {#}
-							{#	layer.bindPopup(`<b>${feature.properties.name}</b><br>Value: <br>${feature.properties.value}`);#}
-							{#	layer.on('click', function () {#}
-							{#		addToGraph(feature.properties.id);#}
-							{#	});#}
-							{##}
-						});
-						geoJsonLayer.addTo(newLayerGroup);
-					}
-					newLayerGroup.addTo(map);
-					{#updateLegend(minValue, maxValue);#}
-					$('#loading-message').hide();
-				},
-				error: function (xhr, status, error) {
-					console.error('Error updating map:', error);
-					$('#loading-message').hide();
-				}
-			});
+		async function fetchMinMaxValues(dataLayerKey, shapeType) {
+			try {
+				return await $.ajax({
+					url: "{% url 'get_min_max_dl_value' %}",
+					data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType}
+				});
+			} catch (error) {
+				console.error(`Error fetching min/max for ${dataLayerKey}:`, error);
+				throw error;
+			}
 		}
 
-		function updateMap() {
+		async function fetchLayerData(dataLayerKey, shapeType, selectedYear) {
+			try {
+				return await $.ajax({
+					url: "{% url 'get_dl_value_for_year_shapes' %}",
+					data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType, 'year': selectedYear}
+				});
+			} catch (error) {
+				console.error(`Error fetching layer data for ${dataLayerKey}:`, error);
+				throw error;
+			}
+		}
+
+		function createLayerGroup(dataLayerKey, minValue, maxValue, data) {
+			const { names, geometries, dl_values: dlValues } = data;
+			const layerGroup = L.layerGroup();
+
+			Object.entries(geometries).forEach(([shapeId, geometryData]) => {
+				const value = dlValues[shapeId];
+				const name = names[shapeId] || 'Unknown';
+				const geometry = typeof geometryData === 'string' ? JSON.parse(geometryData) : geometryData;
+
+				const color = getColor(value, minValue, maxValue);
+
+				const geoJsonFeature = {
+					type: 'Feature',
+					geometry: geometry,
+					properties: { id: shapeId, name, value }
+				};
+
+				const geoJsonLayer = L.geoJSON(geoJsonFeature, {
+					style: () => ({
+						fillColor: color,
+						weight: 2,
+						opacity: 1,
+						color: 'black',
+						fillOpacity: 0.9
+					}),
+					onEachFeature: (feature, layer) => {
+						layer.bindPopup(`<b>${feature.properties.name}</b><br>Value: <br>${feature.properties.value}`);
+					}
+				});
+
+				geoJsonLayer.addTo(layerGroup);
+			});
+
+			return layerGroup;
+		}
+
+		async function updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, existingGroup) {
+			try {
+				const minMaxData = await fetchMinMaxValues(dataLayerKey, shapeType);
+				const { min_value: minValue, max_value: maxValue } = minMaxData;
+
+				const layerData = await fetchLayerData(dataLayerKey, shapeType, selectedYear);
+
+				updateLegend(dataLayerKey, minValue, maxValue)
+
+				if (existingGroup) {
+					existingGroup.clearLayers();
+					createLayerGroup(dataLayerKey, minValue, maxValue, layerData).eachLayer(layer => layer.addTo(existingGroup));
+				} else {
+					const newLayerGroup = createLayerGroup(dataLayerKey, minValue, maxValue, layerData);
+					layerGroups[dataLayerKey] = newLayerGroup;
+					newLayerGroup.addTo(map);
+				}
+			} catch (error) {
+				console.error(`Error processing layer ${dataLayerKey}:`, error);
+			} finally {
+				$('#loading-message').hide();
+			}
+		}
+
+		async function updateMap() {
 			$('#loading-message').show();
 			const shapeType = $('#type-dropdown').val();
 			const selectedYear = parseInt($('#year-slider')[0].noUiSlider.get());
 
-			let minValue = 0;
-			let maxValue = 0;
+			for (const [dataLayerKey, layerGroup] of Object.entries(layerGroups)) {
+				await updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, layerGroup);
+			}
 
-			Object.entries(layerGroups).forEach(([dataLayerKey, layerGroup]) => {
-    			console.log(`Key: ${dataLayerKey}, LayerGroup:`, layerGroup);
-				$.ajax({
-					url: "{% url 'get_min_max_dl_value' %}",
-					data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType},
-					success: function(data) {
-						minValue = data.min_value;
-						maxValue = data.max_value;
-					},
-					error: function(error) {
-						console.error('Error finding min and max values of datalayer:', error);
-					}
-				});
-				$.ajax({
-					url: "{% url 'get_dl_value_for_year_shapes' %}",
-					data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType, 'year': selectedYear},
-					success: function(data) {
-						const existingLayerGroup = layerGroups[dataLayerKey];
-            			existingLayerGroup.clearLayers();
+			$('#loading-message').hide();
+		}
 
-						const names = data.names;
-						const geometries = data.geometries;
-						const dlValues = data.dl_values;
+		async function createNewLayer(slider, dataLayerKey) {
+			$('#loading-message').show();
+			const shapeType = $('#type-dropdown').val();
+			const selectedYear = parseInt(slider.noUiSlider.get());
 
-						for (const shapeId in geometries) {
-							const value = dlValues[shapeId];
-							const name = names[shapeId] || 'Unknown';
+			let newUtilItems = `
+				<div class="d-flex align-items-stretch border rounded m-2 p-2" id="legend-items-${dataLayerKey}">
+					<div id="legend-description-${dataLayerKey}" class="d-flex align-items-stretch">
+						<div class="d-flex flex-column justify-content-between" id="legend-labels-column-${dataLayerKey}">
+							<label class="col-form-label-sm" id="min-label-${dataLayerKey}">Min</label>
+							<label class="col-form-label-sm" id="max-label-${dataLayerKey}">Max</label>
+						</div>
+						<div class="p-2 flex-grow-1" id="legend-bar-${dataLayerKey}"></div>
+					</div>
+					<div class="legend-customize-${dataLayerKey} mx-4 d-flex align-items-sm-center">
+						<div>
+							<label for="preset-select-${dataLayerKey}" class="col-form-label-sm">Adjust Preset:</label>
+							<select id="preset-select-${dataLayerKey}" class="form-control">
+							</select>
+							<label for="transparency-input-${dataLayerKey}" class="col-form-label-sm">Adjust Transparency (0-1):</label>
+							<input class="form-control" id="transparency-input-${dataLayerKey}">
+						</div>
+					</div>
+					<div id="util-buttons-${dataLayerKey}" class="mx-4 d-flex flex-column align-items-sm-center justify-content-center">
+						<button id="apply-customization-${dataLayerKey}-btn" class="btn btn-primary btn-sm m-4 apply-customization">Apply Customization</button>
+						<button id="remove-${dataLayerKey}-btn" class="btn btn-danger btn-sm remove-datalayer">Remove Layer</button>
+					</div>
+				</div>`;
 
-							let geometry;
-							if (typeof geometries[shapeId] === 'string') {
-								geometry = JSON.parse(geometries[shapeId]);
-							} else {
-								geometry = geometries[shapeId];
-							}
+			$(`#selected-${dataLayerKey}-util`).append(newUtilItems);
+			$(`#selected-${dataLayerKey}-util`).removeClass("d-none");
 
+			populateLegendSelect(dataLayerKey)
+
+			await updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, null);
+
+			$('#loading-message').hide();
+		}
+
+		$(document).on('click', '.apply-customization', function () {
+			let buttonId = $(this).attr('id');
+			let dataLayerKey = buttonId.match(/apply-customization-(\S+)-btn/)[1];
+			const selectedPreset = $(`#preset-select-${dataLayerKey}`).val();
+			if (presets[selectedPreset]) {
+				currentPreset = presets[selectedPreset].colors;
+				applyPreset(dataLayerKey);
+			} else {
+				alert('Invalid preset selected.');
+			}
+		});
+
+		$(document).on('click', '.remove-datalayer', function () {
+			let buttonId = $(this).attr('id');
+			let dataLayerKey = buttonId.match(/remove-(\S+)-btn/)[1];
+			removeLayer(dataLayerKey)
+		});
+
+		const presets = {{ presets|safe }};
+		let currentPreset = presets[Object.keys(presets)[0]].colors;
+
+		function populateLegendSelect(dataLayerKey) {
+			const presetSelect = $(`#preset-select-${dataLayerKey}`);
+			Object.keys(presets).forEach(presetKey => {
+				const option = $('<option>')
+					.attr('value', presetKey)
+					.text(presets[presetKey].name);
+				presetSelect.append(option);
+			});
+		}
+
+		function updateLegend(dataLayerKey, minValue, maxValue) {
+			$(`#min-label-${dataLayerKey}`).text(Math.round(minValue));
+			$(`#max-label-${dataLayerKey}`).text(Math.round(maxValue));
+			updateLegendBar(dataLayerKey)
+		}
+
+		function updateLegendBar(dataLayerKey) {
+			const legendBar = $(`#legend-bar-${dataLayerKey}`);
+			legendBar.empty();
+			const column = $('<div>').addClass('d-flex w-100 h-100 flex-column');
+			currentPreset.forEach(color => {
+				const row = $('<div>')
+					.addClass('flex-fill')
+					.css({
+						background: color,
+						width: '10px',
+						height: '20px'
+					});
+				column.append(row);
+			});
+			legendBar.append(column);
+		}
+
+		function applyPreset(dataLayerKey) {
+			updateLegendBar(dataLayerKey)
+			let transparencyInput = $(`#transparency-input-${dataLayerKey}`).val();
+			const transparency = transparencyInput ? parseFloat(transparencyInput) : 1;
+			let layerGroup = layerGroups[dataLayerKey]
+			const minValue = parseInt($(`#min-label-${dataLayerKey}`).text())
+			const maxValue = parseInt($(`#max-label-${dataLayerKey}`).text())
+			layerGroup.eachLayer(layer => {
+				if (layer._layers) {
+					Object.values(layer._layers).forEach(subLayer => {
+						if (subLayer.feature && subLayer.feature.properties) {
+							const value = subLayer.feature.properties.value;
 							const color = getColor(value, minValue, maxValue);
-
-							const geoJsonFeature = {
-								type: 'Feature',
-								geometry: geometry,
-								properties: { id: shapeId, name, value }
-							};
-
-							const geoJsonLayer = L.geoJSON(geoJsonFeature, {
-								style: () => ({
-									fillColor: color,
-									weight: 2,
-									opacity: 1,
-									color: 'black',
-									fillOpacity: 0.9
-								}),
-								{#onEachFeature: (feature, layer) => {#}
-								{#	layer.bindPopup(`<b>${feature.properties.name}</b><br>Value: <br>${feature.properties.value}`);#}
-								{#	layer.on('click', function () {#}
-								{#		addToGraph(feature.properties.id);#}
-								{#	});#}
-								{##}
+							subLayer.setStyle({
+								fillColor: color,
+								fillOpacity: transparency,
 							});
-							geoJsonLayer.addTo(existingLayerGroup);
+						} else {
+							console.warn('Sub-layer lacks feature or properties:', subLayer);
 						}
-						{#updateLegend(minValue, maxValue);#}
-						$('#loading-message').hide();
-					},
-					error: function (xhr, status, error) {
-						console.error('Error updating map:', error);
-						$('#loading-message').hide();
-					}
-				});
-			})
+					});
+				}
+			});
+		}
+
+		function removeLayer(dataLayerKey) {
+
+		}
+
+		function getColor(value, minValue, maxValue) {
+			const norm_val = (value - minValue) / (maxValue - minValue);
+			if (norm_val > 0.8) return currentPreset[4];
+			if (norm_val > 0.6) return currentPreset[3];
+			if (norm_val > 0.4) return currentPreset[2];
+			if (norm_val > 0.2) return currentPreset[1];
+			return currentPreset[0];
 		}
 
 		{#function initializeGraph(){#}
@@ -379,25 +450,6 @@
 		{#	});#}
 		{##}
 		{##}
-
-		function updateLegend(minValue, maxValue) {
-			document.getElementById('min-label').textContent = Math.round(minValue);
-			document.getElementById('max-label').textContent = Math.round(maxValue);
-		}
-
-		function getColor(value, minValue, maxValue) {
-            const norm_val = (value - minValue) / (maxValue - minValue);
-			if (norm_val > 0.9) return '#3d85c6';
-            if (norm_val > 0.8) return '#5091cb';
-			if (norm_val > 0.7) return '#639dd1';
-            if (norm_val > 0.6) return '#77a9d7';
-			if (norm_val > 0.5) return '#8ab5dc';
-            if (norm_val > 0.4) return '#9ec2e2';
-			if (norm_val > 0.3) return '#b1cee8';
-            if (norm_val > 0.2) return '#c4daed';
-			if (norm_val > 0.1) return '#d8e6f3';
-            return '#ebf2f9';
-        }
 
     </script>
 {% endblock %}
