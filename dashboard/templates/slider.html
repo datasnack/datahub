@@ -35,7 +35,7 @@
 				<div id="available-datalayers" style="max-height: 250px; overflow-y: auto;">
 					{% for datalayer in datalayers %}
 						<div class="datalayer-item">
-							<button class="btn btn-sm btn-outline-success add-datalayer m-1" data-datalayer="{{ datalayer.key }}">
+							<button id="add-datalayer-{{ datalayer.key }}-btn" class="btn btn-sm btn-outline-success add-datalayer m-1" data-datalayer="{{ datalayer.key }}">
 								<i class="bi bi-plus"></i> {{ datalayer.name }}
 							</button>
 						</div>
@@ -356,7 +356,7 @@
 		function applyPreset(dataLayerKey, presetColors) {
 			updateLegendBar(dataLayerKey, presetColors)
 			let transparencyInput = $(`#transparency-input-${dataLayerKey}`).val();
-			const transparency = transparencyInput ? parseFloat(transparencyInput) : 1;
+			const transparency = transparencyInput ? parseFloat(transparencyInput) : 0.9;
 			let layerGroup = layerGroups[dataLayerKey]
 			const minValue = parseInt($(`#min-label-${dataLayerKey}`).text())
 			const maxValue = parseInt($(`#max-label-${dataLayerKey}`).text())
@@ -379,7 +379,10 @@
 		}
 
 		function removeLayer(dataLayerKey) {
-
+			map.removeLayer(layerGroups[dataLayerKey])
+			$(`#add-datalayer-${dataLayerKey}-btn`).prop('disabled', false);
+    		$(`#selected-${dataLayerKey}`).remove();
+			delete layerGroups[dataLayerKey];
 		}
 
 		function getColor(value, minValue, maxValue, presetColors) {
