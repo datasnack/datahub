@@ -184,7 +184,7 @@
 			}
 		}
 
-		function createLayerGroup(dataLayerKey, minValue, maxValue, data) {
+		function createLayerGroup(dataLayerKey, minValue, maxValue, data, presetColors) {
 			const { names, geometries, dl_values: dlValues } = data;
 			const layerGroup = L.layerGroup();
 
@@ -193,7 +193,7 @@
 				const name = names[shapeId] || 'Unknown';
 				const geometry = typeof geometryData === 'string' ? JSON.parse(geometryData) : geometryData;
 
-				const color = getColor(value, minValue, maxValue);
+				const color = getColor(value, minValue, maxValue, presetColors);
 
 				const geoJsonFeature = {
 					type: 'Feature',
@@ -220,20 +220,21 @@
 			return layerGroup;
 		}
 
-		async function updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, existingGroup) {
+		async function updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, layerGroup, presetColors) {
 			try {
 				const minMaxData = await fetchMinMaxValues(dataLayerKey, shapeType);
 				const { min_value: minValue, max_value: maxValue } = minMaxData;
 
 				const layerData = await fetchLayerData(dataLayerKey, shapeType, selectedYear);
 
-				updateLegend(dataLayerKey, minValue, maxValue)
+				updateLegend(dataLayerKey, minValue, maxValue, presetColors)
 
-				if (existingGroup) {
-					existingGroup.clearLayers();
-					createLayerGroup(dataLayerKey, minValue, maxValue, layerData).eachLayer(layer => layer.addTo(existingGroup));
+				if (layerGroup) {
+					layerGroup.clearLayers();
+					createLayerGroup(dataLayerKey, minValue, maxValue, layerData, presetColors).eachLayer(layer => layer.addTo(layerGroup));
+					applyPreset(dataLayerKey, presetColors)
 				} else {
-					const newLayerGroup = createLayerGroup(dataLayerKey, minValue, maxValue, layerData);
+					const newLayerGroup = createLayerGroup(dataLayerKey, minValue, maxValue, layerData, presetColors);
 					layerGroups[dataLayerKey] = newLayerGroup;
 					newLayerGroup.addTo(map);
 				}
@@ -250,7 +251,9 @@
 			const selectedYear = parseInt($('#year-slider')[0].noUiSlider.get());
 
 			for (const [dataLayerKey, layerGroup] of Object.entries(layerGroups)) {
-				await updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, layerGroup);
+				const selectedPreset = $(`#preset-select-${dataLayerKey}`).val();
+				const presetColors = presets[selectedPreset].colors;
+				await updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, layerGroup, presetColors);
 			}
 
 			$('#loading-message').hide();
@@ -289,8 +292,9 @@
 			$(`#selected-${dataLayerKey}-util`).removeClass("d-none");
 
 			populateLegendSelect(dataLayerKey)
+			const defaultPresetColors = presets[Object.keys(presets)[0]].colors;
 
-			await updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, null);
+			await updateOrCreateLayer(dataLayerKey, shapeType, selectedYear, null, defaultPresetColors);
 
 			$('#loading-message').hide();
 		}
@@ -300,8 +304,8 @@
 			let dataLayerKey = buttonId.match(/apply-customization-(\S+)-btn/)[1];
 			const selectedPreset = $(`#preset-select-${dataLayerKey}`).val();
 			if (presets[selectedPreset]) {
-				currentPreset = presets[selectedPreset].colors;
-				applyPreset(dataLayerKey);
+				const presetColors = presets[selectedPreset].colors;
+				applyPreset(dataLayerKey, presetColors);
 			} else {
 				alert('Invalid preset selected.');
 			}
@@ -326,17 +330,17 @@
 			});
 		}
 
-		function updateLegend(dataLayerKey, minValue, maxValue) {
+		function updateLegend(dataLayerKey, minValue, maxValue, presetColors) {
 			$(`#min-label-${dataLayerKey}`).text(Math.round(minValue));
 			$(`#max-label-${dataLayerKey}`).text(Math.round(maxValue));
-			updateLegendBar(dataLayerKey)
+			updateLegendBar(dataLayerKey, presetColors)
 		}
 
-		function updateLegendBar(dataLayerKey) {
+		function updateLegendBar(dataLayerKey, presetColors) {
 			const legendBar = $(`#legend-bar-${dataLayerKey}`);
 			legendBar.empty();
 			const column = $('<div>').addClass('d-flex w-100 h-100 flex-column');
-			currentPreset.forEach(color => {
+			presetColors.forEach(color => {
 				const row = $('<div>')
 					.addClass('flex-fill')
 					.css({
@@ -349,8 +353,8 @@
 			legendBar.append(column);
 		}
 
-		function applyPreset(dataLayerKey) {
-			updateLegendBar(dataLayerKey)
+		function applyPreset(dataLayerKey, presetColors) {
+			updateLegendBar(dataLayerKey, presetColors)
 			let transparencyInput = $(`#transparency-input-${dataLayerKey}`).val();
 			const transparency = transparencyInput ? parseFloat(transparencyInput) : 1;
 			let layerGroup = layerGroups[dataLayerKey]
@@ -361,7 +365,7 @@
 					Object.values(layer._layers).forEach(subLayer => {
 						if (subLayer.feature && subLayer.feature.properties) {
 							const value = subLayer.feature.properties.value;
-							const color = getColor(value, minValue, maxValue);
+							const color = getColor(value, minValue, maxValue, presetColors);
 							subLayer.setStyle({
 								fillColor: color,
 								fillOpacity: transparency,
@@ -378,13 +382,13 @@
 
 		}
 
-		function getColor(value, minValue, maxValue) {
+		function getColor(value, minValue, maxValue, presetColors) {
 			const norm_val = (value - minValue) / (maxValue - minValue);
-			if (norm_val > 0.8) return currentPreset[4];
-			if (norm_val > 0.6) return currentPreset[3];
-			if (norm_val > 0.4) return currentPreset[2];
-			if (norm_val > 0.2) return currentPreset[1];
-			return currentPreset[0];
+			if (norm_val > 0.8) return presetColors[4];
+			if (norm_val > 0.6) return presetColors[3];
+			if (norm_val > 0.4) return presetColors[2];
+			if (norm_val > 0.2) return presetColors[1];
+			return presetColors[0];
 		}
 
 		{#function initializeGraph(){#}
