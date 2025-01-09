@@ -189,7 +189,6 @@
 						success: function (response) {
 							layerGroup.clearLayers();
 
-							const dlCounts = response.shape_dlcount_dict;
 							const availableDlDict = response.shape_dl_dict;
 							const missingDlDict = response.shape_missing_dl_dict;
 							const geometries = response.geometries;
@@ -201,9 +200,10 @@
 							for (const shapeId in geometries) {
 								const availableDls = availableDlDict[shapeId] || 'No available data layer';
 								const missingDls = missingDlDict[shapeId] || 'No missing data layer';
-								const count = dlCounts[shapeId] || 0;
+								const availableCount = availableDls.length || 0;
+								const missingCount = missingDls.length || 0;
 								const name = names[shapeId] || 'Unknown';
-								shapeData.push({ id: shapeId, name, count, availableDls, missingDls });
+								shapeData.push({ id: shapeId, name, availableDls, missingDls, availableCount, missingCount });
 
 								let geometry;
 
@@ -213,12 +213,12 @@
 									geometry = geometries[shapeId];
 								}
 
-								const color = getColor(count, 0, selectedLayers.length);
+								const color = getColor(availableCount, 0, selectedLayers.length);
 
 								const geoJsonFeature = {
 									type: 'Feature',
 									geometry: geometry,
-									properties: { id: shapeId, name, count}
+									properties: { id: shapeId, name, availableCount, missingCount}
 								};
 
 								const geoJsonLayer = L.geoJSON(geoJsonFeature, {
@@ -230,32 +230,36 @@
 										fillOpacity: 1
 									}),
 									onEachFeature: (feature, layer) => {
-										layer.bindPopup(`<b>${feature.properties.name}</b>
-										<br>Available Data Layers: ${feature.properties.count}`)
+										layer.on('mouseover', function(e) {
+										let popupContent = `<b>${feature.properties.name}</b>
+										<br>Available Data Layers: ${feature.properties.availableCount}`;
+										let popup = L.popup()
+											.setLatLng(e.latlng)
+											.setContent(popupContent)
+											.openOn(layer._map);
+									});
+
+									layer.on('mouseout', function() {
+										layer._map.closePopup();
+									});
+										layer.bindPopup()
 									}
 								});
 
 								geoJsonLayer.addTo(layerGroup);
 							}
 
-							shapeData.sort((a, b) => b.count - a.count);
+							shapeData.sort((a, b) => b.availableCount - a.availableCount);
 
 							const rankingList = $('#ranking-list');
 							rankingList.empty();
 
 							shapeData.forEach((shape, index) => {
-								let availableDl;
-								if (Array.isArray(shape.availableDls)) {
-									availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-light">${dl}</li>`).join('');
-								} else {
-									availableDl = `<li class="list-group-item fw-light">${shape.availableDls}</li>`;
-								}
-								let missingDl;
-								if (Array.isArray(shape.missingDls)) {
-									missingDl = shape.missingDls.map(dl => `<li class="list-group-item fw-light">${dl}</li>`).join('');
-								} else {
-									missingDl = `<li class="list-group-item fw-light">${shape.missingDls}</li>`;
-								}
+								let availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-light">
+										<a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a></li>`).join('');
+
+								let missingDl = shape.missingDls.map(dl => `<li class="list-group-item fw-light">
+										<a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a></li>`).join('');
 
 								rankingList.append(`
 									<li class="list-group-item">
@@ -264,8 +268,11 @@
 										   data-bs-target="#details-dls-${index}"
 										   data-index="${index}"
 										   style="cursor: pointer;">
-											${shape.name}
-											<span class="badge text-bg-primary rounded-pill">${shape.count}</span>
+											<a href="/shapes/${shape.id}" class="text-decoration-none">
+												${shape.name}
+											</a>
+											<span class="badge text-bg-primary rounded-pill">${shape.availableCount}</span>
+											<span class="badge text-bg-danger rounded-pill">${shape.missingCount}</span>
 										</b>
 										<div id="details-dls-${index}" class="details-dls collapse container text-center m-4">
 											<div class="row">

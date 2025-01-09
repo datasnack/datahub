@@ -61,7 +61,6 @@ def get_dl_count_for_year_shapes(request):
     year = int(request.GET['year'])
 
     shapes = Shape.objects.filter(type_id=type_id)
-    shape_dlcount_dict = {shape.id: 0 for shape in shapes}
     shape_dl_dict = {shape.id: [] for shape in shapes}
     shape_missing_dl_dict = {shape.id: [] for shape in shapes}
 
@@ -70,17 +69,15 @@ def get_dl_count_for_year_shapes(request):
         for shape in shapes:
             try:
                 stat = ShapeDataLayerYearStats.objects.get(shape_id=shape.id, data_layer=datalayer_str, year=year)
-                shape_dlcount_dict[shape.id] += 1
-                shape_dl_dict[shape.id].append(datalayer_name)
+                shape_dl_dict[shape.id].append([datalayer_name, datalayer_str])
             except ObjectDoesNotExist:
-                shape_missing_dl_dict[shape.id].append(datalayer_name)
+                shape_missing_dl_dict[shape.id].append([datalayer_name, datalayer_str])
                 continue
 
     geometries = {shape.id: shape.geometry.geojson for shape in shapes}
     names = {shape.id: shape.name for shape in shapes}
 
     context = {
-        'shape_dlcount_dict': shape_dlcount_dict,
         'shape_dl_dict': dict(sorted(shape_dl_dict.items(), key=lambda item: item[1])),
         'shape_missing_dl_dict': dict(sorted(shape_missing_dl_dict.items(), key=lambda item: item[1])),
         'geometries': geometries,
