@@ -57,8 +57,7 @@
     <div id="year-slider" style="margin: 50px;"></div>
     <span id="year-slider-value"></span>
 
-	<div id="graph" style="width: 100%; height: 400px;"></div>
-
+	<div id="graph-container" class="container-fluid"></div>
 
     <script>
 		let map;
@@ -82,6 +81,7 @@
 
 		$('.add-datalayer').on('click', function () {
 			const shapeType = $('#type-dropdown').val();
+			$('#type-dropdown').prop('disabled', true);
 			if (shapeType) {
 				let datalayerKey = $(this).data('datalayer');
 				let datalayerName = $(this).text();
@@ -116,6 +116,7 @@
 						initializeSlider(slider, data)
 					}
 					createNewLayer(slider, dataLayerKey);
+					createNewGraph(dataLayerKey)
 					{#initializeGraph();#}
 				}
 			});
@@ -210,8 +211,24 @@
 						fillOpacity: 0.9
 					}),
 					onEachFeature: (feature, layer) => {
-						layer.bindPopup(`<b>${feature.properties.name}</b><br>Value: <br>${feature.properties.value}`);
+						layer.on('mouseover', function(e) {
+							let popupContent = `<b>${feature.properties.name}</b><br>Value: <br>${feature.properties.value}`;
+							let popup = L.popup()
+								.setLatLng(e.latlng)
+								.setContent(popupContent)
+								.openOn(layer._map);
+						});
+
+						layer.on('mouseout', function() {
+							layer._map.closePopup();
+						});
+
+
+						layer.on('click', () => {
+							addToGraph(feature.properties.id)
+						});
 					}
+
 				});
 
 				geoJsonLayer.addTo(layerGroup);
@@ -394,69 +411,78 @@
 			return presetColors[0];
 		}
 
-		{#function initializeGraph(){#}
-		{#	const dataLayer = $('#data-layer-dropdown').val();#}
-		{#	const dataLayerName = $('#data-layer-dropdown option:selected').text();#}
-		{#	let traces = [];#}
-		{#	$.ajax({#}
-		{#		url: "{% url 'get_historical_data_highest_type' %}",#}
-		{#		data: {'data_layer_key': dataLayer},#}
-		{#		success: function(data) {#}
-		{#			let historicalData = data.historical_data;#}
-		{#			let highestShapeName = data.highest_shape_name;#}
-		{#			if (historicalData.length > 0) {#}
-		{#				traces.push({#}
-		{#					x: historicalData.map(d => d.year),#}
-		{#					y: historicalData.map(d => d.value),#}
-		{#					mode: 'lines+markers',#}
-		{#					showlegend: true,#}
-		{#					name: highestShapeName,#}
-		{#					line: {color: '#8979da'}#}
-		{#				});#}
-		{#				let layout = {#}
-		{#					title: dataLayerName,#}
-		{#					xaxis: { title: 'Year' },#}
-		{#					yaxis: { title: 'Value' },#}
-		{#					width: null,#}
-		{#					height: 400#}
-		{#				};#}
-		{#				Plotly.newPlot('graph', traces, layout);#}
-		{#			}#}
-		{#		},#}
-		{#		error: function (xhr, status, error) {#}
-		{#			console.error('Error initializing graph:', error);#}
-		{#		}#}
-		{#	})#}
-		{##}
-		{##}
-		{##}
-		{#function addToGraph(shapeId) {#}
-		{#	const datalayer = $('#data-layer-dropdown').val();#}
-		{#	$.ajax({#}
-		{#		url: "{% url 'get_historical_data_shape' %}",#}
-		{#		data: {'data_layer_key': datalayer, 'shape_id': shapeId},#}
-		{#		success: function(data) {#}
-		{#			const historicalData = data.historical_data;#}
-		{#			const shapeName = data.shape_name#}
-		{#			if (historicalData.length > 0) {#}
-		{#				const newTrace = {#}
-		{#					x: historicalData.map(d => d.year),#}
-		{#					y: historicalData.map(d => d.value),#}
-		{#					mode: 'lines+markers',#}
-		{#					showlegend: true,#}
-		{#					name: shapeName#}
-		{#				};#}
-		{##}
-		{#				Plotly.addTraces('graph', newTrace);#}
-		{#			}#}
-		{##}
-		{#		},#}
-		{#		error: function (xhr, status, error) {#}
-		{#			console.error('Error adding to graph:', error);#}
-		{#		}#}
-		{#	});#}
-		{##}
-		{##}
+		function createNewGraph(dataLayerKey) {
+			let newGraph = `
+				<div class="border rounded" id="graph-${dataLayerKey}">
+				</div>`;
+			$('#graph-container').append(newGraph)
+			let traces = [];
+			$.ajax({
+				url: "{% url 'get_historical_data_highest_type' %}",
+				data: {'data_layer_key': dataLayerKey},
+				success: function(data) {
+					let historicalData = data.historical_data;
+					let highestShapeName = data.highest_shape_name;
+					if (historicalData.length > 0) {
+						traces.push({
+							x: historicalData.map(d => d.year),
+							y: historicalData.map(d => d.value),
+							mode: 'lines+markers',
+							showlegend: true,
+							name: highestShapeName,
+							line: {color: '#8979da'}
+						});
+						let layout = {
+							title: dataLayerKey,
+							xaxis: { title: 'Year' },
+							yaxis: { title: 'Value' },
+							width: null,
+							height: 400
+						};
+						Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error('Error creating graph:', error);
+				}
+			})
+		}
+
+
+		function addToGraph(shapeId) {
+			$('#selected-datalayers').children().each(function(index, element) {
+				let childId = $(element).attr('id');
+				let dataLayerKey = childId.match(/selected-(\S+)/)[1];
+				const traceExists = $(`#graph-${dataLayerKey}`)[0].data.some(trace => trace.id === shapeId);
+				if (!traceExists) {
+					$.ajax({
+					url: "{% url 'get_historical_data_shape' %}",
+					data: {'data_layer_key': dataLayerKey, 'shape_id': shapeId},
+					success: function(data) {
+						const historicalData = data.historical_data;
+						const shapeName = data.shape_name
+						if (historicalData.length > 0) {
+							const newTrace = {
+								x: historicalData.map(d => d.year),
+								y: historicalData.map(d => d.value),
+								mode: 'lines+markers',
+								showlegend: true,
+								name: shapeName,
+								id: shapeId
+							};
+
+							Plotly.addTraces($(`#graph-${dataLayerKey}`)[0], newTrace);
+						}
+
+					},
+					error: function (xhr, status, error) {
+						console.error('Error adding to graph:', error);
+					}
+					})
+				}
+			});
+
+		}
 
     </script>
 {% endblock %}
