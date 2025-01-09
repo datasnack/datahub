@@ -359,12 +359,13 @@
 		function applyPreset() {
 			updateLegendBar()
 			const transparencyInput = $('#transparency-input').val()
-			const transparency = transparencyInput ? parseFloat(transparencyInput) : 1;
+			const transparency = transparencyInput ? parseFloat(transparencyInput) : 0.9;
 			layerGroup.eachLayer(layer => {
 				if (layer._layers) {
 					Object.values(layer._layers).forEach(subLayer => {
 						if (subLayer.feature && subLayer.feature.properties) {
-							const count = subLayer.feature.properties.count;
+							const count = subLayer.feature.properties.availableCount;
+							console.log($('#datalayer-checkbox .form-check-input:checked').length)
 							const color = getColor(count, 0, $('#datalayer-checkbox .form-check-input:checked').length);
 							subLayer.setStyle({
 								fillColor: color,
