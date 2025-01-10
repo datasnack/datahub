@@ -14,7 +14,7 @@ urlpatterns = [
 
     path('slider/', views.slider_base, name='slider'),
     path('slider/get-datalayer-available-years/', views.get_datalayer_available_years, name='get_datalayer_available_years'),
-    path('slider/get-dl-value-for-year-shapes', views.get_dl_value_for_year_shapes, name='get_dl_value_for_year_shapes'),
+    path('slider/get-dl-value-for-year-shapes/', views.get_dl_value_for_year_shapes, name='get_dl_value_for_year_shapes'),
     path('slider/get-historical-data-shape/', views.get_historical_data_shape, name='get_historical_data_shape'),
     path('slider/get-historical-data-highest-type/', views.get_historical_data_highest_type, name='get_historical_data_highest_type'),
     path('slider/get-min-max-dl-value/', views.get_min_max_dl_value, name='get_min_max_dl_value'),
