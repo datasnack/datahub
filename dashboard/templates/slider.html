@@ -62,6 +62,7 @@
     <script>
 		let map;
 		let layerGroups = {};
+		let defaultTransparency = 0.9
 
 		$(document).ready(function() {
 			$('#type-dropdown').prop('selectedIndex', 0);
@@ -208,7 +209,7 @@
 						weight: 2,
 						opacity: 1,
 						color: 'black',
-						fillOpacity: 0.9
+						fillOpacity: defaultTransparency
 					}),
 					onEachFeature: (feature, layer) => {
 						layer.on('mouseover', function(e) {
@@ -335,7 +336,6 @@
 		});
 
 		const presets = {{ presets|safe }};
-		let currentPreset = presets[Object.keys(presets)[0]].colors;
 
 		function populateLegendSelect(dataLayerKey) {
 			const presetSelect = $(`#preset-select-${dataLayerKey}`);
@@ -373,7 +373,7 @@
 		function applyPreset(dataLayerKey, presetColors) {
 			updateLegendBar(dataLayerKey, presetColors)
 			let transparencyInput = $(`#transparency-input-${dataLayerKey}`).val();
-			const transparency = transparencyInput ? parseFloat(transparencyInput) : 0.9;
+			const transparency = transparencyInput ? parseFloat(transparencyInput) : defaultTransparency;
 			let layerGroup = layerGroups[dataLayerKey]
 			const minValue = parseInt($(`#min-label-${dataLayerKey}`).text())
 			const maxValue = parseInt($(`#max-label-${dataLayerKey}`).text())
