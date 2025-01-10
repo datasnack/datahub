@@ -1,5 +1,11 @@
 import {applyPreset, getColor, updateLegendBar} from './customization_utils.js';
-import {fetchLayerData, fetchMinMaxValues} from "./slider_api.js";
+import {
+	fetchAvailableYears,
+	fetchHistoricalData,
+	fetchHistoricalDataHighestShape,
+	fetchLayerData,
+	fetchMinMaxValues
+} from "./slider_api.js";
 
 const {centerX, centerY, centerZoom, presets} = config;
 
@@ -47,21 +53,17 @@ $('.add-datalayer').on('click', function () {
 });
 
 
-function processObjects(dataLayerKey) {
-	$.ajax({
-		url: "/dashboard/slider/get-datalayer-available-years/",
-		data: {'data_layer_key': dataLayerKey},
-		success: function (data) {
-			const slider = $('#year-slider')[0];
-			if (slider && slider.noUiSlider) {
-				updateSlider(slider, data)
-			} else {
-				initializeSlider(slider, data)
-			}
-			createNewLayer(slider, dataLayerKey);
-			createNewGraph(dataLayerKey)
-		}
-	});
+async function processObjects(dataLayerKey) {
+	const data = await fetchAvailableYears(dataLayerKey);
+	const slider = $('#year-slider')[0];
+	if (slider && slider.noUiSlider) {
+		updateSlider(slider, data)
+	} else {
+		initializeSlider(slider, data)
+	}
+	await createNewLayer(slider, dataLayerKey);
+	await createNewGraph(dataLayerKey)
+
 }
 
 function initializeSlider(slider, availableYears) {
@@ -272,75 +274,54 @@ function removeLayer(dataLayerKey) {
 	delete layerGroups[dataLayerKey];
 }
 
-function createNewGraph(dataLayerKey) {
+async function createNewGraph(dataLayerKey) {
 	let newGraph = `
 				<div class="border rounded" id="graph-${dataLayerKey}">
 				</div>`;
 	$('#graph-container').append(newGraph)
 	let traces = [];
-	$.ajax({
-		url: "/dashboard/slider/get-historical-data-highest-type/",
-		data: {'data_layer_key': dataLayerKey},
-		success: function (data) {
-			let historicalData = data.historical_data;
-			let highestShapeName = data.highest_shape_name;
-			if (historicalData.length > 0) {
-				traces.push({
-					x: historicalData.map(d => d.year),
-					y: historicalData.map(d => d.value),
-					mode: 'lines+markers',
-					showlegend: true,
-					name: highestShapeName,
-					line: {color: '#8979da'}
-				});
-				let layout = {
-					title: dataLayerKey,
-					xaxis: {title: 'Year'},
-					yaxis: {title: 'Value'},
-					width: null,
-					height: 400
-				};
-				Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
-			}
-		},
-		error: function (xhr, status, error) {
-			console.error('Error creating graph:', error);
-		}
-	})
+	const data = await fetchHistoricalDataHighestShape(dataLayerKey);
+	const {historical_data: historicalData, highest_shape_name: highestShapeName} = data;
+	if (historicalData.length > 0) {
+		traces.push({
+			x: historicalData.map(d => d.year),
+			y: historicalData.map(d => d.value),
+			mode: 'lines+markers',
+			showlegend: true,
+			name: highestShapeName,
+			line: {color: '#8979da'}
+		});
+		let layout = {
+			title: dataLayerKey,
+			xaxis: {title: 'Year'},
+			yaxis: {title: 'Value'},
+			width: null,
+			height: 400
+		};
+		Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
+	}
 }
 
 
 function addToGraph(shapeId) {
-	$('#selected-datalayers').children().each(function (index, element) {
+	$('#selected-datalayers').children().each(async function (index, element) {
 		let childId = $(element).attr('id');
 		let dataLayerKey = childId.match(/selected-(\S+)/)[1];
 		const traceExists = $(`#graph-${dataLayerKey}`)[0].data.some(trace => trace.id === shapeId);
 		if (!traceExists) {
-			$.ajax({
-				url: "/dashboard/slider/get-historical-data-shape/",
-				data: {'data_layer_key': dataLayerKey, 'shape_id': shapeId},
-				success: function (data) {
-					const historicalData = data.historical_data;
-					const shapeName = data.shape_name
-					if (historicalData.length > 0) {
-						const newTrace = {
-							x: historicalData.map(d => d.year),
-							y: historicalData.map(d => d.value),
-							mode: 'lines+markers',
-							showlegend: true,
-							name: shapeName,
-							id: shapeId
-						};
-
-						Plotly.addTraces($(`#graph-${dataLayerKey}`)[0], newTrace);
-					}
-
-				},
-				error: function (xhr, status, error) {
-					console.error('Error adding to graph:', error);
-				}
-			})
+			const data = await fetchHistoricalData(dataLayerKey, shapeId);
+			const {historical_data: historicalData, shape_name: shapeName} = data;
+			if (historicalData.length > 0) {
+				const newTrace = {
+					x: historicalData.map(d => d.year),
+					y: historicalData.map(d => d.value),
+					mode: 'lines+markers',
+					showlegend: true,
+					name: shapeName,
+					id: shapeId
+				};
+				Plotly.addTraces($(`#graph-${dataLayerKey}`)[0], newTrace);
+			}
 		}
 	});
-
 }

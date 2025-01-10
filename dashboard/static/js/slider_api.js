@@ -21,3 +21,39 @@ export async function fetchLayerData(dataLayerKey, shapeType, selectedYear) {
 		throw error;
 	}
 }
+
+export async function fetchHistoricalData(dataLayerKey, shapeId) {
+	try {
+		return await $.ajax({
+			url: "/dashboard/slider/get-historical-data-shape/",
+			data: {'data_layer_key': dataLayerKey, 'shape_id': shapeId},
+		});
+	} catch (error) {
+		console.error(`Error fetching historical data for ${dataLayerKey}:`, error);
+		throw error;
+	}
+}
+
+export async function fetchHistoricalDataHighestShape(dataLayerKey) {
+	try {
+		return await $.ajax({
+			url: "/dashboard/slider/get-historical-data-highest-type/",
+			data: {'data_layer_key': dataLayerKey},
+		});
+	} catch (error) {
+		console.error(`Error fetching historical data for the highest shape`);
+		throw error
+	}
+}
+
+export async function fetchAvailableYears(dataLayerKey) {
+	try {
+		return await $.ajax({
+			url: "/dashboard/slider/get-datalayer-available-years/",
+			data: {'data_layer_key': dataLayerKey},
+		});
+	} catch (error) {
+		console.error(`Error fetching historical data for the highest shape`);
+		throw error
+	}
+}
