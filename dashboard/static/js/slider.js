@@ -1,4 +1,5 @@
 import {applyPreset, getColor, updateLegendBar} from './customization_utils.js';
+import {fetchLayerData, fetchMinMaxValues} from "./slider_api.js";
 
 const {centerX, centerY, centerZoom, presets} = config;
 
@@ -100,30 +101,6 @@ function updateSlider(slider, availableYears) {
 			'max': newMaxYear
 		}
 	});
-}
-
-async function fetchMinMaxValues(dataLayerKey, shapeType) {
-	try {
-		return await $.ajax({
-			url: "/dashboard/slider/get-min-max-dl-value/",
-			data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType}
-		});
-	} catch (error) {
-		console.error(`Error fetching min/max for ${dataLayerKey}:`, error);
-		throw error;
-	}
-}
-
-async function fetchLayerData(dataLayerKey, shapeType, selectedYear) {
-	try {
-		return await $.ajax({
-			url: "/dashboard/slider/get-dl-value-for-year-shapes/",
-			data: {'data_layer_key': dataLayerKey, 'shape_type': shapeType, 'year': selectedYear}
-		});
-	} catch (error) {
-		console.error(`Error fetching layer data for ${dataLayerKey}:`, error);
-		throw error;
-	}
 }
 
 function createLayerGroup(dataLayerKey, minValue, maxValue, data, presetColors) {

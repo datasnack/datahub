@@ -1,4 +1,5 @@
 import {applyPreset, getColor, updateLegendBar} from './customization_utils.js';
+import {fetchData} from "./info_map_api.js";
 
 const {centerX, centerY, centerZoom, minYear, maxYear, presets} = config;
 
@@ -112,18 +113,6 @@ async function updateMap() {
 	} else {
 		alert('Missing input. Please make sure that the type and data layers are selected.');
 		$('#loading-message').hide();
-	}
-}
-
-async function fetchData(type, year, selectedLayers) {
-	try {
-		return await $.ajax({
-			url: "/dashboard/info-map/get-dl-count-for-year-shapes/",
-			data: {'type_id': type, 'year': year, 'data_layers': selectedLayers.join(',')},
-		});
-	} catch (error) {
-		console.error(`Error fetching data`);
-		throw error;
 	}
 }
 
