@@ -9,7 +9,7 @@ urlpatterns = [
     path('info-map/get-dl-count-for-year-shapes/', views.get_dl_count_for_year_shapes, name='get_dl_count_for_year_shapes'),
 
     path('temporal-trend/', views.temporal_trend_base, name='temporal_trend'),
-    path('temporal-trend/get-shapes-by-shape-id/', views.get_shapes_by_shape_id, name='get_shapes_by_shape_id'),
+    path('temporal-trend/get-shapes-by-type/', views.get_shapes_by_type, name='get_shapes_by_type'),
     path('temporal-trend/get-historical-data-shape/', views.get_historical_data_shape, name='get_historical_data_shape'),
 
     path('slider/', views.slider_base, name='slider'),

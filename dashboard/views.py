@@ -89,11 +89,11 @@ def get_dl_count_for_year_shapes(request):
 
 def temporal_trend_base(request):
     types = Type.objects.all().order_by('id')
-    datalayers = Datalayer.objects.all()
+    datalayers = Datalayer.objects.order_by('name')
 
     context = {
         'types': types,
-        'datalayers': datalayers,
+        'datalayers': json.dumps(list(datalayers.values('key', 'name'))),
         'datahub_center_x': settings.DATAHUB_CENTER_X,
         'datahub_center_y': settings.DATAHUB_CENTER_Y,
         'datahub_center_zoom': settings.DATAHUB_CENTER_ZOOM
@@ -116,7 +116,7 @@ def get_historical_data_shape(request):
     return JsonResponse(context, safe=False)
 
 
-def get_shapes_by_shape_id(request):
+def get_shapes_by_type(request):
     type_id = request.GET.get('type_id')
     if type_id:
         shapes = Shape.objects.filter(type_id=type_id).order_by('name')

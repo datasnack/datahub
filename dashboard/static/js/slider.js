@@ -46,14 +46,14 @@ $('.add-datalayer').on('click', function () {
 				`;
 		$('#selected-datalayers').append(selectedItem);
 		$(this).prop('disabled', true);
-		processObjects(datalayerKey)
+		processObjects(datalayerKey, datalayerName)
 	} else {
 		alert("Please select the type!");
 	}
 });
 
 
-async function processObjects(dataLayerKey) {
+async function processObjects(dataLayerKey, dataLayerName) {
 	const data = await fetchAvailableYears(dataLayerKey);
 	const slider = $('#year-slider')[0];
 	if (slider && slider.noUiSlider) {
@@ -62,7 +62,7 @@ async function processObjects(dataLayerKey) {
 		initializeSlider(slider, data)
 	}
 	await createNewLayer(slider, dataLayerKey);
-	await createNewGraph(dataLayerKey)
+	await createNewGraph(dataLayerKey, dataLayerName)
 
 }
 
@@ -274,11 +274,11 @@ function removeLayer(dataLayerKey) {
 	delete layerGroups[dataLayerKey];
 }
 
-async function createNewGraph(dataLayerKey) {
+async function createNewGraph(dataLayerKey, dataLayerName) {
 	let newGraph = `
-				<div class="border rounded" id="graph-${dataLayerKey}">
+				<div class="border rounded m-2" id="graph-${dataLayerKey}">
 				</div>`;
-	$('#graph-container').append(newGraph)
+	$('#graphs-container').append(newGraph)
 	let traces = [];
 	const data = await fetchHistoricalDataHighestShape(dataLayerKey);
 	const {historical_data: historicalData, highest_shape_name: highestShapeName} = data;
@@ -292,10 +292,10 @@ async function createNewGraph(dataLayerKey) {
 			line: {color: '#8979da'}
 		});
 		let layout = {
-			title: dataLayerKey,
+			title: dataLayerName + ' - ' + dataLayerKey,
 			xaxis: {title: 'Year'},
 			yaxis: {title: 'Value'},
-			width: null,
+			width: 1250,
 			height: 400
 		};
 		Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
