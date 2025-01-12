@@ -32,23 +32,28 @@ $('#load-button').click(async function () {
 
     let dataLayerData = {};
 
-	createNormalizedGraph(shapeName)
+    createNormalizedGraph(shapeName);
 
-    $('.datalayer-dropdown').each(async function () {
-        const dataLayerKey = $(this).val();
+    const dropdowns = $('.datalayer-dropdown');
+
+    for (const dropdown of dropdowns) {
+        const dataLayerKey = $(dropdown).val();
         if (dataLayerKey) {
             const data = await fetchHistoricalData(dataLayerKey, shapeId);
-			const {historical_data: historicalData} = data
+            const { historical_data: historicalData } = data;
             dataLayerData[dataLayerKey] = historicalData;
-			if (historicalData) {
-				const dataLayerName = $(this).find("option:selected").text();
-        		const dropdownId = $(this).attr('id');
-        		const dropdownNumber = dropdownId.match(/datalayer-(\S+)-dropdown/)[1];
-				createNewGraph(shapeId, dataLayerKey, dataLayerName, parseInt(dropdownNumber), dataLayerData[dataLayerKey]);
-				addNormalizedTraceToGraph(dataLayerName, dataLayerData[dataLayerKey])
-			}
+            const dataLayerName = $(dropdown).find("option:selected").text();
+            const dropdownId = $(dropdown).attr('id');
+            const dropdownNumber = dropdownId.match(/datalayer-(\S+)-dropdown/)[1];
+
+            if (historicalData.length > 0) {
+                createNewGraph(shapeId, dataLayerKey, dataLayerName, parseInt(dropdownNumber), dataLayerData[dataLayerKey]);
+                addNormalizedTraceToGraph(dataLayerName, dataLayerData[dataLayerKey]);
+            } else {
+                createErrorContainer(dataLayerKey, dataLayerName, parseInt(dropdownNumber));
+            }
         }
-    });
+    }
 });
 
 
@@ -127,6 +132,13 @@ function createNormalizedGraph(shapeName) {
 		height: 400
 	};
 	Plotly.newPlot($('#normalized-graph')[0], [], layout);
+}
+
+function createErrorContainer(dataLayerKey, dataLayerName, dropdownNumber){
+	let newContainer = `<div class="border rounded m-2 text-center" id="error-container-${dataLayerKey}">
+		<label class="form-label text-danger">Data Layer ${dropdownNumber}: ${dataLayerName} - ${dataLayerKey} not found!</label>
+        </div>`;
+	$('#graphs-container').append(newContainer);
 }
 
 function addNormalizedTraceToGraph(dataLayerName, historicalData) {
