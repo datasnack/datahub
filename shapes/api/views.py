@@ -72,6 +72,8 @@ def shape_geometry(request):
     else:
         HttpResponseNotFound("No shapes found")
 
+    name = datahub_key(name)
+
     # format
     fmt = request.GET.get("format", "geojson")
 
