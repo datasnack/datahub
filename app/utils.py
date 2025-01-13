@@ -1,5 +1,6 @@
 import contextlib
 import datetime as dt
+import hashlib
 
 from django.conf import settings
 from django.template.defaultfilters import slugify
@@ -27,3 +28,16 @@ def prase_date_or_today(date_str: str) -> dt.date:
         parsed_date = dt.datetime.now(tz=dt.UTC).date()
 
     return parsed_date
+
+
+def dict_to_string(input_dict):
+    """Convert a dictionary to a deterministic string."""
+    parts = [f"{key}={value}" for key, value in sorted(input_dict.items())]
+    return "&".join(parts)
+
+
+def generate_unique_hash(input_dict):
+    """Generate a unique hash based on the input dictionary."""
+    serialized = dict_to_string(input_dict)
+    hash_object = hashlib.sha256(serialized.encode())
+    return hash_object.hexdigest()

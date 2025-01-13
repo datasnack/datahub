@@ -8,8 +8,10 @@ from geojson import Feature, FeatureCollection, Point, Polygon
 from shapely import wkt
 
 from django.conf import settings
+from django.core.cache import caches
 from django.http import (
     FileResponse,
+    HttpResponse,
     HttpResponseBadRequest,
     HttpResponseNotFound,
     JsonResponse,
@@ -17,6 +19,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 
+from app.utils import datahub_key, generate_unique_hash
 from shapes.models import Shape, Type
 
 # Create your views here.
@@ -40,6 +43,7 @@ def shape_geometry(request):
     formats the approach with GeoPandas and using the same structure seems
     preferable anyway.
     """
+    cache = caches["geojson"]
     query = {
         "shape_id": request.GET.get("shape_id", None),
         "shape_type": request.GET.get("shape_type", None),
@@ -47,6 +51,17 @@ def shape_geometry(request):
         "format": request.GET.get("format", "geojson"),
         "simplify": request.GET.get("simplify", settings.DATAHUB_GEOMETRY_SIMPLIFY),
     }
+
+    # for API calls requesting GeoJSON (map integrations) we provide caching
+    if query["format"] == "geojson":
+        cache_key = generate_unique_hash(query)
+        cached = cache.get(cache_key)
+        if cached:
+            name = cache.get(f"{cache_key}_name", "download")
+            response = HttpResponse(cached, content_type="application/geo+json")
+            response["Content-Disposition"] = f'attachment; filename="{name}.geojson"'
+            return response
+
     # single, or type?
     shapes = []
     name = ""
@@ -99,11 +114,16 @@ def shape_geometry(request):
         )
 
     if fmt == "geojson":
-        file = BytesIO()
-        gdf.to_file(file, driver="GeoJSON")
-        file.seek(0)
-        response = FileResponse(file, as_attachment=False, filename=f"{name}.geojson")
-        response["Content-Type"] = "application/geo+json"
+        # save GeoJSON into variable to also put as a string into the Django cache.
+        # indent=None to save the whitespace linebreaks
+        content = gdf.to_json(indent=None)
+
+        cache_key = generate_unique_hash(query)
+        cache.set(cache_key, content)
+        cache.set(f"{cache_key}_name", name)
+
+        response = HttpResponse(content, content_type="application/geo+json")
+        response["Content-Disposition"] = f'attachment; filename="{name}.geojson"'
         return response
 
     if fmt == "gpkg":

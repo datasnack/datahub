@@ -209,6 +209,19 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": BASE_DIR / ".cache/default",
+        "TIMEOUT": None,  # never invalidate cache automatically
+    },
+    "geojson": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": BASE_DIR / ".cache/geojson",
+        "TIMEOUT": None,  # never invalidate cache automatically
+    },
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
