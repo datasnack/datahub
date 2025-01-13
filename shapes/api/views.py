@@ -7,6 +7,7 @@ import shapely.geometry
 from geojson import Feature, FeatureCollection, Point, Polygon
 from shapely import wkt
 
+from django.conf import settings
 from django.http import (
     FileResponse,
     HttpResponseBadRequest,
@@ -39,6 +40,13 @@ def shape_geometry(request):
     formats the approach with GeoPandas and using the same structure seems
     preferable anyway.
     """
+    query = {
+        "shape_id": request.GET.get("shape_id", None),
+        "shape_type": request.GET.get("shape_type", None),
+        "shape_parent_id": request.GET.get("shape_parent_id", None),
+        "format": request.GET.get("format", "geojson"),
+        "simplify": request.GET.get("simplify", settings.DATAHUB_GEOMETRY_SIMPLIFY),
+    }
     # single, or type?
     shapes = []
     name = ""
@@ -82,6 +90,11 @@ def shape_geometry(request):
         )
     gdf = geopandas.GeoDataFrame(rows, geometry="geometry")
     gdf = gdf.set_crs(4326)
+
+    if query["simplify"]:
+        gdf["geometry"] = gdf["geometry"].simplify(
+            tolerance=query["simplify"], preserve_topology=True
+        )
 
     if fmt == "geojson":
         file = BytesIO()
