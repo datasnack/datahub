@@ -75,6 +75,16 @@
         <td class="align-middle">
 			<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
 			{% include "datalayers/partials/tags.html" with datalayer=dl %}
+
+			<div class="float-end">
+				{% if dl.has_class %}
+					<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
+					{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
+						{% icon dl_temporal_icon ignore_missing=True %}
+					{% endwith %}
+					</span>
+				{% endif %}
+			</div>
 		</td>
         <td class="align-middle"><code>{{ dl.key }}</code></td>
 

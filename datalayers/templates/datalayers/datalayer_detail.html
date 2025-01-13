@@ -153,7 +153,16 @@
 								</tr>
 								<tr>
 									<th class="fw-normal">{% translate "Temporal resolution" %}</th>
-									<td><code>{{ datalayer.temporal_resolution|default_if_none:"-" }}</code></td>
+									<td>
+										{% if datalayer.has_class %}
+											<span class="text-secondary" title="{% blocktranslate with resolution=datalayer.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
+											{% with "calendar-"|add:datalayer.temporal_resolution_str as dl_temporal_icon %}
+												{% icon dl_temporal_icon ignore_missing=True %}
+											{% endwith %}
+											</span>
+										{% endif %}
+										<code>{{ datalayer.temporal_resolution|default_if_none:"-" }}</code>
+									</td>
 								</tr>
 							</tbody>
 						</table>
