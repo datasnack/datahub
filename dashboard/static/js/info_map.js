@@ -159,6 +159,15 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 				fillOpacity: 1
 			}),
 			onEachFeature: (feature, layer) => {
+				layer.on('click', function (e) {
+					let detail = $(`#details-dls-${feature.properties.id}`);
+					detail.collapse('show');
+					detail[0].scrollIntoView({
+						behavior: 'smooth',
+						block: 'center'
+					});
+				});
+
 				layer.on('mouseover', function (e) {
 					let popupContent = `<b>${feature.properties.name}</b>
 										<br>Available Data Layers: ${feature.properties.availableCount}`;
@@ -184,26 +193,29 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 	rankingList.empty();
 
 	shapeData.forEach((shape, index) => {
-		let availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-light">
+		let availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-light small">
 										<a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a></li>`).join('');
 
-		let missingDl = shape.missingDls.map(dl => `<li class="list-group-item fw-light">
+		let missingDl = shape.missingDls.map(dl => `<li class="list-group-item fw-light small">
 										<a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a></li>`).join('');
+
+		let percentage = ((shape.availableCount / (shape.availableCount + shape.missingCount)) * 100).toFixed(2);
 
 		rankingList.append(`
 									<li class="list-group-item">
 										<b class="shape-name"
 										   data-bs-toggle="collapse"
-										   data-bs-target="#details-dls-${index}"
-										   data-index="${index}"
+										   data-bs-target="#details-dls-${shape.id}"
+										   data-index="${shape.id}"
 										   style="cursor: pointer;">
 											<a href="/shapes/${shape.id}" class="text-decoration-none">
 												${shape.name}
 											</a>
 											<span class="badge text-bg-primary rounded-pill">${shape.availableCount}</span>
 											<span class="badge text-bg-danger rounded-pill">${shape.missingCount}</span>
+											<span class="badge text-bg-success rounded-pill">${percentage}%</span>
 										</b>
-										<div id="details-dls-${index}" class="details-dls collapse container text-center m-4">
+										<div id="details-dls-${shape.id}" class="details-dls collapse container text-center m-4">
 											<div class="row">
 												<div class="col">
 													<label class="form-label fw-bold">Available Data Layers</label>

@@ -29,6 +29,7 @@ $('#datalayers-container').on('change', '.datalayer-dropdown', function () {
 $('#load-button').click(async function () {
     const shapeId = $('#shape-dropdown').val();
     const shapeName = $('#shape-dropdown').find("option:selected").text();
+	$('#graphs-container').empty();
 
     let dataLayerData = {};
 

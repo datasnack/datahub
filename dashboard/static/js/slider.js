@@ -132,7 +132,7 @@ function createLayerGroup(dataLayerKey, minValue, maxValue, data, presetColors) 
 			}),
 			onEachFeature: (feature, layer) => {
 				layer.on('mouseover', function (e) {
-					let popupContent = `<b>${feature.properties.name}</b><br>Value: <br>${feature.properties.value}`;
+					let popupContent = `<b>${feature.properties.name}</b>`;
 					let popup = L.popup()
 						.setLatLng(e.latlng)
 						.setContent(popupContent)
@@ -271,6 +271,7 @@ function removeLayer(dataLayerKey) {
 	map.removeLayer(layerGroups[dataLayerKey])
 	$(`#add-datalayer-${dataLayerKey}-btn`).prop('disabled', false);
 	$(`#selected-${dataLayerKey}`).remove();
+	$(`#graph-${dataLayerKey}`).remove();
 	delete layerGroups[dataLayerKey];
 }
 
