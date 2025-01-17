@@ -6,6 +6,9 @@ const {centerX, centerY, centerZoom, minYear, maxYear, presets} = config;
 let map;
 let layerGroup = L.layerGroup();
 let defaultTransparency = 0.9;
+let datalayerDict = {}
+let shapeDict = {}
+
 
 $(document).ready(function () {
 	$('#type-dropdown').prop('selectedIndex', 0);
@@ -101,9 +104,13 @@ async function updateMap() {
 	const type = $('#type-dropdown').val();
 	const year = parseInt($('#year-slider')[0].noUiSlider.get());
 	const selectedLayers = [];
-	$('.form-check-input:checked').each(function () {
+	datalayerDict = {}
+	shapeDict = {}
+	$('.form-check-input:checked').each(function (index) {
 		selectedLayers.push($(this).data('datalayer'));
+		datalayerDict[index + 1] = $(this).next('label').text().trim();
 	});
+	writeTableRowHeaders();
 	if (year && selectedLayers.length > 0 && type) {
 		const data = await fetchData(type, year, selectedLayers)
 		const selectedPreset = $('#preset-select').val();
@@ -186,6 +193,13 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 
 		geoJsonLayer.addTo(layerGroup);
 	}
+	populateRankingListAndTable(shapeData);
+	$('#loading-message').hide();
+}
+
+function populateRankingListAndTable(shapeData) {
+	shapeData.sort((a, b) => a.name - b.name)
+	writeTableColumnHeaders(shapeData);
 
 	shapeData.sort((a, b) => b.availableCount - a.availableCount);
 
@@ -193,11 +207,19 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 	rankingList.empty();
 
 	shapeData.forEach((shape, index) => {
-		let availableDl = shape.availableDls.map(dl => `<li class="list-group-item fw-light small">
-										<a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a></li>`).join('');
+		let availableDl = shape.availableDls.map(dl => {
+            fillTableCell(dl[0], shape.name, '<i class="bi bi-check text-success fs-3"></i>');
+			return `<li class="list-group-item fw-light">
+                        <a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a>
+                    </li>`;
+        }).join('');
 
-		let missingDl = shape.missingDls.map(dl => `<li class="list-group-item fw-light small">
-										<a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a></li>`).join('');
+		let missingDl = shape.missingDls.map(dl => {
+            fillTableCell(dl[0], shape.name, '<i class="bi bi-x text-danger fs-3"></i>');
+            return `<li class="list-group-item fw-light">
+                        <a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a>
+                    </li>`;
+        }).join('');
 
 		let percentage = ((shape.availableCount / (shape.availableCount + shape.missingCount)) * 100).toFixed(2);
 
@@ -234,9 +256,45 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 									</li>
 								`);
 	});
-
-	$('#loading-message').hide();
 }
+
+
+function writeTableRowHeaders() {
+	const tbody = $('#info-matrix tbody');
+	tbody.empty();
+	$.each(datalayerDict, function(index, selectedLayerName) {
+		const row = $('<tr></tr>');
+		row.append(`<th scope="row">${selectedLayerName}</th>`);
+		tbody.append(row);
+	});
+}
+
+function writeTableColumnHeaders(shapeData) {
+    const thead = $('#info-matrix thead');
+    thead.empty();
+    let headerRow = '<tr><th scope="col"></th>';
+    shapeData.forEach((shape, index) => {
+		shapeDict[index + 1] = shape.name;
+        headerRow += `<th scope="col">${shape.name}</th>`;
+    });
+    headerRow += '</tr>';
+    thead.append(headerRow);
+}
+
+function fillTableCell(datalayerName, shapeName, value) {
+	const rowIndex = Object.keys(datalayerDict).find(key => datalayerDict[key] === datalayerName);
+	const colIndex = Object.keys(shapeDict).find(key => shapeDict[key] === shapeName);
+
+	const row = $('#info-matrix tr').eq(parseInt(rowIndex));
+	let cell = row.find('td').eq(parseInt(colIndex));
+
+	if (cell.length === 0) {
+		cell = $('<td></td>');
+		row.append(cell);
+	}
+	cell.html(value);
+}
+
 
 $('#apply-legend-btn').on('click', function () {
 	const selectedPreset = $('#preset-select').val();
@@ -258,3 +316,5 @@ function populateLegendSelect() {
 		presetSelect.append(option);
 	});
 }
+
+

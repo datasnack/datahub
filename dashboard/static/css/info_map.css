@@ -1,3 +1,7 @@
+.info-table-container          { overflow: auto; max-height: 750px;}
+.info-table-container thead th { position: sticky; top: 0; z-index: 1; }
+.info-table-container tbody th { position: sticky; left: 0; z-index: 1; }
+
 #loading-message {
     position: absolute;
     top: 0;
