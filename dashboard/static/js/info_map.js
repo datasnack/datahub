@@ -193,8 +193,6 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 
 		geoJsonLayer.addTo(layerGroup);
 	}
-	console.log("DL:", JSON.stringify(datalayerDict, null, 2));
-
 
 	populateRankingListAndTable(shapeData);
 	$('#loading-message').hide();
@@ -203,9 +201,8 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 function populateRankingListAndTable(shapeData) {
 	shapeData.sort((a, b) => a.name - b.name)
 	writeTableColumnHeaders(shapeData);
-	console.log("Shape:", JSON.stringify(shapeDict, null, 2));
 
-	// shapeData.sort((a, b) => b.availableCount - a.availableCount);
+	shapeData.sort((a, b) => b.availableCount - a.availableCount);
 
 	const rankingList = $('#ranking-list');
 	rankingList.empty();
