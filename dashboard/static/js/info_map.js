@@ -199,7 +199,7 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 }
 
 function populateRankingListAndTable(shapeData) {
-	shapeData.sort((a, b) => a.name - b.name)
+	shapeData.sort((a, b) => a.name.localeCompare(b.name))
 	writeTableColumnHeaders(shapeData);
 
 	shapeData.sort((a, b) => b.availableCount - a.availableCount);
