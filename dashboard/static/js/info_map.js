@@ -168,7 +168,7 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 			onEachFeature: (feature, layer) => {
 				layer.on('click', function (e) {
 					let detail = $(`#details-dls-${feature.properties.id}`);
-					detail.collapse('show');
+					detail.collapse('toggle');
 					detail[0].scrollIntoView({
 						behavior: 'smooth',
 						block: 'center'
@@ -193,6 +193,9 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 
 		geoJsonLayer.addTo(layerGroup);
 	}
+	console.log("DL:", JSON.stringify(datalayerDict, null, 2));
+
+
 	populateRankingListAndTable(shapeData);
 	$('#loading-message').hide();
 }
@@ -200,8 +203,9 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 function populateRankingListAndTable(shapeData) {
 	shapeData.sort((a, b) => a.name - b.name)
 	writeTableColumnHeaders(shapeData);
+	console.log("Shape:", JSON.stringify(shapeDict, null, 2));
 
-	shapeData.sort((a, b) => b.availableCount - a.availableCount);
+	// shapeData.sort((a, b) => b.availableCount - a.availableCount);
 
 	const rankingList = $('#ranking-list');
 	rankingList.empty();
@@ -209,14 +213,14 @@ function populateRankingListAndTable(shapeData) {
 	shapeData.forEach((shape, index) => {
 		let availableDl = shape.availableDls.map(dl => {
             fillTableCell(dl[0], shape.name, '<i class="bi bi-check text-success fs-3"></i>');
-			return `<li class="list-group-item fw-light">
+			return `<li class="list-group-item fw-light small">
                         <a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a>
                     </li>`;
         }).join('');
 
 		let missingDl = shape.missingDls.map(dl => {
             fillTableCell(dl[0], shape.name, '<i class="bi bi-x text-danger fs-3"></i>');
-            return `<li class="list-group-item fw-light">
+            return `<li class="list-group-item fw-light small">
                         <a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a>
                     </li>`;
         }).join('');
@@ -279,6 +283,17 @@ function writeTableColumnHeaders(shapeData) {
     });
     headerRow += '</tr>';
     thead.append(headerRow);
+	createTds(shapeData.length)
+}
+
+function createTds(columnsCount){
+	const tbody = $('#info-matrix tbody');
+    tbody.find('tr').each(function() {
+        const row = $(this);
+        for (let i = 0; i < columnsCount; i++) {
+            row.append('<td></td>');
+        }
+    });
 }
 
 function fillTableCell(datalayerName, shapeName, value) {
@@ -286,12 +301,8 @@ function fillTableCell(datalayerName, shapeName, value) {
 	const colIndex = Object.keys(shapeDict).find(key => shapeDict[key] === shapeName);
 
 	const row = $('#info-matrix tr').eq(parseInt(rowIndex));
-	let cell = row.find('td').eq(parseInt(colIndex));
+	let cell = row.find('td').eq(parseInt(colIndex) - 1);
 
-	if (cell.length === 0) {
-		cell = $('<td></td>');
-		row.append(cell);
-	}
 	cell.html(value);
 }
 
