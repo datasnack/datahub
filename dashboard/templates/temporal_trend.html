@@ -5,9 +5,6 @@
 {% block content %}
 	<link rel="stylesheet" type="text/css" href="{% static 'css/temporal_trend.css' %}">
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-
     <h1>Temporal Trend for a Shape</h1>
 
 	<div class="mt-3">
@@ -36,7 +33,22 @@
 
 	<button id="load-button" type="button" class="mt-3 btn btn-primary">Load</button>
 
-	<div id="graphs-container" class="container-fluid mt-3"></div>
+	<div id="graphs-container" class="border rounded p-2 mt-3">
+		<div class="row">
+			<div id="normalized-graph-container"></div>
+		</div>
+		<div class="row">
+			<div id="raw-graphs-container" class="container-fluid mt-3"></div>
+		</div>
+		<div class="row">
+			<div id="error-graphs-container" class="container-fluid mt-3"></div>
+		</div>
+	</div>
+{#	<div id="graphs-container" class="container-fluid mt-3"></div>#}
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
 
 	<script>
 		const datalayers = {{ datalayers | safe }};

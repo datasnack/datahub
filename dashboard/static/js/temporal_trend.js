@@ -29,7 +29,9 @@ $('#datalayers-container').on('change', '.datalayer-dropdown', function () {
 $('#load-button').click(async function () {
     const shapeId = $('#shape-dropdown').val();
     const shapeName = $('#shape-dropdown').find("option:selected").text();
-	$('#graphs-container').empty();
+	$('#normalized-graph-container').empty();
+	$('#raw-graphs-container').empty();
+	$('#error-graphs-container').empty();
 
     let dataLayerData = {};
 
@@ -92,44 +94,52 @@ function handleDropdownChange(dropdown) {
 }
 
 function createNewGraph(shapeId, dataLayerKey, dataLayerName, dropdownNumber, historicalData) {
-    let newGraph = `
-        <div class="border rounded m-2" id="graph-${dataLayerKey}">
+	let newGraph = `
+        <div class="col-6 mb-3">
+            <div id="graph-${dataLayerKey}" style="width: 100%; height: 250px;">
+            </div>
         </div>`;
-    $('#graphs-container').append(newGraph);
 
-    let traces = [];
-    if (historicalData.length > 0) {
-        traces.push({
-            x: historicalData.map(d => d.year),
-            y: historicalData.map(d => d.value),
-            mode: 'lines+markers',
-            showlegend: true,
-            name: dataLayerKey,
-        });
+	if ($('#raw-graphs-container .row').length === 0 || $('#raw-graphs-container .row').last().children().length === 2) {
+		$('#raw-graphs-container').append('<div class="row">');
+	}
 
-        let layout = {
-            title: 'Data Layer ' + dropdownNumber + ': ' + dataLayerName + ' - ' + dataLayerKey,
-            xaxis: { title: 'Year' },
-            yaxis: { title: 'Value' },
-            width: 1250,
-            height: 400
-        };
+	$('#raw-graphs-container .row').last().append(newGraph);
 
-        Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
-    }
+	let traces = [];
+	if (historicalData.length > 0) {
+		traces.push({
+			x: historicalData.map(d => d.year),
+			y: historicalData.map(d => d.value),
+			mode: 'lines+markers',
+			showlegend: false,
+			name: dataLayerKey,
+		});
+
+		let layout = {
+			title: `<b>Data Layer ${dropdownNumber}: ${dataLayerName}<br>${dataLayerKey}</b>`,
+			// title: 'Data Layer ' + dropdownNumber + ': ' + dataLayerName + ' - ' + dataLayerKey,
+			xaxis: {title: 'Year'},
+			yaxis: {title: 'Value'},
+			width: null,
+			height: 250
+		};
+
+		Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
+	}
 }
 
 function createNormalizedGraph(shapeName) {
 	let newNormalizedGraph = `
-        <div class="border rounded m-2" id="normalized-graph">
+        <div id="normalized-graph">
         </div>`;
-	$('#graphs-container').append(newNormalizedGraph);
+	$('#normalized-graph-container').append(newNormalizedGraph);
 
 	let layout = {
-		title: 'Normalized Graph for ' + shapeName,
+		title: `<b>Normalized Graph for ${shapeName}</b>`,
 		xaxis: {title: 'Year'},
 		yaxis: {title: 'Value'},
-		width: 1250,
+		width: null,
 		height: 400
 	};
 	Plotly.newPlot($('#normalized-graph')[0], [], layout);
@@ -139,7 +149,7 @@ function createErrorContainer(dataLayerKey, dataLayerName, dropdownNumber){
 	let newContainer = `<div class="border rounded m-2 text-center" id="error-container-${dataLayerKey}">
 		<label class="form-label text-danger">Data Layer ${dropdownNumber}: ${dataLayerName} - ${dataLayerKey} not found!</label>
         </div>`;
-	$('#graphs-container').append(newContainer);
+	$('#error-graphs-container').append(newContainer);
 }
 
 function addNormalizedTraceToGraph(dataLayerName, historicalData) {

@@ -26,7 +26,7 @@ $(document).ready(function () {
 			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 		}).addTo(map);
 	}
-	selectedShapes.clear();
+	selectedShapes = {};
 });
 
 $('.add-datalayer').on('click', function () {
@@ -34,7 +34,7 @@ $('.add-datalayer').on('click', function () {
 	$('#type-dropdown').prop('disabled', true);
 	if (shapeType) {
 		let datalayerKey = $(this).data('datalayer');
-		let datalayerName = $(this).text();
+		let datalayerName = $(this).text().trim();
 
 		let selectedItem = `
 					<div class="datalayer-item border rounded m-2 p-2" id="selected-${datalayerKey}">
@@ -283,7 +283,7 @@ function removeLayer(dataLayerKey) {
 
 async function createNewGraph(dataLayerKey, dataLayerName) {
 	let newGraph = `
-				<div class="border rounded m-2" id="graph-${dataLayerKey}">
+				<div class="border rounded m-2 p-2" id="graph-${dataLayerKey}" style="height: 250px; max-height: 100%; max-width: 100%;">
 				</div>`;
 	$('#graphs-container').append(newGraph)
 	let traces = [];
@@ -299,16 +299,53 @@ async function createNewGraph(dataLayerKey, dataLayerName) {
 			line: {color: '#8979da'}
 		});
 		let layout = {
-			title: dataLayerName + ' - ' + dataLayerKey,
-			xaxis: {title: 'Year'},
-			yaxis: {title: 'Value'},
-			width: 1250,
-			height: 400
+			title: {
+				text: `<b>${dataLayerName}<br>${dataLayerKey}</b>`,
+				font: {
+					size: 12,
+				},
+			},
+			xaxis: {
+				title: {
+					text: 'Year',
+					font: {
+						size: 10,
+					},
+				},
+				tickfont: {
+					size: 10,
+				},
+			},
+			yaxis: {
+				title: {
+					text: 'Value',
+					font: {
+						size: 10,
+					},
+				},
+				tickfont: {
+					size: 10,
+				},
+			},
+			legend: {
+				orientation: 'h',
+				x: 0.5,
+				y: -0.6,
+				xanchor: 'center',
+				yanchor: 'top',
+				font: {
+					size: 10,
+				},
+			},
+			margin: {
+				b: 60,
+			},
+			height: 225,
 		};
 		Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
-	}
-	for (const id in selectedShapes) {
-		addToGraph(id, selectedShapes[id])
+		for (const id in selectedShapes) {
+			addToGraph(id, selectedShapes[id])
+		}
 	}
 }
 
