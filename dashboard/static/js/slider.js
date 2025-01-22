@@ -12,6 +12,7 @@ const {centerX, centerY, centerZoom, presets} = config;
 let map;
 let layerGroups = {};
 let defaultTransparency = 0.9
+let selectedShapes = {};
 
 $(document).ready(function () {
 	$('#type-dropdown').prop('selectedIndex', 0);
@@ -25,7 +26,7 @@ $(document).ready(function () {
 			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 		}).addTo(map);
 	}
-
+	selectedShapes.clear();
 });
 
 $('.add-datalayer').on('click', function () {
@@ -145,7 +146,12 @@ function createLayerGroup(dataLayerKey, minValue, maxValue, data, presetColors) 
 
 
 				layer.on('click', () => {
-					addToGraph(feature.properties.id)
+					let id = feature.properties.id
+					if (!(id in selectedShapes)) {
+						let color = "#" + Math.floor(Math.random() * 16777215).toString(16);
+						addToGraph(id, color);
+						selectedShapes[id] = color;
+					}
 				});
 			}
 
@@ -301,10 +307,13 @@ async function createNewGraph(dataLayerKey, dataLayerName) {
 		};
 		Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
 	}
+	for (const id in selectedShapes) {
+		addToGraph(id, selectedShapes[id])
+	}
 }
 
 
-function addToGraph(shapeId) {
+function addToGraph(shapeId, color) {
 	$('#selected-datalayers').children().each(async function (index, element) {
 		let childId = $(element).attr('id');
 		let dataLayerKey = childId.match(/selected-(\S+)/)[1];
@@ -319,7 +328,8 @@ function addToGraph(shapeId) {
 					mode: 'lines+markers',
 					showlegend: true,
 					name: shapeName,
-					id: shapeId
+					id: shapeId,
+					line: {color: color}
 				};
 				Plotly.addTraces($(`#graph-${dataLayerKey}`)[0], newTrace);
 			}
