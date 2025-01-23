@@ -23,15 +23,31 @@ class Command(BaseCommand):
         engine = get_engine()
 
         gdf = geopandas.read_file(file.name)
-        required_cols = ["id", "name", "type", "parent_id", "properties", "geometry"]
+        required_cols = [
+            "id",
+            "name",
+            "type",
+            "parent_id",
+            "properties",
+            "geometry",
+        ]
+
+        # key field is required, but we can fallback to id if not provided
 
         # optional cols, if not set make it empty
+        if "license" not in gdf.columns:
+            gdf["license"] = ""
         if "properties" not in gdf.columns:
             gdf["properties"] = "{}"
         if "attribution_text" not in gdf.columns:
             gdf["attribution_text"] = ""
         if "attribution_url" not in gdf.columns:
             gdf["attribution_url"] = ""
+        if "attribution_html" not in gdf.columns:
+            gdf["attribution_html"] = ""
+
+        if "admin" not in gdf.columns:
+            gdf["admin"] = None
 
         # make sure our required columns exist
         for col in required_cols:
@@ -63,15 +79,24 @@ class Command(BaseCommand):
         # foreign key to the parent row.
         # ...so we need to split our input data in parent only rows and child rows
         # and import them separately.
+        #
+        # Also GeoPandas to_postgis() uses intermediary CSV files, which cast empty
+        # strings to NULL. so the Django way of "nullable/empty" strings stored as "" (empty string)
+        # clashes during imports, this is why we use `null=True, blank=True` for optional
+        # fields in the model (see https://github.com/geopandas/geopandas/issues/2588).
         gdf_no_parent = gdf[gdf["parent_id"].isna()].copy()
         gdf_no_parent[
             [
                 "created_at",
                 "updated_at",
                 "id",
+                "key",
                 "name",
+                "admin",
+                "license",
                 "attribution_text",
                 "attribution_url",
+                "attribution_html",
                 "type_id",
                 "properties",
                 "geometry",
@@ -88,9 +113,13 @@ class Command(BaseCommand):
                 "created_at",
                 "updated_at",
                 "id",
+                "key",
                 "name",
+                "admin",
+                "license",
                 "attribution_text",
                 "attribution_url",
+                "attribution_html",
                 "type_id",
                 "parent_id",
                 "properties",

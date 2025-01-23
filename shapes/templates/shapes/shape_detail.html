@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load markdown %}
 {% load i18n %}
 
 {% block title %}{% blocktranslate with name=shape.name type=shape.type.name %}{{ name }} ({{ type}}){% endblocktranslate %}{% endblock %}
@@ -90,7 +91,19 @@
 				</tr>
 				{% endif %}
 
-				{% if shape.attribution_url %}
+				{% if shape.license %}
+					<tr class="small">
+						<th>{% translate "Geometry license" %}</th>
+						<td>{{ shape.license }}</td>
+					</tr>
+				{% endif %}
+
+				{% if shape.attribution_html %}
+					<tr class="small">
+						<th>{% translate "Geometry attribution" %}</th>
+						<td>{% markdown shape.attribution_html %}</td>
+					</tr>
+				{% elif shape.attribution_url %}
 					{% if shape.attribution_text %}
 						<tr class="small">
 							<th>{% translate "Geometry attribution" %}</th>

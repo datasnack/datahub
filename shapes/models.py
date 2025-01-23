@@ -5,6 +5,7 @@ from shapely import wkt
 from django.contrib.gis.db import models
 from django.db import models as djmodels
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 
 class Type(djmodels.Model):
@@ -40,9 +41,19 @@ class Shape(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    key = models.SlugField(max_length=255, null=False, unique=True)
+    admin = models.PositiveSmallIntegerField(null=True, blank=True)
     name = models.CharField(max_length=255)
-    attribution_text = models.CharField(blank=True, max_length=255)
-    attribution_url = models.URLField(blank=True, max_length=255)
+
+    license = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_("SPDX identifier of the license if available."),
+    )
+    attribution_text = models.TextField(blank=True, null=True)
+    attribution_url = models.URLField(blank=True, null=True)
+    attribution_html = models.TextField(blank=True, null=True)
+
     type = models.ForeignKey(
         Type,
         on_delete=models.RESTRICT,
@@ -56,7 +67,7 @@ class Shape(models.Model):
         related_name="children",
     )
     area_sqm = models.FloatField(null=True)
-    properties = models.JSONField(null=True)
+    properties = models.JSONField(blank=True, null=True)
     geometry = models.GeometryField(srid=4326)
 
     objects = MyManager()
