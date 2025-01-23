@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/datasnack/datahub/compare/v0.5.2..v0.6.0) - 2025-01-23
+
+### Changed
+
+- Geometry attribution/license fields ([7a77ffd](https://github.com/datasnack/datahub/commit/7a77ffdf6df17fd0d5c336491fb69c470780f8e5))
+- Utilize caching for API GeoJSON returns ([e8a38ba](https://github.com/datasnack/datahub/commit/e8a38ba580ed8c1cc7f3fcd4388edb77e014c697))
+- Temporal resolution icon for Data Layers ([cf174f5](https://github.com/datasnack/datahub/commit/cf174f508f44fe47360dcc0a6c2da23787f83a40))
+- Clear cache management command ([ac5d9cd](https://github.com/datasnack/datahub/commit/ac5d9cda8be4cf77319cf50c081c9e396c992b85))
+- Simplify API response geometries per configuration ([8622a62](https://github.com/datasnack/datahub/commit/8622a62801d11d32e45b0737edd9aa76fc991333))
+
+### Fixed
+
+- Prefix instance key download names ([a5052dc](https://github.com/datasnack/datahub/commit/a5052dc4fd25e56e207c88925176a8222f8e3194))
+- Dropdown overlapping base map selector in Leaflet ([385bf1e](https://github.com/datasnack/datahub/commit/385bf1e2f181cd03524010f00f5491741699a03c))
+
 ## [0.5.2](https://github.com/datasnack/datahub/compare/v0.5.1..v0.5.2) - 2024-12-10
 
 ### Fixed
