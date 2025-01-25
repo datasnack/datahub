@@ -17,6 +17,7 @@ let selectedShapes = {};
 $(document).ready(function () {
 	$('#type-dropdown').prop('selectedIndex', 0);
 	$('#loading-message').hide();
+	$('#current-year').hide();
 	if (!map) {
 		map = L.map('map').setView(
 			[centerY, centerX], centerZoom
@@ -29,7 +30,7 @@ $(document).ready(function () {
 	selectedShapes = {};
 });
 
-$('.add-datalayer').on('click', function () {
+$('.add-datalayer').on('click', async function () {
 	const shapeType = $('#type-dropdown').val();
 	$('#type-dropdown').prop('disabled', true);
 	if (shapeType) {
@@ -47,7 +48,7 @@ $('.add-datalayer').on('click', function () {
 				`;
 		$('#selected-datalayers').append(selectedItem);
 		$(this).prop('disabled', true);
-		processObjects(datalayerKey, datalayerName)
+		await processObjects(datalayerKey, datalayerName)
 	} else {
 		alert("Please select the type!");
 	}
@@ -194,6 +195,8 @@ async function updateMap() {
 	$('#loading-message').show();
 	const shapeType = $('#type-dropdown').val();
 	const selectedYear = parseInt($('#year-slider')[0].noUiSlider.get());
+	$('#current-year').show();
+	$('#current-year').text(selectedYear);
 
 	for (const [dataLayerKey, layerGroup] of Object.entries(layerGroups)) {
 		const selectedPreset = $(`#preset-select-${dataLayerKey}`).val();
@@ -250,7 +253,7 @@ $(document).on('click', '.apply-customization', function () {
 	const selectedPreset = $(`#preset-select-${dataLayerKey}`).val();
 	if (presets[selectedPreset]) {
 		const presetColors = presets[selectedPreset].colors;
-			applyPreset(presetColors, `#legend-bar-${dataLayerKey}`, $(`#transparency-input-${dataLayerKey}`).val(), parseInt($(`#min-label-${dataLayerKey}`).text()), parseInt($(`#max-label-${dataLayerKey}`).text()), layerGroups[dataLayerKey], dataLayerKey);
+		applyPreset(presetColors, `#legend-bar-${dataLayerKey}`, $(`#transparency-input-${dataLayerKey}`).val(), parseInt($(`#min-label-${dataLayerKey}`).text()), parseInt($(`#max-label-${dataLayerKey}`).text()), layerGroups[dataLayerKey], dataLayerKey);
 	} else {
 		alert('Invalid preset selected.');
 	}
@@ -283,7 +286,7 @@ function removeLayer(dataLayerKey) {
 
 async function createNewGraph(dataLayerKey, dataLayerName) {
 	let newGraph = `
-				<div class="border rounded m-2 p-2" id="graph-${dataLayerKey}" style="height: 250px; max-height: 100%; max-width: 100%;">
+				<div class="border rounded m-2" id="graph-${dataLayerKey}" style="height: 250px; width:600px; max-height: 100%; max-width: 100%;">
 				</div>`;
 	$('#graphs-container').append(newGraph)
 	let traces = [];
@@ -341,6 +344,7 @@ async function createNewGraph(dataLayerKey, dataLayerName) {
 				b: 60,
 			},
 			height: 225,
+			width: 595
 		};
 		Plotly.newPlot($(`#graph-${dataLayerKey}`)[0], traces, layout);
 		for (const id in selectedShapes) {

@@ -16,47 +16,46 @@ $('#type-dropdown').change(async function () {
 		$.each(data, function (key, shape) {
 			$('#shape-dropdown').append(`<option value="${shape.id}">${shape.name}</option>`);
 		});
-	}
-	else {
+	} else {
 		$('#shape-dropdown').append('<option value="">Select Shape</option>');
 	}
 });
 
 $('#datalayers-container').on('change', '.datalayer-dropdown', function () {
-    handleDropdownChange($(this));
+	handleDropdownChange($(this));
 });
 
 $('#load-button').click(async function () {
-    const shapeId = $('#shape-dropdown').val();
-    const shapeName = $('#shape-dropdown').find("option:selected").text();
+	const shapeId = $('#shape-dropdown').val();
+	const shapeName = $('#shape-dropdown').find("option:selected").text();
 	$('#normalized-graph-container').empty();
 	$('#raw-graphs-container').empty();
 	$('#error-graphs-container').empty();
 
-    let dataLayerData = {};
+	let dataLayerData = {};
 
-    createNormalizedGraph(shapeName);
+	createNormalizedGraph(shapeName);
 
-    const dropdowns = $('.datalayer-dropdown');
+	const dropdowns = $('.datalayer-dropdown');
 
-    for (const dropdown of dropdowns) {
-        const dataLayerKey = $(dropdown).val();
-        if (dataLayerKey) {
-            const data = await fetchHistoricalData(dataLayerKey, shapeId);
-            const { historical_data: historicalData } = data;
-            dataLayerData[dataLayerKey] = historicalData;
-            const dataLayerName = $(dropdown).find("option:selected").text();
-            const dropdownId = $(dropdown).attr('id');
-            const dropdownNumber = dropdownId.match(/datalayer-(\S+)-dropdown/)[1];
+	for (const dropdown of dropdowns) {
+		const dataLayerKey = $(dropdown).val();
+		if (dataLayerKey) {
+			const data = await fetchHistoricalData(dataLayerKey, shapeId);
+			const {historical_data: historicalData} = data;
+			dataLayerData[dataLayerKey] = historicalData;
+			const dataLayerName = $(dropdown).find("option:selected").text();
+			const dropdownId = $(dropdown).attr('id');
+			const dropdownNumber = dropdownId.match(/datalayer-(\S+)-dropdown/)[1];
 
-            if (historicalData.length > 0) {
-                createNewGraph(shapeId, dataLayerKey, dataLayerName, parseInt(dropdownNumber), dataLayerData[dataLayerKey]);
-                addNormalizedTraceToGraph(dataLayerName, dataLayerData[dataLayerKey]);
-            } else {
-                createErrorContainer(dataLayerKey, dataLayerName, parseInt(dropdownNumber));
-            }
-        }
-    }
+			if (historicalData.length > 0) {
+				createNewGraph(shapeId, dataLayerKey, dataLayerName, parseInt(dropdownNumber), dataLayerData[dataLayerKey]);
+				addNormalizedTraceToGraph(dataLayerName, dataLayerData[dataLayerKey]);
+			} else {
+				createErrorContainer(dataLayerKey, dataLayerName, parseInt(dropdownNumber));
+			}
+		}
+	}
 });
 
 
@@ -145,7 +144,7 @@ function createNormalizedGraph(shapeName) {
 	Plotly.newPlot($('#normalized-graph')[0], [], layout);
 }
 
-function createErrorContainer(dataLayerKey, dataLayerName, dropdownNumber){
+function createErrorContainer(dataLayerKey, dataLayerName, dropdownNumber) {
 	let newContainer = `<div class="border rounded m-2 text-center" id="error-container-${dataLayerKey}">
 		<label class="form-label text-danger">Data Layer ${dropdownNumber}: ${dataLayerName} - ${dataLayerKey} not found!</label>
         </div>`;
@@ -153,28 +152,28 @@ function createErrorContainer(dataLayerKey, dataLayerName, dropdownNumber){
 }
 
 function addNormalizedTraceToGraph(dataLayerName, historicalData) {
-    let allData = historicalData.map(d => d.value);
+	let allData = historicalData.map(d => d.value);
 
-    const min = Math.min(...allData);
-    const max = Math.max(...allData);
-    let normalizedValues;
+	const min = Math.min(...allData);
+	const max = Math.max(...allData);
+	let normalizedValues;
 
-    if (min === max) {
-        normalizedValues = historicalData.map(() => 0.5);
-    } else {
-        normalizedValues = historicalData.map(d => normalize(d.value, min, max));
-    }
+	if (min === max) {
+		normalizedValues = historicalData.map(() => 0.5);
+	} else {
+		normalizedValues = historicalData.map(d => normalize(d.value, min, max));
+	}
 
-    Plotly.addTraces($('#normalized-graph')[0], [{
-        x: historicalData.map(d => d.year),
-        y: normalizedValues,
-        mode: 'lines+markers',
-        showlegend: true,
-        name: dataLayerName,
-    }]);
+	Plotly.addTraces($('#normalized-graph')[0], [{
+		x: historicalData.map(d => d.year),
+		y: normalizedValues,
+		mode: 'lines+markers',
+		showlegend: true,
+		name: dataLayerName,
+	}]);
 }
 
 function normalize(value, min, max) {
-    return (value - min) / (max - min);
+	return (value - min) / (max - min);
 }
 

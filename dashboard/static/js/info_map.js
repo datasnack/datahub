@@ -15,6 +15,7 @@ $(document).ready(function () {
 	$('#transparency-input').val(defaultTransparency);
 	$('.form-check-input').prop('checked', false);
 	$('#loading-message').hide();
+	$('#current-year').hide();
 	if (!map) {
 		map = L.map('map').setView(
 			[centerY, centerX], centerZoom
@@ -112,6 +113,8 @@ async function updateMap() {
 	});
 	writeTableRowHeaders();
 	if (year && selectedLayers.length > 0 && type) {
+		$('#current-year').show();
+		$('#current-year').text(year);
 		const data = await fetchData(type, year, selectedLayers)
 		const selectedPreset = $('#preset-select').val();
 		const presetColors = presets[selectedPreset].colors;
@@ -167,9 +170,17 @@ function updateOrCreateLayer(data, minValue, maxValue, presetColors) {
 			}),
 			onEachFeature: (feature, layer) => {
 				layer.on('click', function (e) {
-					let detail = $(`#details-dls-${feature.properties.id}`);
-					detail.collapse('toggle');
-					detail[0].scrollIntoView({
+					let detail = $(`#details-dls-${feature.properties.id}`)[0];
+
+					if (detail.classList.contains('collapse')) {
+						if (detail.classList.contains('show')) {
+							detail.classList.remove('show');
+						} else {
+							detail.classList.add('show');
+						}
+					}
+
+					$(`#shape-name-${feature.properties.id}`)[0].scrollIntoView({
 						behavior: 'smooth',
 						block: 'center'
 					});
@@ -209,24 +220,25 @@ function populateRankingListAndTable(shapeData) {
 
 	shapeData.forEach((shape, index) => {
 		let availableDl = shape.availableDls.map(dl => {
-            fillTableCell(dl[0], shape.name, '<i class="bi bi-check text-success fs-3"></i>');
+			fillTableCell(dl[0], shape.name, '<i class="bi bi-check text-success fs-3"></i>');
 			return `<li class="list-group-item fw-light small">
                         <a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a>
                     </li>`;
-        }).join('');
+		}).join('');
 
 		let missingDl = shape.missingDls.map(dl => {
-            fillTableCell(dl[0], shape.name, '<i class="bi bi-x text-danger fs-3"></i>');
-            return `<li class="list-group-item fw-light small">
+			fillTableCell(dl[0], shape.name, '<i class="bi bi-x text-danger fs-3"></i>');
+			return `<li class="list-group-item fw-light small">
                         <a href="/datalayers/${dl[1]}" class="text-decoration-none">${dl[0]}</a>
                     </li>`;
-        }).join('');
+		}).join('');
 
 		let percentage = ((shape.availableCount / (shape.availableCount + shape.missingCount)) * 100).toFixed(2);
 
 		rankingList.append(`
 									<li class="list-group-item">
 										<b class="shape-name"
+										   id="shape-name-${shape.id}"
 										   data-bs-toggle="collapse"
 										   data-bs-target="#details-dls-${shape.id}"
 										   data-index="${shape.id}"
@@ -263,7 +275,7 @@ function populateRankingListAndTable(shapeData) {
 function writeTableRowHeaders() {
 	const tbody = $('#info-matrix tbody');
 	tbody.empty();
-	$.each(datalayerDict, function(index, selectedLayerName) {
+	$.each(datalayerDict, function (index, selectedLayerName) {
 		const row = $('<tr></tr>');
 		row.append(`<th scope="row">${selectedLayerName}</th>`);
 		tbody.append(row);
@@ -271,26 +283,26 @@ function writeTableRowHeaders() {
 }
 
 function writeTableColumnHeaders(shapeData) {
-    const thead = $('#info-matrix thead');
-    thead.empty();
-    let headerRow = '<tr><th scope="col"></th>';
-    shapeData.forEach((shape, index) => {
+	const thead = $('#info-matrix thead');
+	thead.empty();
+	let headerRow = '<tr><th scope="col"></th>';
+	shapeData.forEach((shape, index) => {
 		shapeDict[index + 1] = shape.name;
-        headerRow += `<th scope="col">${shape.name}</th>`;
-    });
-    headerRow += '</tr>';
-    thead.append(headerRow);
+		headerRow += `<th scope="col">${shape.name}</th>`;
+	});
+	headerRow += '</tr>';
+	thead.append(headerRow);
 	createTds(shapeData.length)
 }
 
-function createTds(columnsCount){
+function createTds(columnsCount) {
 	const tbody = $('#info-matrix tbody');
-    tbody.find('tr').each(function() {
-        const row = $(this);
-        for (let i = 0; i < columnsCount; i++) {
-            row.append('<td></td>');
-        }
-    });
+	tbody.find('tr').each(function () {
+		const row = $(this);
+		for (let i = 0; i < columnsCount; i++) {
+			row.append('<td></td>');
+		}
+	});
 }
 
 function fillTableCell(datalayerName, shapeName, value) {

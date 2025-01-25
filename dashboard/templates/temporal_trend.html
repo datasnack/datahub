@@ -5,7 +5,7 @@
 {% block content %}
 	<link rel="stylesheet" type="text/css" href="{% static 'css/temporal_trend.css' %}">
 
-    <h1>Temporal Trend for a Shape</h1>
+	<h3>Temporal Trend for a Shape</h3>
 
 	<div class="mt-3">
 		<label for="type-dropdown" class="form-label fw-bold">Select Shape Type:</label>
@@ -44,7 +44,7 @@
 			<div id="error-graphs-container" class="container-fluid mt-3"></div>
 		</div>
 	</div>
-{#	<div id="graphs-container" class="container-fluid mt-3"></div>#}
+	{#	<div id="graphs-container" class="container-fluid mt-3"></div>#}
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -53,5 +53,5 @@
 	<script>
 		const datalayers = {{ datalayers | safe }};
 	</script>
-    <script type="module" src="{% static 'js/temporal_trend.js' %}"></script>
+	<script type="module" src="{% static 'js/temporal_trend.js' %}"></script>
 {% endblock %}

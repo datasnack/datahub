@@ -8,54 +8,54 @@ export function getColor(value, minValue, maxValue, presetColors) {
 }
 
 export function updateLegendBar(legendBar, presetColors, layout) {
-    $(legendBar).empty();
+	$(legendBar).empty();
 
-    const parentDiv = $('<div>')
-        .addClass('d-flex w-100')
-        .addClass(layout === 'row' ? 'flex-row' : 'flex-column');
+	const parentDiv = $('<div>')
+		.addClass('d-flex w-100')
+		.addClass(layout === 'row' ? 'flex-row' : 'flex-column');
 
-    presetColors.forEach(color => {
-        const childDiv = $('<div>')
-            .addClass('flex-fill')
-            .css({
-                background: color,
-                height: layout === 'row' ? '10px' : '20px',
-                width: layout === 'row' ? 'auto' : '10px',
-            });
-        parentDiv.append(childDiv);
-    });
+	presetColors.forEach(color => {
+		const childDiv = $('<div>')
+			.addClass('flex-fill')
+			.css({
+				background: color,
+				height: layout === 'row' ? '10px' : '20px',
+				width: layout === 'row' ? 'auto' : '10px',
+			});
+		parentDiv.append(childDiv);
+	});
 
-    $(legendBar).append(parentDiv);
+	$(legendBar).append(parentDiv);
 }
 
 export function applyPreset(presetColors, legendBar, transparencyInput, minValue, maxValue, layerGroup, dataLayerKey = null) {
 	const defaultTransparency = 0.9;
 
-    if (dataLayerKey) {
-        updateLegendBar(legendBar, presetColors, 'column');
-    } else {
-        updateLegendBar(legendBar, presetColors, 'row');
-    }
+	if (dataLayerKey) {
+		updateLegendBar(legendBar, presetColors, 'column');
+	} else {
+		updateLegendBar(legendBar, presetColors, 'row');
+	}
 
-    const transparency = transparencyInput ? parseFloat(transparencyInput) : defaultTransparency;
+	const transparency = transparencyInput ? parseFloat(transparencyInput) : defaultTransparency;
 
-    layerGroup.eachLayer(layer => {
-        if (layer._layers) {
-            Object.values(layer._layers).forEach(subLayer => {
-                if (subLayer.feature && subLayer.feature.properties) {
-                    const value = dataLayerKey
-                        ? subLayer.feature.properties.value
-                        : subLayer.feature.properties.availableCount;
+	layerGroup.eachLayer(layer => {
+		if (layer._layers) {
+			Object.values(layer._layers).forEach(subLayer => {
+				if (subLayer.feature && subLayer.feature.properties) {
+					const value = dataLayerKey
+						? subLayer.feature.properties.value
+						: subLayer.feature.properties.availableCount;
 
-                    const color = getColor(value, minValue, maxValue, presetColors);
-                    subLayer.setStyle({
-                        fillColor: color,
-                        fillOpacity: transparency,
-                    });
-                } else {
-                    console.warn('Sub-layer lacks feature or properties:', subLayer);
-                }
-            });
-        }
-    });
+					const color = getColor(value, minValue, maxValue, presetColors);
+					subLayer.setStyle({
+						fillColor: color,
+						fillOpacity: transparency,
+					});
+				} else {
+					console.warn('Sub-layer lacks feature or properties:', subLayer);
+				}
+			});
+		}
+	});
 }

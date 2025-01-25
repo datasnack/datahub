@@ -5,7 +5,6 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 from django.db import connection
-from django.utils.safestring import mark_safe
 
 from dashboard.models import ShapeDataLayerYearStats
 from shapes.models import Type, Shape

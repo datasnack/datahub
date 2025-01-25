@@ -5,14 +5,14 @@
 {% block content %}
 	<link rel="stylesheet" type="text/css" href="{% static 'css/slider.css' %}">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css"/>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
 
-    <h1>Temporal Slider</h1>
+	<h3>Temporal Slider</h3>
 
-    <div class="mt-3">
+	<div class="mt-3">
 		<label for="type-dropdown" class="form-label fw-bold">Select Shape Type:</label>
 		<select id="type-dropdown" class="form-select">
 			<option value="">Select Type</option>
@@ -29,7 +29,9 @@
 				<div id="available-datalayers" style="max-height: 250px; overflow-y: auto;">
 					{% for datalayer in datalayers %}
 						<div class="datalayer-item">
-							<button id="add-datalayer-{{ datalayer.key }}-btn" class="btn btn-sm btn-outline-success add-datalayer m-1" data-datalayer="{{ datalayer.key }}">
+							<button id="add-datalayer-{{ datalayer.key }}-btn"
+									class="btn btn-sm btn-outline-success add-datalayer m-1"
+									data-datalayer="{{ datalayer.key }}">
 								<i class="bi bi-plus"></i> {{ datalayer.name }}
 							</button>
 						</div>
@@ -46,35 +48,42 @@
 
 	<div class="container border rounded p-2" style="height: 600px;">
 		<div class="row">
-    		<div class="col">
+			<div class="col">
 				<div id="map" style="height: 550px">
-					<div id="loading-message">Loading, please wait...</div>
+					<div id="current-year"
+						 class="position-absolute bottom-0 start-0 p-2 text-white fw-bold bg-secondary bg-gradient fs-6"
+						 style="z-index:999;">
+					</div>
+					<div id="loading-message">
+						<div class="loader"></div>
+					</div>
 				</div>
 			</div>
 			<div class="col">
-				<div id="graphs-container" class="container-fluid" style="max-height: 100%; height: 550px; overflow-y: auto;"></div>
+				<div id="graphs-container" class="container-fluid"
+					 style="max-height: 100%; height: 550px; overflow-y: auto;"></div>
 			</div>
 		</div>
 	</div>
 
 
-    <div id="year-slider" style="margin: 50px;"></div>
-    <span id="year-slider-value"></span>
+	<div id="year-slider" style="margin: 50px;"></div>
+	<span id="year-slider-value"></span>
 
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
 	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/gh/RubaXa/Sortable/Sortable.min.js"></script>
 
-    <script>
+	<script>
 		const config = {
-        centerX: parseFloat("{{ datahub_center_x }}"),
-        centerY: parseFloat("{{ datahub_center_y }}"),
-        centerZoom: parseInt("{{ datahub_center_zoom }}"),
-        presets: {{ presets|safe }}
-    	};
-    </script>
+			centerX: parseFloat("{{ datahub_center_x }}"),
+			centerY: parseFloat("{{ datahub_center_y }}"),
+			centerZoom: parseInt("{{ datahub_center_zoom }}"),
+			presets: {{ presets|safe }}
+		};
+	</script>
 	<script type="module" src="{% static 'js/slider.js' %}"></script>
 {% endblock %}
