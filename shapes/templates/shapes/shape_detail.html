@@ -49,6 +49,15 @@
 					<th>{% translate "Name" %}</th>
 					<td>{{ shape.name }}</td>
 				</tr>
+
+
+				{% if shape.description %}
+					<tr>
+						<th>{% translate "Description" %}</th>
+						<td>{% markdown shape.description %}</td>
+					</tr>
+				{% endif %}
+
 				<tr>
 					<th>{% translate "Area" %}</th>
 					<td>{{ shape.area_sqkm|floatformat:2 }} km<sup>2</sup></td>

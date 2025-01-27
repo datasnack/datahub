@@ -35,6 +35,8 @@ class Command(BaseCommand):
         # key field is required, but we can fallback to id if not provided
 
         # optional cols, if not set make it empty
+        if "description" not in gdf.columns:
+            gdf["description"] = ""
         if "license" not in gdf.columns:
             gdf["license"] = ""
         if "properties" not in gdf.columns:
@@ -92,6 +94,7 @@ class Command(BaseCommand):
                 "id",
                 "key",
                 "name",
+                "description",
                 "admin",
                 "license",
                 "attribution_text",
@@ -115,6 +118,7 @@ class Command(BaseCommand):
                 "id",
                 "key",
                 "name",
+                "description",
                 "admin",
                 "license",
                 "attribution_text",

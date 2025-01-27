@@ -44,6 +44,7 @@ class Shape(models.Model):
     key = models.SlugField(max_length=255, null=False, unique=True)
     admin = models.PositiveSmallIntegerField(null=True, blank=True)
     name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
 
     license = models.TextField(
         blank=True,
