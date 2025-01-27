@@ -4,6 +4,7 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
+from app.utils import datahub_key
 from datalayers.utils import get_conn_string
 
 
@@ -55,7 +56,7 @@ class Command(BaseCommand):
             extension = "sql"
 
         if not file:
-            file = f"{dt.datetime.now(dt.UTC).strftime('%Y-%m-%d_%H-%M-%S')}_datahub.{extension}"
+            file = f"{dt.datetime.now(dt.UTC).strftime('%Y-%m-%d_%H-%M-%S')}_{datahub_key('db')}.{extension}"
 
         path = Path("data/") / file
 
