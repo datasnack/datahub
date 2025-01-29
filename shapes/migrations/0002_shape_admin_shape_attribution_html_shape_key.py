@@ -5,7 +5,10 @@ from django.db import migrations, models
 from shapes.models import Shape
 
 def migrate_data_forward(apps, schema_editor):
-    for instance in Shape.objects.all():
+    # select ONLY the needed id column. In a later migration we add a new field
+    # which is not yet created, so we need prevent a SQL column does not exist error
+    # during the select query.
+    for instance in Shape.objects.all().values('id'):
         instance.key = str(instance.id)
         instance.save()
 
