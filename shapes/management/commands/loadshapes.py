@@ -33,6 +33,8 @@ class Command(BaseCommand):
         ]
 
         # key field is required, but we can fallback to id if not provided
+        if "key" not in gdf.columns:
+            gdf["key"] = gdf["id"]
 
         # optional cols, if not set make it empty
         if "description" not in gdf.columns:
