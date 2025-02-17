@@ -57,12 +57,18 @@ def search(request):
             )
 
     if "datalayers" in search_filter:
-        datalayers = Datalayer.objects.filter(
-            Q(name__icontains=search_term)
-            | Q(key__icontains=search_term)
-            | Q(category__name__icontains=search_term)
-            | Q(tags__name__icontains=search_term)
-        ).distinct("id")
+        datalayers = (
+            Datalayer.objects.filter(
+                Q(name__icontains=search_term)
+                | Q(key__icontains=search_term)
+                | Q(category__name__icontains=search_term)
+                | Q(tags__name__icontains=search_term)
+            )
+            # reset potential multi col ordering from model Meta sub-class, so distinct()
+            # works as expected that needs to have the same ORDER BY than query.
+            .order_by()
+            .distinct("id")
+        )
 
         for d in datalayers:
             results.append(
