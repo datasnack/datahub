@@ -536,7 +536,7 @@
 								</tr>
 								<tr>
 									<td>{% translate "Date last accessed" %}</td>
-									<td>{{ s.date_last_accessed }}</td>
+									<td>{% if s.date_last_accessed %}{{ s.date_last_accessed }}{% endif %}</td>
 								</tr>
 							</tbody>
 						</table>
