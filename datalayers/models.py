@@ -9,6 +9,7 @@ import pandas as pd
 from psycopg import sql
 from taggit.managers import TaggableManager
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -170,9 +171,15 @@ class DatalayerManager(models.Manager):
 
 
 class Datalayer(models.Model):
+    DATA_TYPES = (
+        ("primary", _("Primary data")),
+        ("secondary", _("Secondary data")),
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    name = models.CharField(max_length=255)
     key = models.SlugField(
         max_length=255,
         null=False,
@@ -181,11 +188,13 @@ class Datalayer(models.Model):
             "Unique key identifying this Data Layer, use only <code>a-z</code>, <code>0-9</code> and <code>_</code>. Follow the convention of <code>&lt;source&gt;_&lt;parameter&gt;</code>."
         ),
     )
-    name = models.CharField(max_length=255)
-    description = models.TextField(
-        blank=True,
+    data_type = models.CharField(
+        max_length=10,
+        choices=DATA_TYPES,
+        default="secondary",
+        verbose_name=_("Data type"),
         help_text=_(
-            'You can use <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank">Markdown</a> for text formatting, including tables and footnotes.'
+            "Highlight if this Data Layer uses primary, i.e., you own data, or if it uses secondary data from someone else."
         ),
     )
 
@@ -197,14 +206,40 @@ class Datalayer(models.Model):
         null=True,
     )
     tags = TaggableManager(blank=True)
-    date_included = models.DateField(blank=True, null=True)
 
-    related_to = models.ManyToManyField("self", blank=True)
+    description = models.TextField(  # noqa: DJ001
+        blank=True,
+        null=True,
+        help_text=_(
+            'Description of the Data Layer. You can use <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank">Markdown</a> for text formatting, including tables and footnotes.'
+        ),
+    )
+    caveats = models.TextField(  # noqa: DJ001
+        blank=True,
+        null=True,
+        help_text=_(
+            'Describe known issues and caveats of the Data Layer. You can use <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank">Markdown</a> for text formatting, including tables and footnotes.'
+        ),
+    )
 
     # Data Layer metadata and processing
     # original_unit    = models.CharField(max_length=255, blank=True)
-    operation = models.CharField(max_length=255, blank=True)
-    database_unit = models.CharField(max_length=255, blank=True)
+    operation = models.TextField(
+        blank=True,
+        help_text=_(
+            "Describe the operation performed to harmonize the raw data, i.e., mean, sum, …"
+        ),
+    )
+    database_unit = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_(
+            "Unit of the harmonized values of this Data Layer, i.e., °C, mm, entities, …"
+        ),
+    )
+
+    date_included = models.DateField(blank=True, null=True, default=dt.date.today)
+    related_to = models.ManyToManyField("self", blank=True)
 
     # Original data source metadata
     format = models.CharField(max_length=255, blank=True)
@@ -232,6 +267,12 @@ class Datalayer(models.Model):
     # creator       = models.CharField(max_length=255, blank=True)
     # type          = models.CharField(max_length=255, blank=True)
     # identifier    = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = (
+            "key",
+            "name",
+        )
 
     def __str__(self) -> str:
         return f"{self.name} ({self.key})"
@@ -553,6 +594,11 @@ class Datalayer(models.Model):
         query += "WHERE 1=1 "
 
         if start_date:
+            if self.temporal_resolution == LayerTimeResolution.YEAR and isinstance(
+                start_date, dt.date
+            ):
+                start_date = start_date.year
+
             query += "AND {temporal_column} >= %(start_date)s "
             params["start_date"] = start_date
 
@@ -724,53 +770,252 @@ class Datalayer(models.Model):
         self.info("Finished processing", {"duration": end - start})
 
 
-class DatalayerSource(models.Model):
+class SourceMetadata(models.Model):
+    SOURCE_TYPES = (
+        ("data", _("Data source")),
+        ("information", _("Further information")),
+    )
+
+    DISTANCE_TYPES = (
+        ("meters", _("Meters")),
+        ("kilometers", _("Kilometers")),
+        ("degrees", _("Degrees")),
+    )
+
     class SourcePIDType(models.TextChoices):
+        URL = "URL", _("URL")
         DOI = "DOI", _("DOI")
         ROR = "ROR", _("ROR")
         ORCID = "ORCID", _("ORCID")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    position = models.PositiveSmallIntegerField(
+        default=0,
+        help_text=_(
+            "Field to order the meta data entries, if 0 will appended to at the end."
+        ),
+    )
 
     datalayer = models.ForeignKey(
         Datalayer,
         on_delete=models.CASCADE,
         related_name="sources",
-        blank=True,
-        null=True,
     )
 
     pid_type = models.CharField(
         max_length=255,
         choices=SourcePIDType,
-        default=SourcePIDType.DOI,
+        default="",
+        blank=True,
+        verbose_name=_("PID type"),
+        help_text=_("In case of URL put the URL into the PID field."),
     )
-    pid = models.CharField(max_length=255, blank=True)
-    description = models.TextField(blank=True, null=True)
+    pid = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("PID"),
+        help_text=_(
+            "Fetching DOI data will overwrite name, license and DataCite fields."
+        ),
+    )
 
-    # TODO: bibtex field?
+    metadata_type = models.CharField(
+        max_length=20,
+        choices=SOURCE_TYPES,
+        default="data",
+        verbose_name=_("Metadata type"),
+        help_text=_(
+            "Differentiate if this an actual data source of the Data Layer or further information."
+        ),
+    )
+    use_for_citation = models.BooleanField(
+        default=True,
+        help_text=_(
+            "Should this source be used in the aggregated citation information of this Data Layer?"
+        ),
+    )
 
-    # in case of DOI
-    datacite = models.JSONField(null=True, blank=True, editable=False)
+    name = models.CharField(max_length=255)
+    description = models.TextField(  # noqa: DJ001
+        blank=True,
+        null=True,
+        help_text=_(
+            'Description of the source. You can use <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank">Markdown</a> for text formatting, including tables and footnotes.'
+        ),
+    )
+
+    source_name = models.CharField(blank=True, null=True)
+    source_link = models.URLField(blank=True, null=True, max_length=2000)
+
+    # Data Hub relevant metadata
+    format = models.CharField(
+        max_length=255,  # 255 is max length of MIME type per RFC 4288 and RFC 6838
+        blank=True,
+        help_text=_(
+            'File type of the source, preferable it\'s MIME type, see <a target="_blank" href="https://www.iana.org/assignments/media-types/media-types.xhtml">list of available types</a>'
+        ),
+    )
+    format_unit = models.CharField(max_length=255, blank=True)
+    format_api = models.BooleanField(
+        default=False,
+        verbose_name=_("Source is an API"),
+        help_text=_(
+            "Check, if the source data are dynamically requested from an API. Use format field to specify the format of the data returned by the API, i.e., JSON."
+        ),
+    )
+
+    spatial_epsg = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name=_("EPSG-Code"),
+        help_text=_("EPSG ID of the data source."),
+    )
+
+    spatial_coverage = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_(
+            "What extend of the world dose the source cover, i.e., <code>global</code>, country code (ISO 3611-1 alpha3 preferred, separate by , in case of multiple), degrees"
+        ),
+    )
+
+    spatial_coverage_west_bound_longitude = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=9,
+        decimal_places=6,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        verbose_name=_("[Raster] West (←) bound"),
+        help_text=_("Westernmost coordinate (Longitude, -180 to 180)."),
+    )
+    spatial_coverage_east_bound_longitude = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=9,
+        decimal_places=6,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        verbose_name=_("[Raster] East (→) bound"),
+        help_text=_("Easternmost coordinate (Longitude, -180 to 180)."),
+    )
+    spatial_coverage_south_bound_latitude = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=8,
+        decimal_places=6,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        verbose_name=_("[Raster] South (↓) bound"),
+        help_text=_("Southernmost coordinate (Latitude, -90 to 90)."),
+    )
+    spatial_coverage_north_bound_latitude = models.DecimalField(
+        blank=True,
+        null=True,
+        max_digits=8,
+        decimal_places=6,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        verbose_name=_("[Raster] North (↑) bound"),
+        help_text=_("Northernmost coordinate (Latitude, -90 to 90)."),
+    )
+
+    spatial_resolution = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_(
+            "Resolution of the source, i.e., x km for raster data, <code>coordinates</code> for Points, administrative unit/region for vector files."
+        ),
+    )
+
+    spatial_resolution_x_distance = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name=_("[Raster] cell width value"),
+    )
+    spatial_resolution_x_unit = models.CharField(
+        null=True,
+        blank=True,
+        choices=DISTANCE_TYPES,
+        verbose_name=_("[Raster] cell width unit"),
+    )
+
+    spatial_resolution_y_distance = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name=_("[Raster] height value"),
+    )
+    spatial_resolution_y_unit = models.CharField(
+        null=True,
+        blank=True,
+        choices=DISTANCE_TYPES,
+        verbose_name=_("[Raster] cell height unit"),
+    )
+
+    temporal_resolution = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_(
+            "Temporal resolution, like annually, monthly, cross sectional for single points."
+        ),
+    )
+    temporal_coverage_start = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_(
+            "First temporal point of the source, use ISO format like yyyy[-mm[-dd]]."
+        ),
+    )
+    temporal_coverage_end = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_(
+            "Last temporal point of the source, use ISO format like yyyy[-mm[-dd]]. For continuously updated sources use ongoing"
+        ),
+    )
+
+    language = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_(
+            'Prefer ISO 639-3 language code (3 letters), see <a target="_blank" href="https://iso639-3.sil.org/code_tables/639/data">SIL for full list</a>. Other ISO 639 codes are allowed as well.'
+        ),
+    )
+    license = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_("SPDX identifier of the given license if available"),
+    )
+    date_published = models.CharField(
+        blank=True,
+        help_text=_("Year of publication in yyyy format."),
+    )  # no date field. maybe only a year is known.
+
+    date_last_accessed = models.DateField(blank=True, null=True)
+
+    citation_plain = models.TextField(blank=True)
+    citation_bibtex = models.TextField(blank=True)
+
+    # DataCite
+    datacite = models.JSONField(null=True, blank=True)
     datacite_fetched_at = models.DateTimeField(null=True, blank=True, editable=False)
 
-    def natural_key(self):
-        return (self.datalayer.key,)
+    class Meta:
+        ordering = (
+            "datalayer",
+            "position",
+        )
 
-    def get_pid_url(self):
-        match self.pid_type:
-            case DatalayerSource.SourcePIDType.DOI:
-                return f"https://doi.org/{self.pid}"
+    # this model has a pre_save signal in signals.py
 
-            case DatalayerSource.SourcePIDType.ROR:
-                return f"https://ror.org/{self.pid}"
+    def __str__(self) -> str:
+        return f"{self.name}"
 
-            case DatalayerSource.SourcePIDType.DOI:
-                return f"https://orcid.org/{self.pid}"
+    def related_item(self, pid_type, pid):
+        dl = self.datalayer
 
-            case _:
-                return "#"
+        for source in dl.sources.all():
+            if source.pid_type == pid_type and source.pid == pid:
+                return source
+
+        return None
 
 
 class DatalayerLogEntry(models.Model):

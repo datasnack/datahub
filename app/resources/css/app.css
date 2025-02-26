@@ -33,6 +33,10 @@ h6 {
 	font-size: 1rem;
 }
 
+.text-code {
+	color: var(--bs-code-color);
+}
+
 .footer-copy {
 	border-top: 1px solid var(--bs-gray-200);
 }
@@ -83,6 +87,7 @@ h6 {
 
 .c-icon {
 	fill: currentColor;
+	margin-top: -0.2em;
 }
 
 .icon-text {
@@ -125,6 +130,7 @@ h6 {
 	color: #fff;
 	font-size: 80%;
 	font-family: "DejaVu Sans", Verdana, Geneva, sans-serif;
+	display: inline-block;
 }
 .c-pidbadge-type {
 	border-top-left-radius: var(--border-radius);
@@ -199,4 +205,10 @@ dh-chart .aa-Form {
 .leaflet-popup-content-wrapper {
 	max-height: 250px;
 	overflow: scroll;
+}
+
+
+.row-striped {
+	--bs-table-color-type: var(--bs-table-striped-color);
+    --bs-table-bg-type: var(--bs-table-striped-bg);
 }

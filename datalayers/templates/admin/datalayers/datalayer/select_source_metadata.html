@@ -1,0 +1,10 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h2>Select SourceMetadata to Copy from {{ datalayer }}</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" name="apply" value="Copy">
+</form>
+{% endblock %}

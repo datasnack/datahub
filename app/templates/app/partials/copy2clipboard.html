@@ -1,0 +1,5 @@
+{% load i18n %}
+<button type="button" class="btn btn-sm btn-link text-body js-clipboard" data-clipboard-content="{{ content }}" data-clipboard-source="{{ source }}">
+	<span title="{%translate "Copy to clipboard" %}" class="js-copy">{% icon "copy" %}</span>
+	<span title="{%translate "Copied" %}" class="js-done" style="display:none;">{% icon "check" %}</span>
+</button>

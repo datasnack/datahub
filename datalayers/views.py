@@ -26,6 +26,10 @@ class DatalayerListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["full"] = False
+        if "full" in self.request.GET and self.request.GET["full"] == "1":
+            context["full"] = True
+
         context["columns"] = [
             "operation",
             "format",

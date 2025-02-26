@@ -5,6 +5,7 @@
 {% load l10n %}
 {% load coverage %}
 {% load markdown %}
+{% load call_method %}
 {% block title %}{{ datalayer.name }}{% endblock %}
 
 {% block content %}
@@ -38,6 +39,14 @@
 		<div class="mb-3 small text-muted">
 			{% translate "Key" %}: <code>{{ datalayer.key }}</code>
 
+			| {% if datalayer.data_type == 'primary' %}
+				{% translate "Primary data" %}
+			{% elif datalayer.data_type == 'secondary' %}
+				{% translate "Secondary data" %}
+			{% else %}
+				{{ datalayer.data_type }}
+			{% endif %}
+
 			{% with category=datalayer.category %}
 				{% if category %}
 					| {% translate "Category" %}: <a href="{{ datalayer.category.get_absolute_url }}">{{ datalayer.category }}</a>
@@ -49,63 +58,69 @@
 
 		<div class="mb-3">
 			{% markdown datalayer.description %}
+
+			{% if datalayer.caveats %}
+				<div class="alert alert-warning pb-0">
+					{% markdown datalayer.caveats %}
+				</div>
+			{% endif %}
 		</div>
 
-		{% with related=datalayer.related_to.all %}
-			{% if related|length %}
+		{% with sources=datalayer.sources.all %}
+			{% if sources|length %}
 			<div class="mb-3">
-				{% translate "Related Data Layers:" %}
+				{% translate "Sources of Data Layer:" %}
 				<ul>
-					{% for reld in related %}
-						<li><a href="{{ reld.get_absolute_url }}">{{ reld.name}} (<code>{{ reld.key}}</code>)</a></li>
+					{% for s in sources %}
+						<li>
+							<span class="text-secondary">
+								{% if s.metadata_type == "data" %}
+									{% icon "file-binary" %}
+								{% elif s.metadata_type == "information" %}
+									{% icon "project-roadmap" %}
+								{# else not needed, if no icon is known don't show a fallback #}
+								{%endif%}
+							</span>
+
+							<a href="#source-{{ s.id }}">
+							{{ s.name}}
+						</a></li>
 					{% endfor %}
 				</ul>
 			</div>
 			{% endif %}
 		{% endwith %}
 
-		<hr>
-
-		{% if datalayer.is_available %}
-		<div class="row">
-			<div class="col-12 col-md-6">
-				<table class="table table-sm small caption-top">
-					<caption>{% translate "Data availability per spatial unit within the integrated time period" %}</caption>
-
-					<thead>
-						<tr>
-							<th>{% translate "Shape type" %}</th>
-							<th>{% translate "First" %}</th>
-							<th>{% translate "Last" %}</th>
-							<th>{% translate "Availability" %}</th>
-						</tr>
-					</thead>
-					<tbody class="table-group-divider">
-						{% for type in datalayer.get_available_shape_types %}
-						<tr class="small">
-							<td>
-								<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
-							</td>
-							<td></td>
-							<td></td>
-							<td>
-								{{ datalayer|coverage:type|percentageformat }}
-							</td>
-						</tr>
-						{% endfor %}
-						<tr class="table-active">
-							<td>{% translate "Total" %}</td>
-							<td>{{ datalayer.first_time }}</td>
-							<td>{{ datalayer.last_time }}</td>
-							<td>{{ datalayer.value_coverage|percentageformat }}</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
-		{% endif %}
 
 
+		{% with related=datalayer.related_to.all %}
+			{% if related|length %}
+			<details class="mb-3">
+				<summary>
+					{% blocktranslate with count=related|length %}
+					Related Data Layers ({{ count }})
+					{% endblocktranslate %}
+				</summary>
+				<ul>
+					{% for reld in related %}
+						<li><a class="text-reset text-decoration-none" href="{{ reld.get_absolute_url }}">
+
+							{% if reld.has_class %}
+								<span class="text-secondary" title="{% blocktranslate with resolution=reld.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
+								{% with "calendar-"|add:reld.temporal_resolution_str as dl_temporal_icon %}
+									{% icon dl_temporal_icon ignore_missing=True %}
+								{% endwith %}
+								</span>
+							{% endif %}
+
+							<span class="link-primary text-decoration-underline">{{ reld.name}}</span>
+							(<code class="text-code">{{ reld.key}}</code>)
+						</a></li>
+					{% endfor %}
+				</ul>
+			</details>
+			{% endif %}
+		{% endwith %}
 
 	</div>
 
@@ -173,85 +188,58 @@
 
 			</div>
 		</div>
-	</div>
-
-	{% comment %}
-	<div class="col-12 col-md-3">
 
 
 
+		{% if datalayer.is_available %}
+			<table class="table table-sm small caption-top">
+				<caption>{% translate "Data availability per spatial unit within the integrated time period" %}</caption>
 
-		<table class="table table-sm small">
-			<tbdoy>
-				<tr>
-					<th class="fw-normal">{% translate "Value type" %}</th>
-					<td>{{ datalayer.value_type|default_if_none:"-" }}</td>
-				</tr>
-				<tr>
-					<th class="fw-normal">{% translate "Temporal resolution" %}</th>
-					<td>{{ datalayer.temporal_resolution|default_if_none:"-" }}</td>
-				</tr>
-				<tr>
-					<th class="fw-normal">{% translate "First/Last" %}</th>
-					<td>
-						{{ datalayer.first_time }}
-						/
-						{{ datalayer.last_time }}
-						({{ datalayer.value_coverage|percentageformat }})
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2">
+				<thead>
+					<tr>
+						<th>{% translate "Shape type" %}</th>
+						<th>{% translate "First" %}</th>
+						<th>{% translate "Last" %}</th>
+						<th>{% translate "Availability" %}</th>
+					</tr>
+				</thead>
+				<tbody class="table-group-divider">
+					{% for type in datalayer.get_available_shape_types %}
+					<tr class="small">
+						<td>
+							<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
+						</td>
+						<td></td>
+						<td></td>
+						<td>
+							{{ datalayer|coverage:type|percentageformat }}
+						</td>
+					</tr>
+					{% endfor %}
+					<tr class="table-active">
+						<td>{% translate "Total" %}</td>
+						<td>{{ datalayer.first_time }}</td>
+						<td>{{ datalayer.last_time }}</td>
+						<td>{{ datalayer.value_coverage|percentageformat }}</td>
+					</tr>
+				</tbody>
+			</table>
+		{% endif %}
 
-						<table class="table table-sm small mb-0">
-							<thead>
-								<tr>
-									<th class="fw-normal">{% translate "Shape type" %}</th>
-									<th class="fw-normal">{% translate "Coverage" %}</th>
-								</tr>
-							</thead>
-							<tbody>
-							{% for type in datalayer.get_available_shape_types %}
-								<tr>
-									<td>
-										<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
-									</td>
-									<td>
-										{{ datalayer|coverage:type|percentageformat }}
-									</td>
-								</tr>
-							{% endfor %}
-							</tbody>
-						</table>
-
-					</td>
-				</tr>
-			</tbody>
-		</table>
 
 
 	</div>
-
-	<div class="col-12 col-md-3">
-
-		<div class="mb-3">
-			{% include "datalayers/datalayer_states.html" with mode="large" datalayer=datalayer %}
-		</div>
-
-		<div class="text-muted">
-			<a class="small" href="{% url "datalayers:datalayer_log" datalayer.key %}">{%translate "Log" %}</a> |
-			<a class="small" href="#">{%translate "Files" %}</a>
-		</div>
-
-	</div>
-
-	{% endcomment %}
 </div>
 
 
 <div class="row">
 
-	<div class="col-12 col-xl-8">
+	<div class="col-12">
+
+		<h2>{% translate "Analytical overview"%}
+	</div>
+
+	<div class="col-12">
 
 		<div class="btn-toolbar justify-content-between mb-3">
 			<div class="input-group input-group-sm" style="max-width: 500px">
@@ -305,164 +293,322 @@
 		{%endif%}
 
 	</div>
-	<div class="col-12 col-xl-4">
 
-		{% comment %}
-		<div class="card mb-3">
-			<h5 class="card-header">{% translate "Data Layer information" %}</h5>
-			<div class="card-body">
-				<table class="table table-sm table-meta_data mb-0">
-					<thead>
-						<tr>
-							<th>{% translate "Information" %}</th>
-							<th>{% translate "Description" %}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>{% translate "Operation" %}</td>
-							<td>{{ datalayer.operation }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Original unit" %}</td>
-							<td>{{ datalayer.original_unit }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Database unit" %}</td>
-							<td>{{ datalayer.database_unit }}</td>
-						</tr>
-					</tbody>
-				</table>
+	<div class="col-12">
+
+		<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between mt-5">
+			<div class="mb-2 mb-md-0">
+				<div class="btn-group">
+					<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+						{% icon "download" %} {% translate "Citation data" %}
+					</button>
+
+					<ul class="dropdown-menu">
+						<li><a class="dropdown-item" rel="nofollow" href="#">BibTeX</a></li>
+					</ul>
+				</div>
 			</div>
-		</div>
-		{%endcomment %}
 
-		<div class="card mb-3">
-			<h5 class="card-header">{% translate "Original data information" %}</h5>
+			<h2 class="mb-0">{% translate "Source information"%}</h2>
+		</div>
+
+	</div>
+
+	<div class="col-12">
+
+
+		{% for s in datalayer.sources.all %}
+
+		<div class="card mb-3" id="source-{{ s.id}}">
+			<h5 class="card-header" data-bs-toggle="collapse" data-bs-target="#source-{{ s.id}}-body" aria-expanded="true">
+				[{{ forloop.counter }} of {{ datalayer.sources.all|length }}] {{ s.name }}
+			</h5>
+			<div id="source-{{ s.id}}-body" class="accordion-collapse collapse show">
 			<div class="card-body">
-				<table class="table table-sm table-meta_data">
-					<thead>
-						<tr>
-							<th>{% translate "Information" %}</th>
-							<th>{% translate "Description" %}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>{% translate "Format" %}</td>
-							<td>{{ datalayer.format }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Format unit" %}</td>
-							<td>{{ datalayer.format_unit }}</td>
-						</tr>
-						{% if datalayer.format_description %}
-						<tr>
-							<td></td>
-							<td>
-								{{ datalayer.format_description}}
-							</td>
-						</tr>
+
+
+				<div class="row">
+
+
+					<div class="col-12 col-sm-6">
+
+						<div class="mb-3 d-flex flex-row align-items-center">
+
+							<div class="me-3">
+								{% if s.metadata_type == "data" %}
+									{% icon "file-binary" %} Data
+								{% elif s.metadata_type == "information" %}
+									{% icon "project-roadmap" %} Information
+								{%else%}
+									{{ s.metadata_type }}
+								{%endif%}
+							</div>
+
+							{# PID part #}
+							<div class="">
+								{% if s.pid_type == 'DOI'%}
+									<a class="c-pidbadge" href="https://doi.org/{{ s.pid }}">
+										<span class="c-pidbadge-type">{{ s.pid_type}}</span><span class="c-pidbadge-pid">{{ s.pid }}</span>
+									</a>
+
+									{% include "app/partials/copy2clipboard.html" with content=s.pid %}
+
+								{% elif s.pid_type == 'URL'%}
+									<a href="{{ s.pid}}">{{ s.pid }}</a>
+								{% else %}
+									{{s.pid_type }} | {{ s.pid }}
+								{% endif %}
+							</div>
+
+						</div>
+
+						{# Source #}
+						{% if s.source_name or s.source_link %}
+						<div class="mb-3">
+							{% translate "Source: " %}
+							{% if s.source_name and s.source_link %}
+								<a href="{{ s.source_link}}">{{ s.source_name }}</a>
+							{% elif s.source_name %}
+								{{ s.source_name }}
+							{% elif s.source_link %}
+								<a href="{{ s.source_link}}">{{ s.source_link}}</a>
+							{% endif %}
+						</div>
 						{% endif %}
 
-						{# Spatial #}
-						<tr>
-							<td>{% translate "Spatial details" %}</td>
-							<td>{{ datalayer.spatial_details }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Spatial coverage" %}</td>
-							<td>{{ datalayer.spatial_coverage }}</td>
-						</tr>
+						{# Description #}
+						{% if s.description %}
+							{% markdown s.description %}
+						{%else %}
+							<p class="text-muted fst-italic">{% translate "No description provided." %}</p>
+						{%endif%}
 
-						{# Temporal #}
-						<tr>
-							<td>{% translate "Temporal details" %}</td>
-							<td>{{ datalayer.temporal_details }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Temporal coverage" %}</td>
-							<td>{{ datalayer.temporal_coverage }}</td>
-						</tr>
+						<h4>{% translate "Citation" %}</h4>
 
-						<tr>
-							<td>{% translate "Source" %}</td>
-							<td>
-								{% if datalayer.source %}
+						<p>
+							{% if s.use_for_citation %}
+								<span class="text-success">{% icon "check-circle" %}</span> {% translate "This source is included in the Data Layer citation." %}
+							{% else %}
+								{% icon "circle-slash" %}  {% translate "This source is <b>not</b> included in the Data Layer citation." %}
+							{% endif %}
+						</p>
 
-									{% if datalayer.source_link %}
 
-										<a href="{{ datalayer.source_link }}">
-											{{ datalayer.source }}
-										</a>
+						{% if s.citation_bibtex or s.citation_plain %}
+						<div class="row mb-3">
+							<div class="col-12 col-lg-10">
+								<div class="btn-group btn-group-sm mb-1" role="group">
+									<button type="button" class="btn btn-outline-secondary js-paste-to" data-target="citation-{{s.id}}" data-content="{{ s.citation_bibtex}}" {% if not s.citation_bibtex %}disabled{%endif%}>{% translate "BibTeX" %}</button>
+									<button type="button" class="btn btn-outline-secondary js-paste-to" data-target="citation-{{s.id}}" data-content="{{ s.citation_plain}}" {% if not s.citation_plain %}disabled{%endif%}>{% translate "Plain text" %}</button>
+								</div>
+							</div>
 
-									{% else %}
-										{{ datalayer.source }}
+							{% comment %}
+							{# demo markup for a potential CSL selector for generating plain text citations based on bibtex #}
+							<div class="col-10 col-lg-6">
+								<div class="input-group input-group-sm mb-1">
+									<input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2">
+									<button class="btn btn-outline-secondary" type="button" id="button-addon2">{% translate "Load" %}</button>
+								  </div>
+							</div>
+							{% endcomment %}
+
+							<div class="col-2 col-lg-2">
+								<div class="float-end">
+									{% with s.id|stringformat:"s" as source %}
+										{% include "app/partials/copy2clipboard.html" with source="#citation-"|add:source %}
+									{% endwith %}
+								</div>
+							</div>
+
+							<div class="col-12">
+								<textarea class="form-control" id="citation-{{s.id}}" rows="3">{% if s.citation_bibtex %}{{ s.citation_bibtex}}{%elif s.citation_plain%}{{s.citation_plain}}{%endif%}</textarea>
+							</div>
+						</div>
+						{% else %}
+							<div class="alert alert-light" role="alert">
+								{% translate "No citation information available." %}
+							</div>
+						{%endif%}
+					</div>
+
+					{% if s.metadata_type == "data" %}
+					<div class="col-12 col-sm-6">
+						<table class="table table-sm table-meta_data">
+							<thead>
+								<tr>
+									<th>{% translate "Information" %}</th>
+									<th>{% translate "Description" %}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>{% translate "Format" %}</td>
+									<td>
+										{{ s.format }}
+
+										{% if s.format_api %}
+											(API)
+										{%endif%}
+									</td>
+								</tr>
+								<tr>
+									<td>{% translate "Format unit" %}</td>
+									<td>{{ s.format_unit }}</td>
+								</tr>
+
+								{# Spatial #}
+								<tr>
+									<td>{% translate "Spatial resolution" %}</td>
+									<td>{{ s.spatial_resolution }}</td>
+								</tr>
+								<tr>
+									<td>{% translate "Spatial coverage" %}</td>
+									<td>{{ s.spatial_coverage }}</td>
+								</tr>
+
+								{# Temporal #}
+								<tr>
+									<td>{% translate "Temporal resolution" %}</td>
+									<td>{{ s.temporal_resolution }}</td>
+								</tr>
+								<tr>
+									<td>{% translate "Temporal coverage" %}</td>
+									<td>
+										{% if s.temporal_coverage_start == s.temporal_coverage_end %}
+											{{ s.temporal_coverage_start }}
+										{% elif s.temporal_coverage_start and s.temporal_coverage_end %}
+										{{ s.temporal_coverage_start }}–{{ s.temporal_coverage_end }}
+										{%else %}
+											{{ s.temporal_coverage_start }}
+											{{ s.temporal_coverage_end }}
+										{%endif%}
+									</td>
+								</tr>
+								<tr>
+									<td>{% translate "Language" %}</td>
+									<td>{{ s.language }}</td>
+								</tr>
+								<tr>
+									<td>{% translate "License" %}</td>
+									<td>{{ s.license }}</td>
+								</tr>
+
+								<tr>
+									<td>{% translate "Date published" %}</td>
+									<td>{{ s.date_published }}</td>
+								</tr>
+								<tr>
+									<td>{% translate "Date last accessed" %}</td>
+									<td>{{ s.date_last_accessed }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					{% endif %}
+
+				</div>
+
+				{% comment %} data cite{% endcomment %}
+
+
+				{%if s.datacite %}
+
+					<h4>{% translate "DataCite information" %}</h4>
+
+					{%if s.datacite %}
+						{%if s.datacite.creators %}
+						<details>
+							<summary>{% translate "Authors" %} ({{  s.datacite.creators|length }})</summary>
+							<ul class="list-inline">
+							{% for creator in s.datacite.creators %}
+								<li class="list-inline-item">
+									{{ creator.givenName }}
+									{{ creator.familyName }}
+
+									{% if creator.nameIdentifiers %}
+										{% for cid in creator.nameIdentifiers %}
+											{% if cid.nameIdentifierScheme == "ORCID" %}
+												<a href="{{ cid.nameIdentifier }}">{% icon "orcid" %}</a>
+											{% endif %}
+										{% endfor %}
 									{% endif %}
 
-								{% else %}
-									{{ datalayer.source_link|urlize }}
-								{% endif %}
-							</td>
-						</tr>
-						<tr>
-							<td>{% translate "Language" %}</td>
-							<td>{{ datalayer.language }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "License" %}</td>
-							<td>{{ datalayer.license }}</td>
-						</tr>
+									{% if not forloop.last %}
+										<span class="text-body-tertiary">;</span>
+									{% endif %}
+								</li>
+							{% endfor %}
+							</ul>
+						</details>
 
-						<tr>
-							<td>{% translate "Date published" %}</td>
-							<td>{{ datalayer.date_published }}</td>
-						</tr>
-						<tr>
-							<td>{% translate "Date last accessed" %}</td>
-							<td>{{ datalayer.date_last_accessed }}</td>
-						</tr>
+						{%endif%}
+					{%endif%}
 
-						<tr>
-							<td>{% translate "Citation" %}</td>
-							<td>{{ datalayer.citation }}</td>
-						</tr>
-					</tbody>
-				</table>
 
-				{% with sources=datalayer.sources.all %}
-				{% if sources|length %}
-					<h4>{% translate "Sources" %}</h4>
 
-					{%for source in sources %}
+					{% if s.datacite.relatedIdentifiers %}
 
-						<a href="{{ source.get_pid_url }}">
-							<div class="c-pidbadge">
-								<span class="c-pidbadge-type">{{ source.pid_type}}</span><span class="c-pidbadge-pid">{{ source.pid }}</span>
-							</div>
-						</a>
+					<details>
+						<summary>{% translate "Related items" %} ({{  s.datacite.relatedIdentifiers|length }})</summary>
 
-						{{ source.description }}
+						<table class="table table-sm">
+							<thead>
+								<tr>
+									<th>{% translate "Relation" %}</th>
+									<th>{% translate "PID" %}</th>
+									<th>{% translate "Resource" %}</th>
+									<th>{% translate "Available on this Data Layer" %}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for related in s.datacite.relatedIdentifiers %}
+								<tr>
+									<td>{{ related.relationType}}</td>
+									<td>
+										{%if related.relatedIdentifierType == "DOI" %}
+										<a href="https://doi.org/{{ related.relatedIdentifier }}">
+											<div class="c-pidbadge">
+												<span class="c-pidbadge-type">{{ related.relatedIdentifierType}}</span><span class="c-pidbadge-pid">{{ related.relatedIdentifier }}</span>
+											</div>
+										</a>
+										{%elif related.relatedIdentifierType == "URL" %}
+										<a href="{{ related.relatedIdentifier }}">
+											{{ related.relatedIdentifier}}
+										</a>
+										{%else%}
+											{{ related.relatedIdentifierType}}: {{ related.relatedIdentifier }}
+										{%endif%}
+									</td>
+									<td>{{ related.resourceTypeGeneral}}</td>
+									<td>
+										{% call_method s "related_item" related.relatedIdentifierType related.relatedIdentifier as related_item %}
 
-						<hr>
-					{% endfor %}
+										{% if related_item %}
+											{{ related_item.name }}
+											<a href="#source-{{ related_item.id}}" title="{%translate "Scroll to source" %}" class="text-decoration-none">↩</a>
+										{% else %}
+											-
+										{% endif %}
 
-				{% endif %}
-				{% endwith %}
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+
+					</details>
+					{% endif %}
+
+
+				{%endif%}
+
 
 			</div>
 		</div>
+	</div>
 
-		{% comment %}
-		<div class="card mb-3">
-			<h5 class="card-header">{% translate "DataCite" %}</h5>
-			<div class="card-body">
-				<a href="https://doi.org/{{ datalayer.doi}}">{{ datalayer.doi}}</a>
-
-				<a href="{% url 'datalayers:datalayer_datacite' datalayer.id %}">DataCite</a>
-			</div>
-		</div>
-		{% endcomment %}
+		{% endfor %}
 
 	</div>
 </div>
@@ -472,6 +618,72 @@
 {% block footer %}
 
 {% include "datalayers/partials/api_modal.html" with datalyer=datalayer %}
+
+
+<script type="module">
+document.querySelectorAll("button[data-target]").forEach(button => {
+	button.addEventListener("click", function () {
+		let targetId = this.getAttribute("data-target");
+		let content = this.getAttribute("data-content");
+		let textArea = document.getElementById(targetId);
+
+		if (textArea) {
+			textArea.value = content;
+		}
+	});
+});
+
+
+
+document.querySelectorAll(".js-clipboard").forEach((button) => {
+	button.addEventListener("click", function () {
+	const content = button.dataset.clipboardContent;
+	const sourceSelector = button.dataset.clipboardSource;
+	let textToCopy = "";
+
+	if (content) {
+		textToCopy = content;
+	} else if (sourceSelector) {
+		const sourceElement = document.querySelector(sourceSelector);
+		if (sourceElement) {
+		if (sourceElement.tagName === "TEXTAREA" || sourceElement.tagName === "INPUT") {
+			textToCopy = sourceElement.value;
+		} else {
+			textToCopy = sourceElement.textContent;
+		}
+		}
+	}
+
+	if (textToCopy) {
+		navigator.clipboard.writeText(textToCopy)
+		.then(() => {
+			toggleIcons(button);
+		})
+		.catch((err) => {
+			alert("Error copying to clipboard: " + err);
+		});
+	} else {
+		alert("Nothing to copy!");
+	}
+	});
+});
+
+
+function toggleIcons(button) {
+const copyIcon = button.querySelector(".js-copy");
+const doneIcon = button.querySelector(".js-done");
+if (copyIcon && doneIcon) {
+	copyIcon.style.display = "none";
+	doneIcon.style.display = "inline-block";
+	setTimeout(() => {
+	copyIcon.style.display = "inline-block";
+	doneIcon.style.display = "none";
+	}, 1000);
+}
+}
+
+</script>
+
 
 <script type="module">
 
