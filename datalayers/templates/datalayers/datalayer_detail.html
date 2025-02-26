@@ -6,6 +6,8 @@
 {% load coverage %}
 {% load markdown %}
 {% load call_method %}
+{% load link_license %}
+
 {% block title %}{{ datalayer.name }}{% endblock %}
 
 {% block content %}
@@ -491,7 +493,7 @@
 								</tr>
 								<tr>
 									<td>{% translate "License" %}</td>
-									<td>{{ s.license }}</td>
+									<td>{{ s.license|link_license }}</td>
 								</tr>
 
 								<tr>
