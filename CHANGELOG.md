@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/datasnack/datahub/compare/v0.6.1..v0.7.0) - 2025-02-26
+
+This updates contains a major restructuring of the Data Layer metadata resources. The existing metadata models are *not* migrated to the new format automatically.
+
+### Changed
+
+- New metadata model/form ([c3da789](https://github.com/datasnack/datahub/commit/c3da78910039e63f7eeff95a4ac471333f7459e1))
+- Command to swap between different DH configs/instances ([a229449](https://github.com/datasnack/datahub/commit/a229449e413378a6e7f76270790965018275d646))
+
+### Fixed
+
+- Icon template helper trims whitespace ([534c4f6](https://github.com/datasnack/datahub/commit/534c4f69d82f0d6f24a9232f92e4cf54360fe645))
+- Use data hub prefix for dump file name ([678f16e](https://github.com/datasnack/datahub/commit/678f16eb389a167f9e309dffe914c0102a7564eb))
+
 ## [0.6.1](https://github.com/datasnack/datahub/compare/v0.6.0..v0.6.1) - 2025-01-27
 
 ### Added
