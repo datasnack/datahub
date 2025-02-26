@@ -23,7 +23,7 @@ def icon(name, size=16, *, ignore_missing=False):
         return ""
 
     with Path(file_name).open() as f:
-        svg = f.read()
+        svg = f.read().strip()
         svg = svg[:5] + 'class="c-icon" ' + svg[5:]
         icon_cache[key] = svg
 
