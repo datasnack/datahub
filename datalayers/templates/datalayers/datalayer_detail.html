@@ -462,11 +462,37 @@
 								{# Spatial #}
 								<tr>
 									<td>{% translate "Spatial resolution" %}</td>
-									<td>{{ s.spatial_resolution }}</td>
+									<td>
+										{{ s.spatial_resolution }}
+
+										{% if s.has_spatial_coverage_cell_dimension %}
+										<div>
+											<!-- y -->
+											{{ s.spatial_resolution_y_distance|floatformat:2 }}&#8239;{{ s.spatial_resolution_y_unit }} &times;
+											<!-- x -->
+											{{ s.spatial_resolution_x_distance|floatformat:2 }}&#8239;{{ s.spatial_resolution_x_unit }}
+										</div>
+										{% endif %}
+									</td>
 								</tr>
 								<tr>
 									<td>{% translate "Spatial coverage" %}</td>
-									<td>{{ s.spatial_coverage }}</td>
+									<td>
+										{{ s.spatial_coverage }}
+
+										{% if s.has_spatial_coverage_bbox %}
+											<div class="my-3 mx-5 position-relative border border-dark small" style="width: 150px; height: 100px;">
+												<!-- North -->
+												<div class="position-absolute top-0 start-50 translate-middle bg-secondary-subtle border border-dark px-2">{{ s.spatial_coverage_north_bound_latitude|floatformat:2 }}</div>
+												<!-- South -->
+												<div class="position-absolute top-100 start-50 translate-middle border border-dark bg-secondary-subtle px-2">{{ s.spatial_coverage_south_bound_latitude|floatformat:2 }}</div>
+												<!-- West -->
+												<div class="position-absolute top-50 start-0 translate-middle border border-dark bg-secondary-subtle px-2">{{ s.spatial_coverage_west_bound_longitude|floatformat:2 }}</div>
+												<!-- East -->
+												<div class="position-absolute top-50 start-100 translate-middle border border-dark bg-secondary-subtle px-2">{{ s.spatial_coverage_east_bound_longitude|floatformat:2 }}</div>
+											</div>
+										{%endif%}
+									</td>
 								</tr>
 
 								{# Temporal #}

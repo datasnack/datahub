@@ -1008,6 +1008,26 @@ class SourceMetadata(models.Model):
     def __str__(self) -> str:
         return f"{self.name}"
 
+    @property
+    def has_spatial_coverage_bbox(self) -> bool:
+        """Check if all four directions of the bounding box are set."""
+        return (
+            self.spatial_coverage_west_bound_longitude
+            and self.spatial_coverage_east_bound_longitude
+            and self.spatial_coverage_north_bound_latitude
+            and self.spatial_coverage_south_bound_latitude
+        )
+
+    @property
+    def has_spatial_coverage_cell_dimension(self) -> bool:
+        """Check if all information for the cell dimensions are set."""
+        return (
+            self.spatial_resolution_x_distance
+            and self.spatial_resolution_x_unit
+            and self.spatial_resolution_y_distance
+            and self.spatial_resolution_y_unit
+        )
+
     def related_item(self, pid_type, pid):
         dl = self.datalayer
 
