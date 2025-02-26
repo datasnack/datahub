@@ -6,7 +6,7 @@ from django.utils.text import slugify
 from datalayers.models import Category
 
 def migrate_data_forward(apps, schema_editor):
-    for instance in Category.objects.all():
+    for instance in Category.objects.all().values('name'):
         instance.key = slugify(instance.name)
         instance.save()
 
