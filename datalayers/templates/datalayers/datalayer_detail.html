@@ -460,6 +460,14 @@
 								</tr>
 
 								{# Spatial #}
+								{% if s.spatial_epsg %}
+								<tr>
+									<td>{% translate "Projection" %}</td>
+									<td>
+										<a rel="noreferrer" href="https://epsg.io/{{ s.spatial_epsg }}"> EPSG:{{ s.spatial_epsg }}</a>
+									</td>
+								</tr>
+								{% endif %}
 								<tr>
 									<td>{% translate "Spatial resolution" %}</td>
 									<td>
