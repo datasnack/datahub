@@ -16,7 +16,7 @@ from app.widgets import (
     TemporalResolutionWidget,
 )
 
-from .forms import SourceMetadataSelectionForm
+from .forms import SourceMetadataSelectionForm, SourceMetadataSelectionFromForm
 from .models import Category, Datalayer, SourceMetadata
 from .utils import dumpdata, loaddata
 
@@ -100,7 +100,11 @@ class SourceMetadataAdminInline(admin.StackedInline):
 
 
 class DatalayerAdmin(admin.ModelAdmin):
-    actions = [action_dumpdata, "copy_source_metadata_action"]
+    actions = [
+        action_dumpdata,
+        "copy_source_metadata_action",
+        "copy_source_metadata_from_action",
+    ]
 
     list_display = ["name", "key", "has_class", "is_loaded"]
 
@@ -160,6 +164,11 @@ class DatalayerAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.copy_source_metadata_view),
                 name="copy-source-metadata",
             ),
+            path(
+                "copy-source-metadata-from/",
+                self.admin_site.admin_view(self.copy_source_metadata_from_view),
+                name="copy-source-metadata-from",
+            ),
         ]
         return custom_urls + urls
 
@@ -206,6 +215,14 @@ class DatalayerAdmin(admin.ModelAdmin):
 
     copy_source_metadata_action.short_description = (
         "Copy SourceMetadata to another Datalayer"
+    )
+
+    def copy_source_metadata_from_action(self, request, queryset):
+        selected = request.POST.getlist("_selected_action")
+        return redirect(f"copy-source-metadata-from/?ids={','.join(selected)}")
+
+    copy_source_metadata_from_action.short_description = (
+        "Copy SourceMetadata from a Datalayer to the selected"
     )
 
     def copy_source_metadata_view(self, request, datalayer_id):
@@ -260,6 +277,71 @@ class DatalayerAdmin(admin.ModelAdmin):
 
         return render(
             request, "admin/datalayers/datalayer/select_source_metadata.html", context
+        )
+
+    def copy_source_metadata_from_view(self, request):
+        if not self.has_add_permission(request):  # Check add permission for this model
+            return HttpResponseForbidden(
+                "You do not have permission to copy sources for this model."
+            )
+
+        if "ids" not in request.GET:
+            self.message_user(request, "No items selected!", level=messages.WARNING)
+            return redirect("admin:datalayers_datalayer_changelist")
+
+        ids = request.GET["ids"].split(",")
+
+        if request.method == "POST":
+            form = SourceMetadataSelectionFromForm(request.POST)
+            if form.is_valid():
+                source_datalayer = form.cleaned_data["source_datalayer"]
+                target_datalayers = form.cleaned_data["target_datalayers"]
+
+                delete_existing = form.cleaned_data["delete_existing"]
+                append_copy_to_new_name = form.cleaned_data["append_copy_to_new_name"]
+
+                for target_datalayer in target_datalayers:
+                    if delete_existing:
+                        SourceMetadata.objects.filter(
+                            datalayer=target_datalayer
+                        ).delete()
+
+                    for metadata in source_datalayer.sources.all():
+                        metadata.pk = None  # Duplicate object
+
+                        if append_copy_to_new_name:
+                            metadata.name = f"{metadata.name} (COPY)"
+
+                        metadata.position = (
+                            0  # copied entries will be ordered at the end
+                        )
+                        metadata.datalayer = target_datalayer
+                        metadata.save()
+
+                    self.message_user(
+                        request,
+                        f"Copied SourceMetadata from {source_datalayer} to {target_datalayer}",
+                    )
+
+                return redirect("admin:datalayers_datalayer_changelist")
+
+        else:
+            form = SourceMetadataSelectionFromForm(
+                ids=ids,
+            )
+
+        context = dict(
+            self.admin_site.each_context(request),
+            opts=self.model._meta,  # Ensures admin breadcrumbs and styles
+            app_label=self.model._meta.app_label,
+            form=form,
+            title="Select Data Layer to copy SourceMetaData from",
+        )
+
+        return render(
+            request,
+            "admin/datalayers/datalayer/select_source_metadata_from.html",
+            context,
         )
 
 
