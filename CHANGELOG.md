@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1](https://github.com/datasnack/datahub/compare/v0.7.0..v0.7.1) - 2025-02-27
+
+### Changed
+
+- Admin action to copy metadata to n datalayers form 1 ([314540b](https://github.com/datasnack/datahub/commit/314540b3ba40a4d6267382a16b764f071d513b7f))
+
+### Fixed
+
+- Broken migration for setting key column on shape model ([faa6190](https://github.com/datasnack/datahub/commit/faa6190cc07ef19ed8c13c30e20bb0fff646d3b9))
+
 ## [0.7.0](https://github.com/datasnack/datahub/compare/v0.6.1..v0.7.0) - 2025-02-26
 
 This updates contains a major restructuring of the Data Layer metadata resources. The existing metadata models are *not* migrated to the new format automatically.
