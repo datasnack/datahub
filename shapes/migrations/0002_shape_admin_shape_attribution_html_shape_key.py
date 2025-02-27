@@ -7,10 +7,9 @@ from shapes.models import Shape
 def migrate_data_forward(apps, schema_editor):
     # select ONLY the needed id column. In a later migration we add a new field
     # which is not yet created, so we need prevent a SQL column does not exist error
-    # during the select query.
-    for instance in Shape.objects.all().values('id'):
-        instance.key = str(instance.id)
-        instance.save()
+    # during the select query. So we don't use the model object but work on the fields.
+    for shape_id in Shape.objects.values_list("id", flat=True):
+        Shape.objects.filter(id=shape_id).update(key=str(shape_id))
 
 def migrate_data_backward(apps, schema_editor):
     pass
