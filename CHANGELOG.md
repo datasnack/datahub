@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/datasnack/datahub/compare/v0.7.1..v0.8.0) - 2025-03-05
+
+### Changed
+
+- Bearer token based API access ([4874ae6](https://github.com/datasnack/datahub/commit/4874ae63c9d319cedd7ec3ae18404e9494b4ebfb))
+
+### Fixed
+
+- Show messages to the user if any ([e813687](https://github.com/datasnack/datahub/commit/e81368757dd4bf8dccbb2dc784527b77c0bf5fa8))
+- De/serialization of SourceMetaData model ([9f49a04](https://github.com/datasnack/datahub/commit/9f49a04d058ab08d042bf747c9bfc1f460715e95))
+
 ## [0.7.1](https://github.com/datasnack/datahub/compare/v0.7.0..v0.7.1) - 2025-02-27
 
 ### Changed
