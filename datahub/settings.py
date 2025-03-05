@@ -160,6 +160,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "app.middleware.require_login_middleware.RequireLoginMiddleware",
+    "app.middleware.api_auth_middleware.ApiAuthMiddleware",
 ]
 
 # Enable debug toolbar only if DEBUG=True and the package is installed
@@ -307,6 +308,9 @@ LOGIN_REQUIRED_URLS_EXCEPTIONS = (
     r"/i18n/setlang/$",
     r"/admin(.*)$",
     r"/accounts/login(.*)$",
+    # API auth is handled by the apu_auth_middleware. In case of the API we don't want
+    # an automatic redirect to the login page, so it's excluded in this login middleware.
+    r"/api/(.*)$",
 )
 
 DATAHUB_VERSION = __version__

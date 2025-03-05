@@ -147,6 +147,7 @@
 							<ul class="dropdown-menu dropdown-menu-lg-end">
 								{% if user.is_authenticated %}
 								<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
+								<li><a class="dropdown-item" href="{% url 'app:settings' %}">{% translate "Settings" %}</a></li>
 								<li>
 									<form action="{% url 'logout' %}" method="post">
 										{% csrf_token %}

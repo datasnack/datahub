@@ -1,15 +1,18 @@
-import datetime as dt
-
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.utils.crypto import get_random_string
 from django.utils.translation import gettext as _
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 from app.utils import prase_date_or_today
 from datalayers.models import Datalayer
 from shapes.models import Shape, Type
+
+from .models import BearerToken
 
 
 @require_GET
@@ -80,6 +83,50 @@ def search(request):
             )
 
     return JsonResponse({"results": [results]})
+
+
+@login_required
+def user_settings(request):
+    return render(
+        request,
+        "app/user/settings.html",
+        {},
+    )
+
+
+@login_required
+@require_POST
+def user_settings_create_token(request):
+    """Create a new API token for the current user."""
+    token = get_random_string(length=64)
+
+    bearer_token = BearerToken()
+    bearer_token.user = request.user
+    bearer_token.token = token
+    bearer_token.description = request.POST.get("description", "")
+    bearer_token.save()
+
+    messages.success(
+        request,
+        _(
+            "API token was created: %(token)s Please copy this token to a safe place. It will not be visible again!"
+        )
+        % {"token": token},
+    )
+
+    return redirect("app:settings")
+
+
+@login_required
+@require_POST
+def user_settings_delete_token(request):
+    """Delete the specified API token for the current user."""
+    bearer_token = BearerToken.objects.get(id=request.POST.get("token-id"))
+
+    if bearer_token.user.id == request.user.id:
+        bearer_token.delete()
+
+    return redirect("app:settings")
 
 
 def tools_picker(request):

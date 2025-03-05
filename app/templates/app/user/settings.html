@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block title %}{% translate "Settings" %}{% endblock %}
+
+{% block content %}
+
+<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
+
+	</div>
+
+	<h1>{% translate "Settings" %}</h1>
+</div>
+
+
+
+<div>
+
+	<h2 class="h4 border-bottom">{% translate "API tokens" %}</h2>
+
+	<p>
+		{% blocktranslate %}
+		To access the Data Hub API you need to create an API token. You can create as many token as you need, for example one for each different applications/use-case.
+		{% endblocktranslate %}
+	</p>
+
+	<table class="table table-sm">
+		<thead>
+			<tr>
+				<th>{% translate "Created at" %}</th>
+				<th>{% translate "Description" %}</th>
+				<th class="text-end">{% translate "Action" %}</th>
+			</tr>
+		</thead>
+		<tbody class="table-group-divider">
+			{% for token in user.tokens.all %}
+			<tr>
+				<td>{{ token.created_at }}</td>
+				<td>{{ token.description }}</td>
+				<td>
+					<div class="d-flex justify-content-end">
+						<form action="{% url 'app:settings_delete_token' %}" method="post">
+							{% csrf_token %}
+							<input type="hidden" name="token-id" value="{{ token.id }}">
+							<button class="btn btn-sm btn-outline-danger" type="submit">{% translate "Delete" %}</button>
+						</form>
+					</div>
+				</td>
+			</tr>
+			{% empty %}
+			<tr>
+				<td colspan="2" class="text-muted fst-italic text-center">{% translate "No tokens created yet." %}</td>
+			</tr>
+
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<hr class="my-4">
+
+	<div class="card">
+		<div class="card-header">
+			{% translate "Create new token" %}
+		  </div>
+		<div class="card-body">
+
+			<form action="{% url 'app:settings_create_token' %}" method="post">
+				{% csrf_token %}
+				<div class="mb-3">
+					<label for="token-description" class="form-label">{% translate "Token description/use-case" %}</label>
+					<input name="description" type="text" required class="form-control" id="token-description" placeholder="">
+				</div>
+
+				<button type="submit" class="btn btn-primary">{% translate "Create new token" %}</button>
+			</form>
+		</div>
+	</div>
+
+</div>
+
+{% endblock %}
