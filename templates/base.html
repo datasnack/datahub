@@ -166,6 +166,15 @@
 	</header>
 
 	<div class="{% block containerclass %}container-xxl{% endblock %} my-3">
+		{% if messages %}
+			{% for message in messages %}
+			<div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-primary{% endif %} alert-dismissible fade show" role="alert">
+				{{ message }}
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate "Close" %}"></button>
+			</div>
+			{% endfor %}
+		{% endif %}
+
 		{% block content %}{% endblock %}
 	</div>
 
