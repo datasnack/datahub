@@ -770,6 +770,17 @@ class Datalayer(models.Model):
         self.info("Finished processing", {"duration": end - start})
 
 
+class SourceMetadataManager(models.Manager):
+    def get_by_natural_key(self, *arg):
+        # The SourceMetaData model depends always on a parent DataLayer model. So after
+        # deserializing it should always create a new record. To achieve this:
+        # a) the natural_key() methods returns (None, ) tp prevent the creation of a pk
+        # entry in the export
+        # b) this methods just returns a new instance of the SourceMetadata class to force
+        # the creation of a new record.
+        return SourceMetadata()
+
+
 class SourceMetadata(models.Model):
     SOURCE_TYPES = (
         ("data", _("Data source")),
@@ -997,6 +1008,8 @@ class SourceMetadata(models.Model):
     datacite = models.JSONField(null=True, blank=True)
     datacite_fetched_at = models.DateTimeField(null=True, blank=True, editable=False)
 
+    objects = SourceMetadataManager()
+
     class Meta:
         ordering = (
             "datalayer",
@@ -1007,6 +1020,10 @@ class SourceMetadata(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name}"
+
+    def natural_key(self):
+        # see comment above in SourceMetadataManager.get_by_natural_key()
+        return (None,)
 
     @property
     def has_spatial_coverage_bbox(self) -> bool:
