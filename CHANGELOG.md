@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1](https://github.com/datasnack/datahub/compare/v0.8.0..v0.8.1) - 2025-03-07
+
+### Fixed
+
+- Allow downloading csv and excel in DL shape list ([07a9a06](https://github.com/datasnack/datahub/commit/07a9a06870c597a81ea26a60d971fa5a1dc682ff))
+
 ## [0.8.0](https://github.com/datasnack/datahub/compare/v0.7.1..v0.8.0) - 2025-03-05
 
 ### Changed
