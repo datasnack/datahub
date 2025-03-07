@@ -156,7 +156,24 @@
 					data-datalayer-key="{{ dl.key }}"
 					data-shape-id="{{shape.id}}"
 					title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
-					<a title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{shape.id}}&format=csv" class="ms-1 btn btn-sm btn-outline-primary">{% icon "download" %}</a>
+
+
+
+					<div class="btn-group">
+						<button type="button"{% if not dl.is_available %} disabled{% endif %} class="ms-1 btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+							{% icon "download" %}
+						</button>
+						{% if dl.is_available %}
+						<ul class="dropdown-menu">
+							<li><a class="dropdown-item" title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{shape.id}}&format=csv">{% translate "CSV" %}</a></li>
+							<li><a class="dropdown-item" title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{shape.id}}&format=excel">{% translate "Excel" %}</a></li>
+						</ul>
+						{% endif %}
+					</div>
+
+
+
+
 					<a title="{% translate "Show Data Layer details" %}" href="{{ dl.get_absolute_url }}"  class="ms-1 btn btn-sm btn-link">{% icon "arrow-right" %}</a>
 				</div>
 			</td>
