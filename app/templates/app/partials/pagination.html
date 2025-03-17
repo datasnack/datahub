@@ -1,0 +1,58 @@
+{% load i18n %}
+<div class="d-md-flex justify-content-between align-items-center">
+	<div>
+		<p class="text-muted text-center text-md-start">
+			{% blocktranslate with showing_from=page_obj.start_index showing_to=page_obj.end_index total=page_obj.paginator.count %}
+			Showing {{ showing_from }} to {{ showing_to }} of {{ total }} entries
+			{% endblocktranslate %}
+		</p>
+	</div>
+
+	<nav aria-label="Page navigation">
+		<ul class="pagination justify-content-center">
+			{% if page_obj.has_previous %}
+				<li class="page-item">
+					<a class="page-link" aria-label="{% translate "First" %}" href="{% querystring page=1 %}">«</a>
+				</li>
+				<li class="page-item">
+					<a class="page-link" aria-label="{% translate "Previous" %}" href="{% querystring page=page_obj.previous_page_number %}">‹</a>
+				</li>
+			{%else%}
+				<li class="page-item disabled">
+					<span class="page-link" aria-label="{% translate "First" %}">«</span>
+				</li>
+				<li class="page-item disabled">
+					<span class="page-link" aria-label="{% translate "Previous" %}">‹</span>
+				</li>
+			{% endif %}
+
+			{% for num in page_obj.paginator.page_range %}
+				{% if num == page_obj.number %}
+					<li class="page-item active">
+						<span class="page-link">{{ num }}</span>
+					</li>
+				{% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+					<li class="page-item">
+						<a class="page-link" href="{% querystring page=num %}">{{ num }}</a>
+					</li>
+				{% endif %}
+			{% endfor %}
+
+			{% if page_obj.has_next %}
+				<li class="page-item">
+					<a class="page-link" aria-label="{% translate "Next" %}" href="{% querystring page=page_obj.next_page_number %}">›</a>
+				</li>
+				<li class="page-item">
+					<a class="page-link" aria-label="{% translate "Last" %}" href="{% querystring page=page_obj.paginator.num_pages %}">»</a>
+				</li>
+			{%else%}
+				<li class="page-item disabled">
+					<span class="page-link" aria-label="{% translate "Next" %}">›</span>
+				</li>
+				<li class="page-item disabled">
+					<span class="page-link" aria-label="{% translate "Last" %}">»</span>
+				</li>
+			{% endif %}
+		</ul>
+	</nav>
+</div>

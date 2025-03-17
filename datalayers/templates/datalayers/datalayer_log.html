@@ -30,16 +30,21 @@
 				</tr>
 			</thead>
 			<tbody>
-				{% for log in datalayer.logentries.all %}
+				{% for log in logentries %}
 					<tr>
 						<td class="font-monospace text-nowrap">{{ log.datetime|date:"c" }}</td>
 						<td>{{ log.level }}</td>
 						<td>{{ log.message }}</td>
 						<td>{{ log.context }}</td>
 					</tr>
+				{% empty %}
+				<tr>
+					<td colspan="4">{% translate "No log entries available." %}</td>
+				</tr>
 				{% endfor %}
 			</tbody>
 		</table>
+		{% include "app/partials/pagination.html" %}
 	</div>
 </div>
 {% endblock %}

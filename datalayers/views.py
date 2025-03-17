@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.views.generic import DetailView, ListView
 
-from .models import Category, Datalayer
+from .models import Category, Datalayer, DatalayerLogEntry
 
 
 # Create your views here.
@@ -52,12 +52,23 @@ class DatalayerDetailView(DetailView):
     context_object_name = "datalayer"
 
 
-class DatalayerLogView(DetailView):
-    model = Datalayer
-    slug_field = "key"
-    slug_url_kwarg = "key"
-    context_object_name = "datalayer"
+class DatalayerLogView(ListView):
+    model = DatalayerLogEntry
     template_name = "datalayers/datalayer_log.html"
+    context_object_name = "logentries"
+    paginate_by = 100
+
+    def get_queryset(self):
+        key = self.kwargs.get("key")
+        return DatalayerLogEntry.objects.filter(datalayer__key=key).order_by(
+            "-datetime"
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        key = self.kwargs.get("key")
+        context["datalayer"] = get_object_or_404(Datalayer, key=key)
+        return context
 
 
 class DatalayerDataCiteView(DetailView):
