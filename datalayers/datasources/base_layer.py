@@ -226,7 +226,10 @@ class BaseLayer:
 
     def write_vector_data_to_db(self, gdf):
         gdf.to_postgis(
-            self.get_vector_data_table(), con=get_engine(), if_exists="replace"
+            self.get_vector_data_table(),
+            con=get_engine(),
+            index=False,
+            if_exists="replace",
         )
 
     def get_vector_data_df(self) -> pd.DataFrame:
