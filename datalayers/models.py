@@ -521,7 +521,7 @@ class Datalayer(models.Model):
         fallback_parent=False,
         mode="down",
     ):
-        """Select a singel value of the Data Layer for a shape and optional timestamp."""
+        """Select a single value of the Data Layer for a shape and optional timestamp."""
         if not self.is_loaded():
             return None
 
