@@ -215,11 +215,15 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": BASE_DIR / ".cache/default",
         "TIMEOUT": None,  # never invalidate cache automatically
+        # MAX_ENTRIES has an default of 300. It can't be set to -1/0 to disable this
+        # it just needs a high value, for now use 10k.
+        "OPTIONS": {"MAX_ENTRIES": 10000},
     },
     "geojson": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": BASE_DIR / ".cache/geojson",
         "TIMEOUT": None,  # never invalidate cache automatically
+        "OPTIONS": {"MAX_ENTRIES": 10000},
     },
 }
 
