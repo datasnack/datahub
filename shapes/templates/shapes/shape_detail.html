@@ -17,6 +17,8 @@
 			</ul>
 		</div>
 
+		<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal_api_{{ shape.key }}">{% translate "API" %}</button>
+
 		{% if perms.shapes.change_shape %}
 		<a class="btn btn-sm btn-outline-primary" href="{% url "admin:shapes_shape_change" shape.id %}">{% icon "pencil" %}</a>
 		{% endif %}
@@ -168,6 +170,13 @@
 {% endblock %}
 
 {% block footer %}
+
+
+{% include "shapes/partials/api_modal_shape.html" with shape=shape %}
+<script type="module">
+	hljs.highlightAll();
+</script>
+
 <script type="module">
 	var map = new MyMap('map');
 	map.load_shape({shape_id: '{{ shape.id }}', name: "{{ shape.name }}"});

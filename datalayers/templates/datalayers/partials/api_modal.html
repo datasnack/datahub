@@ -47,6 +47,8 @@ import matplotlib.pyplot as plt
 HOST = ''
 # in case of basic auth set to HTTPBasicAuth('user', 'password')
 AUTH = None
+# API TOKEN
+TOKEN = ""
 
 q = {
     'datalayer_key': '{{ datalayer.key }}',
@@ -57,7 +59,16 @@ q = {
     #'start_date': '',
     #'end_date': '',
 }
-d = requests.get(f"{HOST}/api/datalayers/data/?{urlencode(q)}", auth=AUTH).json()
+response = requests.get(
+    f"{HOST}/api/datalayers/data/?{urlencode(q)}",
+    headers={"Authorization": f"Bearer {TOKEN}"},
+    auth=AUTH,
+)
+if response.status_code == 200:
+    d = response.json()
+else:
+    raise Exception(f"Request failed ({response.status_code}): {response.text}")
+
 {{ datalayer.key }}_df = pd.DataFrame(d['data'])
 {{ datalayer.key }}_df['{{ datalayer.temporal_resolution.string}}'] = pd.to_datetime({{ datalayer.key }}_df['{{ datalayer.temporal_resolution.string}}'], format="{{ datalayer.temporal_resolution.format }}")</code></pre>
 							</div>

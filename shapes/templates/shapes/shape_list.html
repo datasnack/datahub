@@ -10,7 +10,6 @@
 {% block content %}
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
 	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
-
 		<div class="btn-group">
 			<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 				{% icon "download" %} {% translate "Shape geometries" %}
@@ -21,6 +20,9 @@
 				<li><a class="dropdown-item" download="{{ type.name|slugify}}.geojson" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=csv">{% translate "CSV" %}</a></li>
 			</ul>
 		</div>
+
+		<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal_api_{{ type.key }}">{% translate "API" %}</button>
+
 	</div>
 
 	<h1>{{ type.name }}</h1>
@@ -68,6 +70,13 @@
 {% endblock %}
 
 {% block footer %}
+
+{% include "shapes/partials/api_modal_type.html" with type=type %}
+<script type="module">
+	hljs.highlightAll();
+</script>
+
+
 <script type="module">
 $(document).ready(function() {
     $('#shapes').DataTable({

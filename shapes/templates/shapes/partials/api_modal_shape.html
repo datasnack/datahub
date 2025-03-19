@@ -1,0 +1,96 @@
+{% load i18n %}
+
+<div class="modal" id="modal_api_{{ shape.key }}" tabindex="-1" aria-labelledby="modal_api_{{ shape.key }}_title" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="modal_api_{{ shape.key }}_title">{% translate "Shape API" %}</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate "Close" %}"></button>
+			</div>
+			<div class="modal-body">
+
+				<p>
+					{% blocktranslate %}
+						The Shapes can be accessed via an API. Below you see minimal code snippets to query the data. For more information regarding the API please look at the <a href="https://datasnack.org/guide/docs/api.html">documentation</a>.
+					{% endblocktranslate %}
+				</p>
+
+				<p>
+					{% blocktranslate with shape_id=shape.id %}
+						For accessing Data Layer data specific to this shape, please see corresponding Data Layer API and use the filtering option with <code>shape_id: {{ shape_id}}</code>.
+					{% endblocktranslate %}
+				</p>
+
+				<div class="card">
+					<div class="card-header">
+
+						<ul class="nav nav-tabs card-header-tabs" role="tablist">
+							<li class="nav-item" role="presentation">
+								<button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#api_{{ shape.key }}-python-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Python</button>
+							</li>
+							<li class="nav-item" role="presentation">
+								<button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#api_{{ shape.key }}-r-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">R</button>
+							</li>
+						</ul>
+
+
+					</div>
+					<div class="card-body">
+
+
+						<div class="tab-content">
+							<div class="tab-pane show active" id="api_{{ shape.key }}-python-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+
+								<pre class="mb-0"><code class="language-python">import requests
+from requests.auth import HTTPBasicAuth
+from urllib.parse import urlencode
+from io import BytesIO
+import geopandas
+
+# set host, like http://localhost:8000, to where your Data Hub is running
+HOST = ""
+# in case of basic auth set to HTTPBasicAuth('user', 'password')
+AUTH = None
+# API TOKEN
+TOKEN = ""
+
+q = {
+    "shape_id": {{ shape.id }},
+
+    # Simplify geometry to reduce complexity/size in unit of Shapes,
+    # for WGS84 degree: 0.001 ~> 111.3m
+    # https://shapely.readthedocs.io/en/latest/manual.html#object.simplify
+    # "simplify": 0.01
+}
+response = requests.get(
+    f"{HOST}/api/shapes/geometry/?{urlencode(q)}",
+    headers={"Authorization": f"Bearer {TOKEN}"},
+    auth=AUTH,
+)
+if response.status_code == 200:
+    shape_{{shape.key}}_gdf = geopandas.read_file(BytesIO(response.content))
+    d = response.json()
+else:
+    raise Exception(f"Request failed ({response.status_code}): {response.text}")</code></pre>
+							</div>
+
+							<div class="tab-pane" id="api_{{ shape.key }}-r-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+
+								<div class="alert alert-info mb-0">
+									{% translate "There is no ready use snippet for API usage in R yet, though you can adapt the Python example to your R needs." %}
+								</div>
+							</div>
+						</div>
+
+
+					</div>
+				</div>
+
+
+
+
+
+			</div>
+		</div>
+	</div>
+</div>
