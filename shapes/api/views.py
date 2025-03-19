@@ -51,6 +51,11 @@ def shape_geometry(request):
         "format": request.GET.get("format", "geojson"),
         "simplify": request.GET.get("simplify", settings.DATAHUB_GEOMETRY_SIMPLIFY),
     }
+    if isinstance(query["simplify"], str):
+        try:
+            query["simplify"] = float(query["simplify"])
+        except ValueError:
+            query["simplify"] = settings.DATAHUB_GEOMETRY_SIMPLIFY
 
     # for API calls requesting GeoJSON (map integrations) we provide caching
     if query["format"] == "geojson":
