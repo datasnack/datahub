@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.4](https://github.com/datasnack/datahub/compare/v0.8.3..v0.8.4) - 2025-03-19
+
+### Added
+
+- Add more information about API access, add token infos ([93e8f95](https://github.com/datasnack/datahub/commit/93e8f95befa2a582c76b463e8d1abb6d345c90b8))
+
+### Fixed
+
+- Cast simplify parameter in shapes API ([853d2aa](https://github.com/datasnack/datahub/commit/853d2aa63daf442e178105608da15e58af8c1002))
+
 ## [0.8.3](https://github.com/datasnack/datahub/compare/v0.8.2..v0.8.3) - 2025-03-18
 
 ### Fixed
