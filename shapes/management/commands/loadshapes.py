@@ -16,9 +16,25 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("file", type=argparse.FileType("r"))
+        parser.add_argument(
+            "--truncate-shapes-before-import",
+            action="store_true",
+            help="Truncate existing shapes from the database before importing new ones.",
+        )
 
     def handle(self, *args, **options):
+        truncate = options["truncate_shapes_before_import"]
         file = options["file"]
+
+        if truncate:
+            self.stdout.write(self.style.WARNING("Truncating shapes table..."))
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    sql.SQL("TRUNCATE TABLE {table}").format(
+                        table=sql.Identifier(Shape._meta.db_table)
+                    )
+                )
 
         engine = get_engine()
 
