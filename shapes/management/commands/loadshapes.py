@@ -62,10 +62,14 @@ class Command(BaseCommand):
         order_position = 1
         type_map = {}
         for t in gdf["type"].unique():
-            tobj = Type(key=t, name=t.title(), position=order_position)
-            tobj.save()
+            try:
+                tobj = Type.objects.get(key=t)
+            except Type.DoesNotExist:
+                tobj = Type(key=t, name=t.title(), position=order_position)
+                tobj.save()
+                order_position += 10
+
             type_map[t] = tobj.id
-            order_position += 10
 
         def get_type_id(t) -> int:
             return type_map[t]
