@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.6](https://github.com/datasnack/datahub/compare/v0.8.5..v0.8.6) - 2025-04-28
+
+### Added
+
+- Add gpxpy for gpx based data layers ([12950fd](https://github.com/datasnack/datahub/commit/12950fdf60543d8fc69e6d5b5c2e488bd28f75e7))
+
+### Changed
+
+- Inject all shapes as default into dl_process hook ([96e8ad3](https://github.com/datasnack/datahub/commit/96e8ad3ab58ab77c2616e70b9b6ea01b89542cb0))
+- Month based data layers ([bdd41e7](https://github.com/datasnack/datahub/commit/bdd41e765156a8433e2a6445416ab0e838cdfd7a))
+- Categorical value types (nominal, ordinal) ([c075275](https://github.com/datasnack/datahub/commit/c075275592819aa3d224821e88bf6dabe5e9187c))
+
+
 ## [0.8.5](https://github.com/datasnack/datahub/compare/v0.8.4..v0.8.5) - 2025-04-16
 
 ### Changed
