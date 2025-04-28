@@ -109,6 +109,11 @@ class DatalayerValue:
                         and date1.month == date2.month
                         and date1.day == date2.day
                     )
+                case LayerTimeResolution.MONTH:
+                    date1 = self.requested_ts
+                    date2 = self.result["month"]
+                    return not (date1.year == date2.year and date1.month == date2.month)
+
                 case _:
                     msg = f"Unknown time_col={self.dl.temporal_resolution}"
                     raise ValueError(msg)
@@ -128,6 +133,11 @@ class DatalayerValue:
                 if "date" in self.result:
                     return self.result["date"].strftime("%Y-%m-%d")
                 return None
+            case LayerTimeResolution.MONTH:
+                if "month" in self.result:
+                    return self.result["month"].strftime("%Y-%m")
+                return None
+
             case _:
                 msg = f"Unknown time_col={self.dl.temporal_resolution}"
                 raise ValueError(msg)
@@ -392,6 +402,12 @@ class Datalayer(models.Model):
                     "SELECT DATE_PART('year', date ::date) AS year \
                 FROM {table} WHERE date is not NULL GROUP BY year ORDER BY year DESC"
                 ).format(table=sql.Identifier(self.key))
+            case LayerTimeResolution.MONTH:
+                query = sql.SQL(
+                    "SELECT DATE_PART('year', month ::date) AS year \
+                FROM {table} WHERE month is not NULL GROUP BY year ORDER BY year DESC"
+                ).format(table=sql.Identifier(self.key))
+
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -404,6 +420,31 @@ class Datalayer(models.Model):
             years.append(row[0])
 
         return years
+
+    def get_available_months(self) -> list[dt.date]:
+        if not self.is_loaded():
+            # self.logger.warning("Peek of data requested but not loaded for shape_id=%s", shape_id)
+            return []
+
+        match self.temporal_resolution:
+            case LayerTimeResolution.MONTH:
+                query = sql.SQL(
+                    "SELECT DISTINCT month FROM {table} ORDER BY month DESC"
+                ).format(table=sql.Identifier(self.key))
+            case _:
+                raise ValueError(
+                    "Function get_available_months is not defined for Data Layers with time_col != month"
+                )
+
+        with connection.cursor() as c:
+            c.execute(query)
+            results = c.fetchall()
+
+        months = []
+        for row in results:
+            months.append(row[0])
+
+        return months
 
     def _get_class(self):
         # spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
@@ -548,6 +589,9 @@ class Datalayer(models.Model):
             elif self.temporal_resolution == LayerTimeResolution.DAY:
                 query += "AND dl.date {operator} %(when)s "
                 params["when"] = when
+            elif self.temporal_resolution == LayerTimeResolution.MONTH:
+                query += "AND dl.month {operator} %(when)s "
+                params["when"] = when
             else:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -653,6 +697,10 @@ class Datalayer(models.Model):
                 return (dt_last.year - dt_first.year + 1) * type_multiplier
             case LayerTimeResolution.DAY:
                 return ((last - first).days + 1) * type_multiplier
+            case LayerTimeResolution.MONTH:
+                return (
+                    (last.year - first.year) * 12 + (last.month - first.month) + 1
+                ) * type_multiplier
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -690,6 +738,9 @@ class Datalayer(models.Model):
             case LayerTimeResolution.DAY:
                 query = "SELECT dl.date FROM {table} AS dl "
                 query_order = "ORDER BY date ASC LIMIT 1"
+            case LayerTimeResolution.MONTH:
+                query = "SELECT dl.month FROM {table} AS dl "
+                query_order = "ORDER BY month ASC LIMIT 1"
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -727,6 +778,9 @@ class Datalayer(models.Model):
             case LayerTimeResolution.DAY:
                 query = "SELECT dl.date FROM {table} AS dl "
                 query_order = "ORDER BY date DESC LIMIT 1"
+            case LayerTimeResolution.MONTH:
+                query = "SELECT dl.month FROM {table} AS dl "
+                query_order = "ORDER BY month DESC LIMIT 1"
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
