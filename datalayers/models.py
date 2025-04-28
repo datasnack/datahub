@@ -812,13 +812,13 @@ class Datalayer(models.Model):
         end = timer()
         self.info("Finished download", {"end": end, "duration": end - start})
 
-    def process(self):
+    def process(self, *args, **kwargs):
         """Consume/calculate data to insert into the database."""
         start = timer()
         self.info("Starting processing")
 
         cls = self._get_class()
-        cls.process()
+        cls.process(*args, **kwargs)
 
         end = timer()
         self.info("Finished processing", {"duration": end - start})

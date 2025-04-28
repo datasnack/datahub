@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
 from datalayers.models import Datalayer
+from shapes.models import Shape
 
 
 class Command(BaseCommand):
@@ -16,6 +17,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         keys = [s.strip() for s in options["keys"].split(",")]
 
+        shapes = Shape.objects.all()
+
         for key in keys:
             dls = Datalayer.objects.filter(key__iregex=key)
 
@@ -27,7 +30,7 @@ class Command(BaseCommand):
 
             for dl in dls:
                 try:
-                    dl.process()
+                    dl.process(shapes)
                     self.stdout.write(
                         self.style.SUCCESS(f'Data Layer "{dl.key}" has been processed.')
                     )
