@@ -159,6 +159,7 @@ dependencies = [
     { name = "geoalchemy2" },
     { name = "geojson" },
     { name = "geopandas" },
+    { name = "gpxpy" },
     { name = "gunicorn" },
     { name = "meteostat" },
     { name = "mistune" },
@@ -190,6 +191,7 @@ requires-dist = [
     { name = "geoalchemy2" },
     { name = "geojson", specifier = "==3.1.0" },
     { name = "geopandas", specifier = "==1.0.1" },
+    { name = "gpxpy", specifier = ">=1.6.2" },
     { name = "gunicorn", specifier = "==23.0.0" },
     { name = "meteostat", specifier = "==1.6.8" },
     { name = "mistune", specifier = ">=3.0.2" },
@@ -342,6 +344,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/39/08/2cf5d85356e45b10b8d066cf4c3ba1e9e3185423c48104eed87e8afd0455/geopandas-1.0.1.tar.gz", hash = "sha256:b8bf70a5534588205b7a56646e2082fb1de9a03599651b3d80c99ea4c2ca08ab", size = 317736 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c4/64/7d344cfcef5efddf9cf32f59af7f855828e9d74b5f862eddf5bfd9f25323/geopandas-1.0.1-py3-none-any.whl", hash = "sha256:01e147d9420cc374d26f51fc23716ac307f32b49406e4bd8462c07e82ed1d3d6", size = 323587 },
+]
+
+[[package]]
+name = "gpxpy"
+version = "1.6.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/ad/6f1a34e702c72cb495bb258396f237ded76c00f9fe67054a44d778d24ed9/gpxpy-1.6.2.tar.gz", hash = "sha256:a72c484b97ec42b80834353b029cc8ee1b79f0ffca1179b2210bb3baf26c01ae", size = 111695 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/9f/62df6c1e52462bdd04275b36cec49efa9e8af7e7b834499eb288f73dcfbc/gpxpy-1.6.2-py3-none-any.whl", hash = "sha256:289bc2d80f116c988d0a1e763fda22838f83005573ece2bbc6521817b26fb40a", size = 42649 },
 ]
 
 [[package]]

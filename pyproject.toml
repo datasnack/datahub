@@ -27,6 +27,7 @@ dependencies = [
     "xarray==2024.5.0",
     "fiona", # TiffLayer uses fiona for openening mask files, refactor to not depend on it
     "mistune>=3.0.2",
+    "gpxpy>=1.6.2",
 ]
 
 [tool.uv]
