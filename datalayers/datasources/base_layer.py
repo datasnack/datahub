@@ -41,6 +41,8 @@ class LayerValueType(Enum):
     VALUE = "value"
     PERCENTAGE = "percentage"
     BINARY = "binary"
+    NOMINAL = "nominal"  # categorical without natural order
+    ORDINAL = "ordinal"  # categorical with natural order (i.e., low < medium < high)
 
     def __str__(self) -> str:
         return str(self.value)

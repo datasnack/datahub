@@ -223,6 +223,13 @@ def plotly(request):
     datalayer = _get_datalayer_from_request(request)
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
+    # Aggregation over a shape type is not possible with categorical values
+    if datalayer.value_type in [
+        LayerValueType.NOMINAL,
+        LayerValueType.ORDINAL,
+    ]:
+        return JsonResponse({"traces": []})
+
     # resample?
     resample = request.GET.get("resample", "")
 

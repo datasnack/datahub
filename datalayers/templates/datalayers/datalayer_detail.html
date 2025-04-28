@@ -772,6 +772,9 @@ $('#js-add-to-map').on('click', async function() {
 		color = d3.scaleSequential([0, 1], d3.interpolateYlGnBu);
 	}
 
+	{% if datalayer.value_type_str == 'nominal' %}
+	color = d3.scaleOrdinal(Array.from(new Set(valuemap.values())), d3.schemeCategory10)
+	{% endif %}
 
 	function style(feature) {
 		let style = {
@@ -822,12 +825,18 @@ $('#js-add-to-map').on('click', async function() {
 		}).addTo(map.map);
 		map.map.fitBounds(currentResult.getBounds());
 
+		{% if datalayer.value_type_str == 'nominal' %}
+		let legend = Swatches(color, {
+			title: '{{ datalayer.name}}{% if datalayer.format_suffix %} ({{ datalayer.format_suffix }}){% endif %}',
+		});
+		{% else %}
 		let legend = Legend(color, {
 			title: '{{ datalayer.name}}{% if datalayer.format_suffix %} ({{ datalayer.format_suffix }}){% endif %}',
 			{% if datalayer.value_type_str == 'percentage' %}
 			tickFormat: '%'
 			{%endif%}
 		});
+		{% endif %}
 		document.getElementById('legend').innerHTML = "";
 		document.getElementById('legend').appendChild(legend);
 

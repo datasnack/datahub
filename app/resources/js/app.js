@@ -47,6 +47,8 @@ window.d3 = d3;
 import { Legend } from './d3/d3.legend.js';
 window.Legend = Legend;
 
+import { Swatches } from './d3/d3.swatches.js';
+window.Swatches = Swatches;
 
 import hljs from 'highlight.js/lib/core';
 import python from 'highlight.js/lib/languages/python';
