@@ -21,6 +21,7 @@ export function Swatches(color, {
 	}
 
 	// source of htmlToNode() https://stackoverflow.com/a/35385518
+	// introduced to prevent the htl.html dependency (https://github.com/observablehq/htl).
 	function htmlToNode(html) {
 		const template = document.createElement('template');
 		template.innerHTML = html;
@@ -35,7 +36,6 @@ export function Swatches(color, {
 		}
 		return template.content.firstChild;
 	}
-
 
 	if (columns !== null) return htmlToNode(`<div style="display: flex; align-items: center; margin-left: ${+marginLeft}px; min-height: 33px; font: 10px sans-serif;">
 	<style>
@@ -89,5 +89,5 @@ export function Swatches(color, {
   }
 
 	</style>
-	<div>${domain.map(value => htmlToNode(`<span class="${id}" style="--color: ${color(value)}">${format(value)}</span>`).outerHTML)}</div>`);
+	<div>${domain.map(value => htmlToNode(`<span class="${id}" style="--color: ${color(value)}">${format(value)}</span>`).outerHTML).join("")}</div>`);
   }
