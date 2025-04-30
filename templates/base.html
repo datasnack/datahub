@@ -182,10 +182,11 @@
 	<footer class="container-xxl mb-1">
 		<div class="footer-copy pt-1">
 			<small class="text-muted">
+				{{ datahub_name }}
 				{% if INSTANCE_VERSION %}
-				{{ datahub_name }} v{{ INSTANCE_VERSION }} ・
+				v{{ INSTANCE_VERSION }} (<a class="link-secondary" href="{% url 'app:changelog' %}">{% translate "Changelog" %}</a>) ・
 				{% endif%}
-				<a href="https://github.com/datasnack/datahub">{% translate "Data Hub" %}</a> v{{ DATAHUB_VERSION }}
+				<a class="link-secondary" href="https://github.com/datasnack/datahub">{% translate "Data Hub" %}</a> v{{ DATAHUB_VERSION }} <span class="opacity-75 fst-italic">by <a class="link-secondary" href="https://datasnack.org/">Data Snack</a></span>
 			</small>
 		</div>
 	</footer>

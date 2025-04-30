@@ -1,3 +1,6 @@
+import mistune
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
@@ -32,6 +35,34 @@ def home(request):
             "shape_types": Type.objects.order_by("position").all(),
             "datalayers_count": Datalayer.objects.count(),
         },
+    )
+
+
+def changelog(request):
+    text = _(
+        "The project has not defined a changelog yet. Create a `CHANGELOG.md` inside your project root to track changes of the project and show them here."
+    )
+
+    changelog_file = settings.BASE_DIR / "src/CHANGELOG.md"
+
+    if changelog_file.is_file():
+        text = changelog_file.read_text()
+
+    if text.startswith("#"):
+        newline_index = text.find("\n")
+        if newline_index != -1:
+            title = text[1:newline_index].strip()
+            text = text[newline_index + 1 :]
+        else:
+            title = text[1:].strip()
+            text = ""  # No content after title
+    else:
+        title = _("Changelog")
+
+    return render(
+        request,
+        "app/markdown_page.html",
+        {"markdown": text, "title": title},
     )
 
 

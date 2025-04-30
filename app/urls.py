@@ -6,6 +6,7 @@ app_name = "app"
 urlpatterns = [
     path("robots.txt", views.robots_txt),
     path("", views.home, name="home"),
+    path("changelog", views.changelog, name="changelog"),
     path("search", views.search, name="search"),
     path("settings", views.user_settings, name="settings"),
     path(
