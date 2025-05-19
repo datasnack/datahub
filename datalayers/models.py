@@ -326,11 +326,29 @@ class Datalayer(models.Model):
         return None
 
     @property
+    def is_categorical(self) -> bool:
+        if self.has_class():
+            return self.get_class().value_type in [
+                LayerValueType.NOMINAL,
+                LayerValueType.ORDINAL,
+            ]
+
+        return False
+
+    @property
     def value_type_str(self) -> str | None:
         if self.has_class():
             return str(self._get_class().value_type)
 
         return None
+
+    def get_categorical_values(self) -> list[str]:
+        if self.has_class():
+            if self.value_type == LayerValueType.NOMINAL:
+                return self.get_class().nominal_values
+            if self.value_type == LayerValueType.ORDINAL:
+                return self.get_class().ordinal_values
+        return []
 
     def format_precision(self) -> int | None:
         if self.has_class():

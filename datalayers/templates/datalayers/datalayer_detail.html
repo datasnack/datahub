@@ -727,9 +727,11 @@ if (copyIcon && doneIcon) {
 
 </script>
 
+{{ datalayer.get_categorical_values|json_script:"datalayer-categorical-values"}}
 
 <script type="module">
 
+const dl_categorical_values = JSON.parse(document.getElementById('datalayer-categorical-values').textContent);
 var map = new MyMap('map');
 
 $('#js-load-data').on('click', function(e) {
@@ -779,8 +781,8 @@ $('#js-add-to-map').on('click', async function() {
 		color = d3.scaleSequential([0, 1], d3.interpolateYlGnBu);
 	}
 
-	{% if datalayer.value_type_str == 'nominal' %}
-	color = d3.scaleOrdinal(Array.from(new Set(valuemap.values())), d3.schemeCategory10)
+	{% if datalayer.is_categorical %}
+	color = d3.scaleOrdinal(dl_categorical_values, d3.schemeCategory10)
 	{% endif %}
 
 	function style(feature) {
