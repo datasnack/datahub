@@ -34,6 +34,7 @@ dependencies = [
 dev-dependencies = [
     "rich>=13.9.2", # console log color output
     "django-debug-toolbar>=4.3.0",
+    "pytest>=8.3.5",
 ]
 
 
@@ -126,6 +127,9 @@ section-order = [
 [tool.ruff.lint.isort.sections]
 "django" = ["django"]
 
+[tool.ruff.lint.extend-per-file-ignores]
+"*_test.py" = ["S101"]
+
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
 quote-style = "double"
@@ -152,4 +156,3 @@ docstring-code-format = false
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
-

@@ -3,6 +3,7 @@ import subprocess
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
+import datetime as dt
 
 import geopandas
 import pandas as pd
@@ -39,6 +40,8 @@ class LayerTimeResolution(Enum):
 
 class LayerValueType(Enum):
     VALUE = "value"
+    FLOAT = "float"
+    INTEGER = "integer"
     PERCENTAGE = "percentage"
     BINARY = "binary"
     NOMINAL = "nominal"  # categorical without natural order
@@ -57,6 +60,9 @@ class BaseLayer:
 
         self.time_col: LayerTimeResolution = LayerTimeResolution.YEAR
         self.value_type: LayerValueType = LayerValueType.VALUE
+
+        self.nominal_values = []
+        self.ordinal_values = []
 
         # Set this to a table name, in that the download method stores raw
         # data, it's expected that those raw data contain a geometry column
@@ -98,6 +104,64 @@ class BaseLayer:
                 return fmt
             case _:
                 return value
+
+    def is_valid_temporal(self, temporal) -> bool:
+        match self.time_col:
+            case LayerTimeResolution.YEAR:
+                return isinstance(temporal, int)
+            case LayerTimeResolution.MONTH:
+                if isinstance(temporal, dt.datetime):
+                    return False
+                return isinstance(temporal, dt.date) and temporal.day == 1
+            case LayerTimeResolution.DAY:
+                if isinstance(temporal, dt.datetime):
+                    return False
+                return isinstance(temporal, dt.date)
+            case _:
+                raise ValueError("Unsupported time resolution")
+
+    def is_valid_value(self, value) -> bool:
+        match self.value_type:
+            case LayerValueType.PERCENTAGE:
+                return isinstance(value, float) and value >= 0.0 and value <= 1.0
+            case LayerValueType.BINARY:
+                return isinstance(value, bool)
+            case LayerValueType.NOMINAL:
+                return value in self.nominal_values
+            case LayerValueType.ORDINAL:
+                return value in self.ordinal_values
+            case LayerValueType.INTEGER:
+                return isinstance(value, int)
+            case LayerValueType.FLOAT:
+                return isinstance(value, float)
+            case LayerValueType.VALUE:
+                return True  # no validation of VALUE type
+            case _:
+                raise ValueError("Unsupported value type")
+
+    def add_value(self, shape, temporal, value, *, validate_value=True):
+        """Add new value to Data Layer during processing. Includes type checks for temporal and actual value."""
+        if not self.is_valid_temporal(temporal):
+            raise ValueError(
+                f"Temporal value ({temporal}) is not matching Data Layer ({self.time_col})."
+            )
+
+        if validate_value and not self.is_valid_value(value):
+            raise ValueError(
+                f"Processed value ({value}) is not matching Data Layer ({self.value_type})."
+            )
+
+        self.rows.append(
+            {
+                f"{str(self.time_col)}": temporal,
+                "shape_id": shape.id,
+                "value": value,
+            }
+        )
+
+    def len_values(self) -> int:
+        """Get the amount of added values."""
+        return len(self.rows)
 
     def save(self):
         if self.df is None:
