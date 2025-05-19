@@ -14,6 +14,12 @@ class Command(BaseCommand):
             help="Comma separated list of datalayer keys, you can use * as wildcard.",
         )
 
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="If set, no data will be saved to the database.",
+        )
+
     def handle(self, *args, **options):
         keys = [s.strip() for s in options["keys"].split(",")]
 
@@ -31,9 +37,21 @@ class Command(BaseCommand):
             for dl in dls:
                 try:
                     dl.process(shapes)
+
                     self.stdout.write(
-                        self.style.SUCCESS(f'Data Layer "{dl.key}" has been processed.')
+                        self.style.SUCCESS(
+                            f'Data Layer "{dl.key}" has been processed ({dl.get_class().len_values()} values).'
+                        )
                     )
+
+                    if not options["dry_run"]:
+                        dl.get_class().save()
+                    else:
+                        self.stdout.write(
+                            self.style.WARNING(
+                                'The "--dry-run" option was set, nothing was saved to the database!'
+                            )
+                        )
 
                 except NotImplementedError:
                     self.stdout.write(
