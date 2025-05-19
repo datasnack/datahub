@@ -4,6 +4,7 @@ import string
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import Optional
+from warnings import deprecated
 
 import pandas as pd
 from psycopg import sql
@@ -18,7 +19,7 @@ from django.utils.translation import gettext_lazy as _
 from datalayers.utils import dictfetchone, get_conn_string
 from shapes.models import Shape, Type
 
-from .datasources.base_layer import LayerTimeResolution, LayerValueType
+from .datasources.base_layer import BaseLayer, LayerTimeResolution, LayerValueType
 
 # Create your models here.
 logger = logging.getLogger(__name__)
@@ -278,6 +279,8 @@ class Datalayer(models.Model):
     # type          = models.CharField(max_length=255, blank=True)
     # identifier    = models.CharField(max_length=255, blank=True)
 
+    _class_instance = None
+
     class Meta:
         ordering = (
             "key",
@@ -446,13 +449,22 @@ class Datalayer(models.Model):
 
         return months
 
-    def _get_class(self):
+    def _import_and_create_class(self) -> BaseLayer:
         # spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
 
         mod = __import__(f"src.datalayer.{self.key}", fromlist=[camel(self.key)])
         cls = getattr(mod, camel(self.key))()
         cls.layer = self
         return cls
+
+    def get_class(self):
+        if self._class_instance is None:
+            self._class_instance = self._import_and_create_class()
+        return self._class_instance
+
+    @deprecated("Use get_class()")
+    def _get_class(self):
+        return self.get_class()
 
     def has_class(self) -> bool:
         """Check if there is a implementation class for the Data Layer."""
@@ -807,7 +819,7 @@ class Datalayer(models.Model):
         """Automatic download of data source files."""
         start = timer()
         self.info("Starting download")
-        cls = self._get_class()
+        cls = self.get_class()
         cls.download()
         end = timer()
         self.info("Finished download", {"end": end, "duration": end - start})
@@ -817,7 +829,7 @@ class Datalayer(models.Model):
         start = timer()
         self.info("Starting processing")
 
-        cls = self._get_class()
+        cls = self.get_class()
         cls.process(*args, **kwargs)
 
         end = timer()
