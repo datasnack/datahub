@@ -39,7 +39,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(
                 self.style.WARNING(
-                    f"Data Layer with {options["key"]} already exists in the database."
+                    f"Data Layer with {options['key']} already exists in the database."
                 )
             )
 
@@ -50,7 +50,7 @@ class Command(BaseCommand):
         if not dl_file.exists():
             name_camel = camel(options["key"])
             # Create source file
-            tpl = f"""from datalayers.datasources.base_layer import BaseLayer
+            tpl = f"""from datalayers.datasources.base_layer import BaseLayer, LayerTimeResolution, LayerValueType
 
 
 class {name_camel}(BaseLayer):
@@ -60,7 +60,7 @@ class {name_camel}(BaseLayer):
     def download(self):
         raise NotImplementedError
 
-    def process(self):
+    def process(self, shapes):
         raise NotImplementedError
 """
 
