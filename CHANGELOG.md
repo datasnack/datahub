@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.8](https://github.com/datasnack/datahub/compare/v0.8.7..v0.8.8) - 2025-05-20
+
+### Fixed
+
+- @deprected is python 3.13, container is still in 3.12… ([afd86a6](https://github.com/datasnack/datahub/commit/afd86a60b180657ff6af5780cbaf75fd87b81d00))
+
 ## [0.8.7](https://github.com/datasnack/datahub/compare/v0.8.6..v0.8.7) - 2025-05-20
 
 Categorical Data Layer Types (NOMINAL, ORDINAL), `add_value()` function to simplify data layer processing.
