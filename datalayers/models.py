@@ -4,7 +4,6 @@ import string
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import Optional
-from warnings import deprecated
 
 import pandas as pd
 from psycopg import sql
@@ -480,7 +479,6 @@ class Datalayer(models.Model):
             self._class_instance = self._import_and_create_class()
         return self._class_instance
 
-    @deprecated("Use get_class()")
     def _get_class(self):
         return self.get_class()
 
