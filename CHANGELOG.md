@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.7](https://github.com/datasnack/datahub/compare/v0.8.6..v0.8.7) - 2025-05-20
+
+Categorical Data Layer Types (NOMINAL, ORDINAL), `add_value()` function to simplify data layer processing.
+
+### Added
+
+- Add_value function with validation in baselayer ([1b00c3a](https://github.com/datasnack/datahub/commit/1b00c3a2849c24f62a4e5e45b2685b3dbda3e5c0))
+- Add --dry-run option to processing ([7b190e6](https://github.com/datasnack/datahub/commit/7b190e654e479edaf6115892b1dd5cf6275f1ffc))
+
+### Changed
+
+- Show instance changelog ([e7e2313](https://github.com/datasnack/datahub/commit/e7e2313dbd40344731d5eeefa15914a33e13bbbb))
+
+### Fixed
+
+- Prep categorical values for map viz ([42ecbc4](https://github.com/datasnack/datahub/commit/42ecbc4e416279cc7fbaa366853c19dd0f9affb2))
+- Datalayer model uses same instance of base layer class during life cycle ([e97a3e5](https://github.com/datasnack/datahub/commit/e97a3e5bae947cbda01bf16644e7ea02279f15f3))
+- Update scaffolding data layer to latest spec ([94e89bd](https://github.com/datasnack/datahub/commit/94e89bd91147cbf55821169766eb1701eb763c74))
+- Remove , introtduced due to list joining ([1c158a4](https://github.com/datasnack/datahub/commit/1c158a480f719580eab460526a030277a2e1b618))
+
 ## [0.8.6](https://github.com/datasnack/datahub/compare/v0.8.5..v0.8.6) - 2025-04-28
 
 ### Added

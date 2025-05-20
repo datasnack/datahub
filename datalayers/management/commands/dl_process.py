@@ -36,6 +36,8 @@ class Command(BaseCommand):
 
             for dl in dls:
                 try:
+                    self.stdout.write(f'Starting processing Data Layer "{dl.key}"...')
+
                     dl.process(shapes)
 
                     self.stdout.write(
