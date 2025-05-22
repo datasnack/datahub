@@ -344,9 +344,9 @@ class Datalayer(models.Model):
     def get_categorical_values(self) -> list[str]:
         if self.has_class():
             if self.value_type == LayerValueType.NOMINAL:
-                return self.get_class().nominal_values
+                return list(self.get_class().nominal_values)
             if self.value_type == LayerValueType.ORDINAL:
-                return self.get_class().ordinal_values
+                return list(self.get_class().ordinal_values)
         return []
 
     def format_precision(self) -> int | None:
