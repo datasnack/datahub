@@ -376,6 +376,9 @@ class Datalayer(models.Model):
     def warning(self, message, context=None):
         self.log(DatalayerLogEntry.WARNING, message, context=context)
 
+    def error(self, message, context=None):
+        self.log(DatalayerLogEntry.ERROR, message, context=context)
+
     def debug(self, message, context=None):
         self.log(DatalayerLogEntry.DEBUG, message, context=context)
 
