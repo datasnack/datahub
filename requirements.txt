@@ -22,7 +22,7 @@ certifi==2025.4.26
     #   requests
 charset-normalizer==3.4.2
     # via requests
-click==8.2.0
+click==8.2.1
     # via
     #   click-plugins
     #   cligj
@@ -147,7 +147,7 @@ requests==2.32.3
     #   ecmwf-datastores-client
     #   multiurl
     #   osmnx
-rpds-py==0.25.0
+rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing

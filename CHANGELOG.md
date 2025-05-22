@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.9](https://github.com/datasnack/datahub/compare/v0.8.8..v0.8.9) - 2025-05-22
+
+### Changed
+
+- Week type ([3cdd286](https://github.com/datasnack/datahub/commit/3cdd286c259ef959cd7abc5035cbf058407dd883))
+- Error log helper ([896157a](https://github.com/datasnack/datahub/commit/896157ac9601b510fb8af746264512209b4bf88f))
+
+### Fixed
+
+- Cast to list() to prevent dict.values() type ([fcd36d1](https://github.com/datasnack/datahub/commit/fcd36d19ffd66ae600c59bbeb10ec053df2ae6fa))
+
 ## [0.8.8](https://github.com/datasnack/datahub/compare/v0.8.7..v0.8.8) - 2025-05-20
 
 ### Fixed
