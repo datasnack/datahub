@@ -7,6 +7,7 @@
 {% load markdown %}
 {% load call_method %}
 {% load link_license %}
+{% load iso_calendar_week %}
 
 {% block title %}{{ datalayer.name }}{% endblock %}
 
@@ -257,15 +258,23 @@
 					<option value="{{ year }}">{{ year }}</option>
 					{% endfor %}
 				</select>
-				{% elif datalayer.temporal_resolution_str == 'date' %}
-				<input type="date" class="form-control" id="js-map-date" min="{{ datalayer.first_time|date:"Y-m-d" }}" max="{{ datalayer.last_time|date:"Y-m-d" }}">
-
 				{% elif datalayer.temporal_resolution_str == 'month' %}
 				<select class="form-select" id="js-map-date">
 					{% for month in datalayer.get_available_months %}
 					<option value="{{ month|date:"Y-m" }}-01">{{ month|date:"Y-N" }}</option>
 					{% endfor %}
 				</select>
+
+				{% elif datalayer.temporal_resolution_str == 'week' %}
+				<select class="form-select" id="js-map-date">
+					{% for month in datalayer.get_available_weeks %}
+					<option value="{{ month|date:"Y-m-d" }}">{{ month|iso_calendar_week }}</option>
+					{% endfor %}
+				</select>
+				{% elif datalayer.temporal_resolution_str == 'date' %}
+				<input type="date" class="form-control" id="js-map-date" min="{{ datalayer.first_time|date:"Y-m-d" }}" max="{{ datalayer.last_time|date:"Y-m-d" }}">
+
+
 				{% endif %}
 
 				<select class="form-select" id="js-map-mode">

@@ -101,6 +101,16 @@ class DatalayerValue:
                 case LayerTimeResolution.YEAR:
                     if "year" in self.result:
                         return self.requested_ts.year != int(self.result["year"])
+                case LayerTimeResolution.MONTH:
+                    date1 = self.requested_ts
+                    date2 = self.result["month"]
+                    return not (date1.year == date2.year and date1.month == date2.month)
+
+                case LayerTimeResolution.WEEK:
+                    date1 = self.requested_ts.isocalendar()
+                    date2 = self.result["week"].isocalendar()
+                    return not (date1.year == date2.year and date1.week == date2.week)
+
                 case LayerTimeResolution.DAY:
                     date1 = self.requested_ts
                     date2 = self.result["date"]
@@ -109,10 +119,6 @@ class DatalayerValue:
                         and date1.month == date2.month
                         and date1.day == date2.day
                     )
-                case LayerTimeResolution.MONTH:
-                    date1 = self.requested_ts
-                    date2 = self.result["month"]
-                    return not (date1.year == date2.year and date1.month == date2.month)
 
                 case _:
                     msg = f"Unknown time_col={self.dl.temporal_resolution}"
@@ -129,13 +135,17 @@ class DatalayerValue:
                 if "year" in self.result:
                     return self.result["year"]
                 return None
-            case LayerTimeResolution.DAY:
-                if "date" in self.result:
-                    return self.result["date"].strftime("%Y-%m-%d")
-                return None
             case LayerTimeResolution.MONTH:
                 if "month" in self.result:
                     return self.result["month"].strftime("%Y-%m")
+                return None
+            case LayerTimeResolution.WEEK:
+                if "date" in self.result:
+                    return self.result["week"].strftime("%Y-W%V")
+                return None
+            case LayerTimeResolution.DAY:
+                if "date" in self.result:
+                    return self.result["date"].strftime("%Y-%m-%d")
                 return None
 
             case _:
@@ -420,17 +430,22 @@ class Datalayer(models.Model):
                 query = sql.SQL(
                     "SELECT DISTINCT year FROM {table} ORDER BY year DESC"
                 ).format(table=sql.Identifier(self.key))
-            case LayerTimeResolution.DAY:
-                query = sql.SQL(
-                    "SELECT DATE_PART('year', date ::date) AS year \
-                FROM {table} WHERE date is not NULL GROUP BY year ORDER BY year DESC"
-                ).format(table=sql.Identifier(self.key))
             case LayerTimeResolution.MONTH:
                 query = sql.SQL(
                     "SELECT DATE_PART('year', month ::date) AS year \
                 FROM {table} WHERE month is not NULL GROUP BY year ORDER BY year DESC"
                 ).format(table=sql.Identifier(self.key))
+            case LayerTimeResolution.WEEK:
+                query = sql.SQL(
+                    "SELECT DATE_PART('year', week ::date) AS year \
+                FROM {table} WHERE week is not NULL GROUP BY year ORDER BY year DESC"
+                ).format(table=sql.Identifier(self.key))
 
+            case LayerTimeResolution.DAY:
+                query = sql.SQL(
+                    "SELECT DATE_PART('year', date ::date) AS year \
+                FROM {table} WHERE date is not NULL GROUP BY year ORDER BY year DESC"
+                ).format(table=sql.Identifier(self.key))
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -457,6 +472,31 @@ class Datalayer(models.Model):
             case _:
                 raise ValueError(
                     "Function get_available_months is not defined for Data Layers with time_col != month"
+                )
+
+        with connection.cursor() as c:
+            c.execute(query)
+            results = c.fetchall()
+
+        months = []
+        for row in results:
+            months.append(row[0])
+
+        return months
+
+    def get_available_weeks(self) -> list[dt.date]:
+        if not self.is_loaded():
+            # self.logger.warning("Peek of data requested but not loaded for shape_id=%s", shape_id)
+            return []
+
+        match self.temporal_resolution:
+            case LayerTimeResolution.WEEK:
+                query = sql.SQL(
+                    "SELECT DISTINCT week FROM {table} ORDER BY week DESC"
+                ).format(table=sql.Identifier(self.key))
+            case _:
+                raise ValueError(
+                    "Function get_available_weeks is not defined for Data Layers with time_col != week"
                 )
 
         with connection.cursor() as c:
@@ -617,12 +657,17 @@ class Datalayer(models.Model):
             if self.temporal_resolution == LayerTimeResolution.YEAR:
                 query += "AND dl.year {operator} %(when)s "
                 params["when"] = when.year
-            elif self.temporal_resolution == LayerTimeResolution.DAY:
-                query += "AND dl.date {operator} %(when)s "
-                params["when"] = when
             elif self.temporal_resolution == LayerTimeResolution.MONTH:
                 query += "AND dl.month {operator} %(when)s "
                 params["when"] = when
+            elif self.temporal_resolution == LayerTimeResolution.WEEK:
+                query += "AND dl.week {operator} %(when)s "
+                # Monday of the ISO week where the given date is in
+                params["when"] = when - dt.timedelta(days=when.isoweekday() - 1)
+            elif self.temporal_resolution == LayerTimeResolution.DAY:
+                query += "AND dl.date {operator} %(when)s "
+                params["when"] = when
+
             else:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
@@ -728,6 +773,13 @@ class Datalayer(models.Model):
                 return (dt_last.year - dt_first.year + 1) * type_multiplier
             case LayerTimeResolution.DAY:
                 return ((last - first).days + 1) * type_multiplier
+            case LayerTimeResolution.WEEK:
+                # last and first are each the monday of the corresponding week
+                delta_days = (last - first).days
+                delta_weeks = delta_days // 7
+
+                return delta_weeks * type_multiplier
+
             case LayerTimeResolution.MONTH:
                 return (
                     (last.year - first.year) * 12 + (last.month - first.month) + 1
@@ -769,6 +821,9 @@ class Datalayer(models.Model):
             case LayerTimeResolution.DAY:
                 query = "SELECT dl.date FROM {table} AS dl "
                 query_order = "ORDER BY date ASC LIMIT 1"
+            case LayerTimeResolution.WEEK:
+                query = "SELECT dl.week FROM {table} AS dl "
+                query_order = "ORDER BY week ASC LIMIT 1"
             case LayerTimeResolution.MONTH:
                 query = "SELECT dl.month FROM {table} AS dl "
                 query_order = "ORDER BY month ASC LIMIT 1"
@@ -809,6 +864,9 @@ class Datalayer(models.Model):
             case LayerTimeResolution.DAY:
                 query = "SELECT dl.date FROM {table} AS dl "
                 query_order = "ORDER BY date DESC LIMIT 1"
+            case LayerTimeResolution.WEEK:
+                query = "SELECT dl.week FROM {table} AS dl "
+                query_order = "ORDER BY week DESC LIMIT 1"
             case LayerTimeResolution.MONTH:
                 query = "SELECT dl.month FROM {table} AS dl "
                 query_order = "ORDER BY month DESC LIMIT 1"

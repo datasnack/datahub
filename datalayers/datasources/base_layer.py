@@ -1,9 +1,9 @@
+import datetime as dt
 import os
 import subprocess
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
-import datetime as dt
 
 import geopandas
 import pandas as pd
@@ -18,6 +18,8 @@ from datalayers.utils import get_conn_string, get_engine
 class LayerTimeResolution(Enum):
     YEAR = "year"
     MONTH = "month"
+    # ISO8601 week, starts on Monday. Week 01 is the week containing Jan 4.
+    WEEK = "week"
     DAY = "date"
 
     def __str__(self) -> str:
@@ -32,6 +34,8 @@ class LayerTimeResolution(Enum):
             return "%Y"
         if self == LayerTimeResolution.MONTH:
             return "%Y-%m"
+        if self == LayerTimeResolution.WEEK:
+            return "%Y-W%V"  # %V is the ISO8601 week
         if self == LayerTimeResolution.DAY:
             return "%Y-%m-%d"
 
@@ -113,6 +117,14 @@ class BaseLayer:
                 if isinstance(temporal, dt.datetime):
                     return False
                 return isinstance(temporal, dt.date) and temporal.day == 1
+            case LayerTimeResolution.WEEK:
+                if isinstance(temporal, dt.datetime):
+                    return False
+                if not isinstance(temporal, dt.date):
+                    return False
+                return (
+                    temporal.weekday() == 0
+                )  # date must be a monday on which the CW starts
             case LayerTimeResolution.DAY:
                 if isinstance(temporal, dt.datetime):
                     return False
