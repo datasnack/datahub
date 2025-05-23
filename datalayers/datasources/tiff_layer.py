@@ -16,7 +16,7 @@ from .base_layer import BaseLayer
 class TiffLayer(BaseLayer):
     """Extends BaseParameter class for GeoTiff consumption."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.manual_nodata = None
 
@@ -33,15 +33,9 @@ class TiffLayer(BaseLayer):
             ]
         )
 
-    def process(self, shapes=None, save_output=False, param_dir=None):
-        if param_dir is None:
-            param_dir = self.get_data_path()
-
+    def process(self, shapes):
+        param_dir = self.get_data_path()
         files = self.get_tiff_files(param_dir)
-
-        if shapes is None:
-            shapes = Shape.objects.all()
-
         file_count = len(files)
         i = 1
 
@@ -121,5 +115,3 @@ class TiffLayer(BaseLayer):
                         continue
 
                     self.consume(file, band1, shape)
-
-        self.save()
