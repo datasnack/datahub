@@ -29,7 +29,7 @@ class TiffLayer(BaseLayer):
             [
                 s
                 for s in os.listdir(param_dir)
-                if s.rpartition(".")[2] in ("tiff", "tif")
+                if s.rpartition(".")[2] in ("tiff", "tif", "geotiff")
             ]
         )
 
