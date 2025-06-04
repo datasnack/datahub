@@ -153,6 +153,12 @@
                     <option value="W-MON">Resample on week (W-MON)</option>
                     <option value="M">Resample on month (M)</option>
                 </select>
+                {:else if datalayer.temporal_resolution == 'week'}
+                <select class="form-select" bind:value={resampleTo}>
+                    <option value="">Original resolution</option>
+                    <option value="M">Resample on month (M)</option>
+                    <option value="Y">Resample on year (Y)</option>
+                </select>
                 {:else}
                     <div class="col-form-label text-muted fst-italic">No resampling.</div>
                 {/if}
