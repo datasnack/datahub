@@ -15,9 +15,9 @@
 				{% icon "download" %} {% translate "Shape geometries" %}
 			</button>
 			<ul class="dropdown-menu dropdown-menu-end">
-				<li><a class="dropdown-item" download="{{ type.name|slugify}}.gpkg" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
-				<li><a class="dropdown-item" download="{{ type.name|slugify}}.geojson" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=geojson">{% translate "GeoJSON" %}</a></li>
-				<li><a class="dropdown-item" download="{{ type.name|slugify}}.geojson" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=csv">{% translate "CSV" %}</a></li>
+				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
+				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=geojson">{% translate "GeoJSON" %}</a></li>
+				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=csv">{% translate "CSV" %}</a></li>
 			</ul>
 		</div>
 
