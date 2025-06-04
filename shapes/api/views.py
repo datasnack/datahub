@@ -90,7 +90,7 @@ def shape_geometry(request):
         name = slugify(f"{shape.name} children")
     else:
         # no filter, return all shapes
-        shapes = Shape.objects.all()
+        shapes = Shape.objects.select_related("type").all()
         name = "shapes"
 
     name = datahub_key(name)

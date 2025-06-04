@@ -12,7 +12,7 @@ class DatalayerListView(ListView):
     # TODO: get_object_or_404() hit's the database twice!
     # https://stackoverflow.com/q/73241907
     def get_queryset(self):
-        qs = super().get_queryset().prefetch_related("category")
+        qs = super().get_queryset().select_related("category").prefetch_related("tags")
 
         if "category_id" in self.kwargs:
             c = get_object_or_404(Category, pk=self.kwargs["category_id"])
