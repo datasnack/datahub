@@ -5,7 +5,6 @@ import geopandas
 import shapely
 import shapely.geometry
 from geojson import Feature, FeatureCollection, Point, Polygon
-from shapely import wkt
 
 from django.conf import settings
 from django.core.cache import caches
@@ -108,7 +107,7 @@ def shape_geometry(request):
                 "name": s.name,
                 "area_sqkm": s.area_sqkm,
                 "type": s.type.key,
-                "geometry": wkt.loads(s.geometry.wkt),
+                "geometry": s.shapely_geometry(),
             }
         )
     gdf = geopandas.GeoDataFrame(rows, geometry="geometry")
@@ -168,7 +167,7 @@ def shape_bbox(request):
 
     fmt = request.GET.get("format", "geojson")
 
-    geom = wkt.loads(shape.geometry.wkt)
+    geom = shape.geometry.shapely_geometry()
     envelope = geom.envelope
     bounds = geom.bounds
 
