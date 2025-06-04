@@ -36,8 +36,15 @@
 </head>
 <body>
 	<header>
-		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<div class="container-xxl">
+		<nav class="l-navbar navbar navbar-expand-lg navbar-light bg-light border-bottom">
+			<div class="container-fluid">
+
+				{% if not datahub_login_required or user.is_authenticated %}
+				<button class="btn btn-sm d-lg-none me-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive" aria-expanded="false" aria-label="{% translate "Toggle offcanvas" %}">
+					{% icon "three-bars" %}
+				</button>
+				{% endif %}
+
 				<a class="navbar-brand" href="{% url 'app:home' %}">{{ datahub_name }}</a>
 
 				{% if not datahub_login_required or user.is_authenticated %}
@@ -53,112 +60,57 @@
 					</button>
 					{% comment %}
 					agolia/autocomplete needs a container where it renders the inputfield, since we
-					have our own button, we hide it. There is no functionalty to hide/provide a
+					have our own button, we hide it. There is no functionality to hide/provide a
 					custom html for the trigger element, hiding it is actually recommended
-					by the github disussions from the repo. https://github.com/algolia/autocomplete/discussions/1029
+					by the github discussions from the repo. https://github.com/algolia/autocomplete/discussions/1029
 					{% endcomment %}
 					<div style="display: none" id="autocomplete"></div>
 				{% endif %}
 
-				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{% translate "Toggle navigation" %}">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-
-				<div class="collapse navbar-collapse" id="navbarSupportedContent">
-
-					{% if not datahub_login_required or user.is_authenticated %}
-					<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-						{% for st in nav_shape_types %}
-							<li class="nav-item"><a class="nav-link" href="{{ st.get_absolute_url }}">{{ st.name }}</a></li>
-						{% endfor %}
-
-						{%comment%}{% for type in shape_types %}
-						<li class="nav-item"><a class="nav-link" href="{{ url_for('shape_index', shape_type=type) }}">{{ type.title() }}</a></li>
-						{% endfor %}
-						<li class="nav-item"><a class="nav-link" href="{{ url_for('map') }}">Map</a></li>
-						{%endcomment%}
-
-						<li class="nav-item">
-							<a class="nav-link pe-0" href="{% url 'datalayers:datalayer_index' %}">
-								{% translate "Data Layers" %}
-							</a>
-						</li>
-
-						{% if nav_datalayer_categories %}
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
-								<span class="d-auto d-lg-none">{% translate "Categories" %}</span>
-							</a>
-
-							<ul class="dropdown-menu dropdown-menu-end">
-								{% for category in nav_datalayer_categories %}
-								<li><a class="dropdown-item" href="{{ category.get_absolute_url }}">{{ category.name }}</a></li>
-								{% endfor %}
-							</ul>
-						</li>
-						{% endif %}
-
-
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
-								{% translate "Tools" %}
-							</a>
-							<ul class="dropdown-menu dropdown-menu-end">
-								<li><a class="dropdown-item" href="{% url "app:tools_picker" %}">{% translate "Location picker" %}</a></li>
-								{% include 'app/nav_tools.html' %}
-							</ul>
-						</li>
-
-						{% include 'app/nav.html' %}
-
-					</ul>
+				<div class="d-flex ms-auto"> {% comment %} ms-auto makes sure the div is positioned on the "end" in the flex parent {% endcomment %}
+					{% get_available_languages as LANGUAGES %}
+					{% if LANGUAGES|length > 1 %}
+					<div class="input-group input-group-sm me-1">
+						<span class="input-group-text">{% icon "globe" %}</span>
+						<button class="btn btn-outline-secondary btn-language-toggle btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+							{{ LANGUAGE_CODE }}
+						</button>
+						<ul class="dropdown-menu dropdown-menu-end">
+							{% get_language_info_list for LANGUAGES as languages %}
+							{% for language in languages %}
+							<li>
+								<form action="{% url 'set_language' %}" method="post" class="d-inline">
+								{% csrf_token %}
+								<input type="hidden" name="language" value="{{ language.code }}">
+								<input type="hidden" name="next" value="{{ redirect_to }}">
+								<button type="submit" class="dropdown-item{% if language.code == LANGUAGE_CODE %} active{% endif %}">
+									{{ language.name_local }}
+								</button>
+								</form>
+							</li>
+							{% endfor %}
+						</ul>
+					</div>
 					{% endif %}
 
-
-
-					<div class="d-flex ms-auto"> {% comment %} ms-auto makes sure the div is postiend on the "end" in the flex parent {% endcomment %}
-						{% get_available_languages as LANGUAGES %}
-						{% if LANGUAGES|length > 1 %}
-						<form style="width: 150px" class="me-2 mb-2 mb-lg-0" action="{% url 'set_language' %}" method="post">
-							{% csrf_token %}
-							<input name="next" type="hidden" value="{{ redirect_to }}">
-
-							<div class="input-group">
-								<span class="input-group-text">{% icon "globe" %}</span>
-								<select class="form-select" name="language" onchange="this.form.submit()">
-									{% get_language_info_list for LANGUAGES as languages %}
-									{% for language in languages %}
-										<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-											{{ language.name_local }}
-										</option>
-									{% endfor %}
-								</select>
-								{% comment %}
-								<input class="btn btn-outline-secondary" type="submit" value="Go">
-								{% endcomment %}
-							</div>
-						</form>
-						{% endif %}
-
-						<div class="dropdown">
-							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-								{% icon "person" %}
-							</button>
-							<ul class="dropdown-menu dropdown-menu-lg-end">
-								{% if user.is_authenticated %}
-								<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
-								<li><a class="dropdown-item" href="{% url 'app:settings' %}">{% translate "Settings" %}</a></li>
-								<li>
-									<form action="{% url 'logout' %}" method="post">
-										{% csrf_token %}
-										<button class="btn btn-link" type="submit">{% translate "Logout" %}</button>
-									</form>
-								</li>
-								{% else %}
-								<li><a class="dropdown-item" href="{% url "login" %}?next={{ request.path }}">{% translate "Login" %}</a></li>
-								{% endif %}
-							</ul>
-						</div>
+					<div class="dropdown">
+						<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+							{% icon "person" %}
+						</button>
+						<ul class="dropdown-menu dropdown-menu-end">
+							{% if user.is_authenticated %}
+							<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
+							<li><a class="dropdown-item" href="{% url 'app:settings' %}">{% translate "Settings" %}</a></li>
+							<li>
+								<form action="{% url 'logout' %}" method="post">
+									{% csrf_token %}
+									<button class="btn btn-link" type="submit">{% translate "Logout" %}</button>
+								</form>
+							</li>
+							{% else %}
+							<li><a class="dropdown-item" href="{% url "login" %}?next={{ request.path }}">{% translate "Login" %}</a></li>
+							{% endif %}
+						</ul>
 					</div>
 				</div>
 
@@ -166,18 +118,92 @@
 		</nav>
 	</header>
 
-	<div class="{% block containerclass %}container-xxl{% endblock %} my-3">
-		{% if messages %}
-			{% for message in messages %}
-			<div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-primary{% endif %} alert-dismissible fade show" role="alert">
-				{{ message }}
-				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate "Close" %}"></button>
-			</div>
-			{% endfor %}
+	<div class="l-main {% if not datahub_login_required or user.is_authenticated %}l-main--auth{%endif%}">
+
+		{% if not datahub_login_required or user.is_authenticated %}
+		<div class="offcanvas-lg offcanvas-start" id="offcanvasResponsive" tabindex="-1">
+		<aside class="l-sidebar p-1">
+			<nav>
+				<ul class="nav flex-column">
+
+					<li class="nav-item">
+
+						<a href="{% url 'shapes:shape_detail_all' %}" class="nav-link">
+							{% icon "location" %}
+							{% translate "Shapes" %}</a>
+
+
+						<ul class="nav flex-column">
+						{% for st in nav_shape_types %}
+							<li class="nav-item"><a class="nav-link" href="{{ st.get_absolute_url }}">{{ st.name }}</a></li>
+						{% endfor %}
+						</ul>
+
+					</li>
+
+
+					<li class="nav-item">
+
+						<a href="{% url 'datalayers:datalayer_index' %}" class="nav-link">
+							{% icon "stack" %}
+							{% translate "Data Layers" %}</a>
+
+						<ul class="nav flex-column">
+							{% for category in nav_datalayer_categories %}
+							<li class="nav-item"><a class="nav-link" href="{{ category.get_absolute_url }}">{{ category.name }}</a></li>
+							{% endfor %}
+						</ul>
+
+					</li>
+
+
+					<li class="nav-item">
+
+						<span class="nav-link">
+							{% icon "tools" %}
+							<b>{% translate "Tools" %}</b></span>
+
+						<ul class="nav flex-column">
+							<li  class="nav-item"><a class="nav-link" href="{% url "app:tools_picker" %}">{% translate "Location picker" %}</a></li>
+							{% include 'app/nav_tools.html' %}
+						</ul>
+					</li>
+
+
+					<li class="nav-item">
+
+						<a href="#" class="nav-link">
+							{% icon "book" %}
+							{% translate "Docs" %}</a>
+
+						<ul class="nav flex-column">
+							<li class="nav-item"><a class="nav-link" href="{% url 'app:changelog' %}">Changelog</a></li>
+						</ul>
+
+					</li>
+
+
+
+					{% include 'app/nav.html' %}
+
+				</ul>
+			</nav>
+		</aside>
+		</div>
 		{% endif %}
 
-		{% block content %}{% endblock %}
-	</div>
+		<div class="{% block containerclass %}container-xxl{% endblock %} my-3">
+			{% if messages %}
+				{% for message in messages %}
+				<div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-primary{% endif %} alert-dismissible fade show" role="alert">
+					{{ message }}
+					<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate "Close" %}"></button>
+				</div>
+				{% endfor %}
+			{% endif %}
+
+			{% block content %}{% endblock %}
+		</div>
 
 	<footer class="container-xxl mb-1">
 		<div class="footer-copy pt-1">
@@ -190,6 +216,8 @@
 			</small>
 		</div>
 	</footer>
+
+	</div>
 
 	{% block footer %}{% endblock %}
 </body>

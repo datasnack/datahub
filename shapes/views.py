@@ -1,6 +1,7 @@
 import logging
 
 from django.shortcuts import get_object_or_404, render
+from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView
 
 from app.utils import prase_date_or_today
@@ -33,13 +34,21 @@ class ShapeListView(ListView):
             t = get_object_or_404(Type, key=self.kwargs["type_key"])
             qs = qs.filter(type=t)
 
+        qs = qs.select_related("type")
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["title"] = _("Shapes")
+        context["show_map"] = False
+        context["show_type"] = True
+
         if "type_key" in self.kwargs:
             context["type"] = get_object_or_404(Type, key=self.kwargs["type_key"])
+            context["title"] = context["type"].name
+            context["show_map"] = True
+            context["show_type"] = False
 
         return context
 

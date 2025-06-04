@@ -9,8 +9,14 @@
 
 @import "highlight.js/styles/github.css";
 
+@import "layout.css";
 @import "modules/pageheader.css";
 @import "modules/searchbutton.css";
+
+:root {
+	--sidebar-width: 220px;
+}
+
 
 
 /* overwrite large Bootstrap headings */
@@ -211,4 +217,9 @@ dh-chart .aa-Form {
 .row-striped {
 	--bs-table-color-type: var(--bs-table-striped-color);
     --bs-table-bg-type: var(--bs-table-striped-bg);
+}
+
+
+.btn-language-toggle {
+	border-color: var(--bs-border-color);
 }

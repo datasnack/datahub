@@ -3,9 +3,7 @@
 {% load i18n %}
 {% load l10n %}
 
-{% block title %}
-{% blocktranslate with name=type.name %}"{{ name }}" shapes{% endblocktranslate %}
-{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
 <div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
@@ -25,18 +23,23 @@
 
 	</div>
 
-	<h1>{{ type.name }}</h1>
+	<h1>{{ title }}</h1>
 </div>
 
 <div class="row">
+	{% if show_map %}
 	<div class="col-12 col-md-4 order-md-last">
 		<div class="mb-3 bg-light" id="map" style="width: 100%; height: 300px; z-index: 1;"></div>
 	</div>
-	<div class="col-12 col-md-8 order-md-first">
+	{% endif %}
+	<div class="col-12 {% if show_map %}col-md-8 order-md-first{% endif %}">
 		<div class="mb-3">
 			<table class="table table-sm table-striped" id="shapes">
 				<thead>
 					<tr>
+						{% if show_type %}
+						<th>{% translate "Type" %}</th>
+						{% endif %}
 						<th>{% translate "Name" %}</th>
 						<th>{% translate "Area" %}</th>
 						<th class="no-sort text-end">{% translate "Actions" %}</th>
@@ -45,6 +48,11 @@
 				<tbody>
 				{% for shape in shapes %}
 					<tr>
+						{% if show_type %}
+						<td class="align-middle">
+							<a href="{{ shape.type.get_absolute_url }}">{{ shape.type.name }}</a>
+						</td>
+						{% endif %}
 						<td class="align-middle">
 							<a href="{{ shape.get_absolute_url }}">{{ shape.name }}</a>
 						</td>
@@ -72,6 +80,7 @@
 {% block footer %}
 
 {% include "shapes/partials/api_modal_type.html" with type=type %}
+
 <script type="module">
 	hljs.highlightAll();
 </script>
@@ -89,6 +98,7 @@ $(document).ready(function() {
 });
 </script>
 
+{% if show_map %}
 <script type="module">
 	var map = new MyMap('map');
 	map.load_shape({shape_type: '{{ type.key }}', name: "{{ type.name}}"});
@@ -116,6 +126,7 @@ $(document).ready(function() {
 $('.js-highlight-shape').on('click', function(e) {
   highlightShape(parseInt($(this).attr('data-shape_id')));
 });
+</script>
+{% endif %}
 
-  </script>
 {% endblock %}
