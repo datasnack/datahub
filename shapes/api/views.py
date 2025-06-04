@@ -89,7 +89,9 @@ def shape_geometry(request):
         shapes = shape.children.all()
         name = slugify(f"{shape.name} children")
     else:
-        return HttpResponseNotFound("No shapes found")
+        # no filter, return all shapes
+        shapes = Shape.objects.all()
+        name = "shapes"
 
     name = datahub_key(name)
 
