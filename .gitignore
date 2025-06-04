@@ -248,3 +248,4 @@ src.*
 !.env.example
 
 !/app/static/build/
+/app/static/hot
