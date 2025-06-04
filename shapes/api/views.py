@@ -44,9 +44,9 @@ def shape_geometry(request):
     """
     cache = caches["geojson"]
     query = {
-        "shape_id": request.GET.get("shape_id", None),
-        "shape_type": request.GET.get("shape_type", None),
-        "shape_parent_id": request.GET.get("shape_parent_id", None),
+        "shape_id": request.GET.get("shape_id") or None,
+        "shape_type": request.GET.get("shape_type") or None,
+        "shape_parent_id": request.GET.get("shape_parent_id") or None,
         "format": request.GET.get("format", "geojson"),
         "simplify": request.GET.get("simplify", settings.DATAHUB_GEOMETRY_SIMPLIFY),
     }
@@ -69,27 +69,27 @@ def shape_geometry(request):
     # single, or type?
     shapes = []
     name = ""
-    if shape_id := request.GET.get("shape_id", None):
+    if shape_id := query["shape_id"]:
         shapes = [Shape.objects.get(pk=shape_id)]
         name = slugify(shapes[0].name)
-    elif (shape_type := request.GET.get("shape_type", None)) and (
-        shape_parent_id := request.GET.get("shape_parent_id", None)
+    elif (shape_type := query["shape_type"]) and (
+        shape_parent_id := query["shape_parent_id"]
     ):
         t = get_object_or_404(Type, key=shape_type)
 
         shapes = Shape.objects.filter(parent_id=shape_parent_id, type_id=t.id)
         name = slugify("siblings")
 
-    elif shape_type := request.GET.get("shape_type", None):
+    elif shape_type := query["shape_type"]:
         t = get_object_or_404(Type, key=shape_type)
         shapes = t.shapes.all()
         name = slugify(t.name)
-    elif shape_parent_id := request.GET.get("shape_parent_id", None):
+    elif shape_parent_id := query["shape_parent_id"]:
         shape = Shape.objects.get(pk=shape_parent_id)
         shapes = shape.children.all()
         name = slugify(f"{shape.name} children")
     else:
-        HttpResponseNotFound("No shapes found")
+        return HttpResponseNotFound("No shapes found")
 
     name = datahub_key(name)
 
