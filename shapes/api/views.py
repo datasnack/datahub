@@ -103,6 +103,7 @@ def shape_geometry(request):
         rows.append(
             {
                 "shape_id": s.id,
+                "key": s.key,
                 "url": request.build_absolute_uri(s.get_absolute_url()),
                 "name": s.name,
                 "area_sqkm": s.area_sqkm,
