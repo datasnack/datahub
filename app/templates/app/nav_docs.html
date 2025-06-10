@@ -1,14 +1,14 @@
 {%comment%}
 Empty template to allow other "apps" overwriting it to append their own nav items
 
-Create the following template in your app: templates/app/nav_tools.html:
+Create the following template in your app: templates/app/nav_docs.html:
 
-{% extends "app/nav_tools.html" %}
+{% extends "app/nav_docs.html" %}
 {% load i18n %}
-{% block nav_tools %}
+{% block nav_docs %}
 	{{ block.super }}
 	<li class="nav-item"><a class="nav-link" href="#">your_app</a></li>
 {% endblock %}
 
 {% endcomment %}
-{% block nav_tools %}{% endblock nav_tools %}
+{% block nav_docs %}{% endblock nav_docs %}

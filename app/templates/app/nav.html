@@ -9,9 +9,15 @@ Create the following template in your app: templates/app/nav.html:
 	{{ block.super }}
 
 	<li class="nav-item">
-		<a class="nav-link pe-0" href="{% url 'your_app:url_name' %}">
+		<a class="nav-link" href="{% url 'your_app:url_name' %}">
+			{% icon "book" %}
 			{% translate "Your App" %}
 		</a>
+		<ul class="nav flex-column">
+			<li class="nav-item">
+				<a class="nav-link" href="{% url 'your_app:url_name' %}">{% translate "Link" %}</a>
+			</li>
+		</ul>
 	</li>
 {% endblock %}
 
