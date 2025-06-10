@@ -1,4 +1,7 @@
+from taggit.models import Tag
+
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView
 
 from .models import Category, Datalayer, DatalayerLogEntry
@@ -41,6 +44,15 @@ class DatalayerListView(ListView):
             "language",
             "license",
         ]
+
+        context["title"] = _("Data Layers")
+        if "category_id" in self.kwargs:
+            c = get_object_or_404(Category, pk=self.kwargs["category_id"])
+            context["title"] = c.name
+
+        if "tag_slug" in self.kwargs:
+            t = get_object_or_404(Tag, slug=self.kwargs["tag_slug"])
+            context["title"] = f"#{t.name}"
 
         return context
 
