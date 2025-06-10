@@ -107,6 +107,12 @@ h6 {
 	background-color: var(--bs-secondary-bg-subtle);
 }
 
+a.c-tag:hover,
+a.c-tag:focus {
+	background-color: var(--bs-dark-bg-subtle);
+}
+
+
 .datalayer-states--inline .datalayer-state {
 	display: inline-block;
 }

@@ -51,10 +51,18 @@
 	--bs-nav-link-hover-color: var(--bs-navbar-hover-color);
 	--bs-nav-link-disabled-color: var(--bs-navbar-disabled-color);
 }
+.l-sidebar .nav-item {
+	margin-bottom: 1px;
+}
 
+.l-sidebar .nav-link {
+	border-radius: var(--bs-border-radius);
+}
 .l-sidebar .nav-link:hover {
 	background: var(--bs-dark-bg-subtle);
-	border-radius: var(--bs-border-radius);
+}
+.l-sidebar .nav-link.active {
+	background: var(--bs-secondary-bg-subtle);
 }
 
 .l-sidebar > nav > ul > li > a {
