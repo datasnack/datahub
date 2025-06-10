@@ -803,9 +803,8 @@ $('#js-add-to-map').on('click', async function() {
 			fillOpacity: 1
 		};
 
-		let shape_id = feature.properties.id;
+		let shape_id = feature.properties.shape_id;
 		let value = valuemap.get(shape_id)
-
 
 		if (value !== undefined) {
 			style['fillColor'] = color(value);
