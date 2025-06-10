@@ -41,6 +41,7 @@
 						<th>{% translate "Type" %}</th>
 						{% endif %}
 						<th>{% translate "Name" %}</th>
+						<th class="dt-string">{% translate "Key" %}</th>
 						<th>{% translate "Area" %}</th>
 						<th class="no-sort text-end">{% translate "Actions" %}</th>
 					</tr>
@@ -56,6 +57,10 @@
 						<td class="align-middle">
 							<a href="{{ shape.get_absolute_url }}">{{ shape.name }}</a>
 						</td>
+						<td class="align-middle">
+							<code>{{ shape.key }}</code>
+						</td>
+
 						<td class="align-middle" data-order="{{ shape.area_sqkm }}">
 							{% blocktranslate with area=shape.area_sqkm|floatformat:2 %}
 								{{ area }} km<sup>2</sup>
@@ -92,6 +97,7 @@ $(document).ready(function() {
       pageLength: 25,
       order: [[0, 'asc']],
       columnDefs: [
+	  	{type: 'string', targets: 'dt-string' },
         {targets: 'no-sort', orderable: false }
     ]
     });
