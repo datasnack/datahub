@@ -58,7 +58,7 @@
 .l-sidebar .nav-link {
 	border-radius: var(--bs-border-radius);
 }
-.l-sidebar .nav-link:hover {
+.l-sidebar a.nav-link:hover {
 	background: var(--bs-dark-bg-subtle);
 }
 .l-sidebar .nav-link.active {
