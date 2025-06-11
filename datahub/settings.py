@@ -38,6 +38,7 @@ env = environ.Env(
     DATAHUB_DATA_DIR=(str, "data"),
     DATAHUB_HEAD=(str, ""),
     DATAHUB_KEY=(str, ""),
+    DATAHUB_GITHUB=(str, ""),
     DATAHUB_GEOMETRY_SIMPLIFY=(float, None),
 )
 
@@ -335,6 +336,7 @@ DATAHUB_GEOMETRY_SIMPLIFY = env("DATAHUB_GEOMETRY_SIMPLIFY")
 
 DATAHUB_HEAD = env("DATAHUB_HEAD")
 DATAHUB_KEY = env("DATAHUB_KEY")
+DATAHUB_GITHUB = env("DATAHUB_GITHUB")
 
 INSTANCE_VERSION = False
 try:

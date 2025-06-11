@@ -10,7 +10,7 @@ icon_cache = {}
 
 
 @register.simple_tag
-def icon(name, size=16, *, ignore_missing=False):
+def icon(name, size=16, *, ignore_missing=False, classes=""):
     key = f"{name}-{size}"
 
     if key in icon_cache:
@@ -24,7 +24,7 @@ def icon(name, size=16, *, ignore_missing=False):
 
     with Path(file_name).open() as f:
         svg = f.read().strip()
-        svg = svg[:5] + 'class="c-icon" ' + svg[5:]
+        svg = svg[:5] + f'class="c-icon {classes}" ' + svg[5:]
         icon_cache[key] = svg
 
     return mark_safe(svg)  # noqa: S308

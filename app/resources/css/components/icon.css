@@ -1,0 +1,9 @@
+.c-icon {
+	fill: currentColor;
+	margin-top: -0.2em;
+}
+
+.c-icon--large {
+	width: 1.5em;
+	height: 1.5em;
+}

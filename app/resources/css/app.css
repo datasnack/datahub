@@ -10,6 +10,7 @@
 @import "highlight.js/styles/github.css";
 
 @import "layout.css";
+@import "components/icon.css";
 @import "modules/pageheader.css";
 @import "modules/searchbutton.css";
 
@@ -91,21 +92,6 @@ h6 {
 	opacity: 0.7;
 }
 
-.c-icon {
-	fill: currentColor;
-	margin-top: -0.2em;
-}
-
-.icon-text {
-	fill: currentColor;
-}
-
-
-.c-tag {
-	color: rgba(var(--bs-secondary-rgb), 1);
-	text-decoration: none;
-	background-color: var(--bs-secondary-bg-subtle);
-}
 
 a.c-tag:hover,
 a.c-tag:focus {

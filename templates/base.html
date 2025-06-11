@@ -68,6 +68,16 @@
 				{% endif %}
 
 				<div class="d-flex ms-auto"> {% comment %} ms-auto makes sure the div is positioned on the "end" in the flex parent {% endcomment %}
+
+					{% if not datahub_login_required or user.is_authenticated %}
+					{% if DATAHUB_GITHUB %}
+					<a class="btn btn-link text-body" href="{{ DATAHUB_GITHUB }}">
+						{% icon "mark-github" classes="c-icon--large" %}
+					</a>
+					{%endif %}
+					{% endif %}
+
+
 					{% get_available_languages as LANGUAGES %}
 					{% if LANGUAGES|length > 1 %}
 					<div class="input-group input-group-sm me-1">
