@@ -1,5 +1,7 @@
 from django.conf import settings
 
+from app.docs import get_docs_structure
+
 
 def add_datahub_login_required(request):
     return {
@@ -11,4 +13,6 @@ def add_datahub_login_required(request):
         "datahub_name": settings.DATAHUB_NAME,
         "datahub_login_required": settings.DATAHUB_LOGIN_REQUIRED,
         "DATAHUB_HEAD": settings.DATAHUB_HEAD,
+        "DATAHUB_GITHUB": settings.DATAHUB_GITHUB,
+        "DOCS_STRUCTURE": get_docs_structure(),
     }

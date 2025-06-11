@@ -181,21 +181,40 @@
 
 
 					<li class="nav-item">
-
-						<a href="#" class="nav-link">
+						<span class="nav-link">
 							{% icon "book" %}
-							{% translate "Docs" %}</a>
+							<b>{% translate "Docs" %}</b></span>
 
 						<ul class="nav flex-column">
-							<li class="nav-item"><a class="nav-link" href="{% url 'app:changelog' %}">Changelog</a></li>
-						</ul>
 
+
+							{% for item in DOCS_STRUCTURE %}
+							<li class="nav-item">
+								{% if item.type == 'file' %}
+								<a class="nav-link" href="{% url 'app:docs_page' path=item.url %}">{{ item.name }}</a>
+
+								{%else %}
+
+								<span class="nav-link">{{ item.name }}</span>
+
+
+								<ul class="nav flex-column border-start ms-2 ps-2 mb-2">
+									{% for item2 in item.children %}
+									<li class="nav-item">
+										<a class="nav-link" href="{% url 'app:docs_page' path=item2.url %}">{{ item2.name }}</a>
+									</li>
+									{% endfor %}
+								</ul>
+								{%endif %}
+							</li>
+							{% endfor %}
+
+							{% include 'app/nav_docs.html' %}
+							<li class="nav-item"><a class="nav-link" href="{% url 'app:changelog' %}">{% translate "Changelog" %}</a></li>
+						</ul>
 					</li>
 
-
-
 					{% include 'app/nav.html' %}
-
 				</ul>
 			</nav>
 		</aside>

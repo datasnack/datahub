@@ -10,12 +10,14 @@ from django.shortcuts import redirect, render
 from django.utils.crypto import get_random_string
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
+from django.http import Http404
 
 from app.utils import prase_date_or_today
 from datalayers.models import Datalayer
 from shapes.models import Shape, Type
 
 from .models import BearerToken
+from .docs import get_docs_structure, extract_title_from_md
 
 
 @require_GET
@@ -36,6 +38,36 @@ def home(request):
             "datalayers_count": Datalayer.objects.count(),
         },
     )
+
+
+def docs_view(request, path=""):
+    docs = get_docs_structure()
+
+    def rec_search_item(path, docs):
+        match = None
+        for item in docs:
+            if item.is_dir():
+                local_match = rec_search_item(path, item.children)
+                if local_match:
+                    match = local_match
+            elif item.url == path:
+                match = item
+
+        return match
+
+    item = rec_search_item(path, docs)
+    if item is None:
+        raise Http404("Page not found")
+
+    text = ""
+    title = ""
+
+    try:
+        text, title = extract_title_from_md(item.path.read_text(), item.name)
+    except (OSError, UnicodeDecodeError):
+        raise Http404("Could not read wiki page")
+
+    return render(request, "app/markdown_page.html", {"markdown": text, "title": title})
 
 
 def changelog(request):

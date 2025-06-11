@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -20,4 +20,5 @@ urlpatterns = [
         name="settings_delete_token",
     ),
     path("tools/picker", views.tools_picker, name="tools_picker"),
+    re_path(r"^docs/(?P<path>.+)/$", views.docs_view, name="docs_page"),
 ]
