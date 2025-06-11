@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0](https://github.com/datasnack/datahub/compare/v0.8.10..v0.9.0) - 2025-06-11
+
+- Switch navigation from top to sidebar nav with offcanvas.
+- Provide simple markdown file based documentation section
+
+### Changed
+
+- Simple markdown file based docs section ([ac087a0](https://github.com/datasnack/datahub/commit/ac087a004960287388206a947e53cb6d0d323a59))
+- Show shape key in list/detail views ([b7b591a](https://github.com/datasnack/datahub/commit/b7b591a8f5ffe1c31bdce27661f25e5be1c97e41))
+- Prefetch categories and tags ([c769ca2](https://github.com/datasnack/datahub/commit/c769ca26fac42de6e513162200dcae4b9264ad8e))
+- Move navbar to sidebar nav + offcanvas ([de8e77e](https://github.com/datasnack/datahub/commit/de8e77eadc43d840a92e63bbbfe266b6f7997ca7))
+
+### Fixed
+
+- Search shapes also by key ([738d8ce](https://github.com/datasnack/datahub/commit/738d8ce956c3117a37ef3e57e0df77a4d76d54a1))
+- Dynamic data layer list view title dependeing on filter ([7729ade](https://github.com/datasnack/datahub/commit/7729ade5eb0b221ea6821c8cd2e57b700140db78))
+- Return all shapes for shape API if no filter is present ([877d599](https://github.com/datasnack/datahub/commit/877d599fa4025557c185bfeb178e0cb1da414b03))
+- Provide shape key in download ([500b1c7](https://github.com/datasnack/datahub/commit/500b1c7bc698cb41efa3d87b62898d855927b690))
+
 ## [0.8.10](https://github.com/datasnack/datahub/compare/v0.8.9..v0.8.10) - 2025-05-23
 
 ### Fixed
