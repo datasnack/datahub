@@ -111,7 +111,9 @@ def search(request):
     results = []
 
     if "shapes" in search_filter:
-        shapes = Shape.objects.filter(name__icontains=search_term)
+        shapes = Shape.objects.filter(
+            Q(name__icontains=search_term) | Q(key__icontains=search_term)
+        )
 
         for s in shapes:
             results.append(
