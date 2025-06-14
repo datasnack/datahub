@@ -46,7 +46,7 @@ django-environ==0.11.2
     # via datahub (pyproject.toml)
 django-taggit==6.1.0
     # via datahub (pyproject.toml)
-ecmwf-datastores-client==0.1.0
+ecmwf-datastores-client==0.2.0
     # via cdsapi
 et-xmlfile==2.0.0
     # via openpyxl

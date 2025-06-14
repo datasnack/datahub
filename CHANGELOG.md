@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1](https://github.com/datasnack/datahub/compare/v0.9.0..v0.9.1) - 2025-06-14
+
+### Fixed
+
+- Regression values on heatmap not shown ([a3468c3](https://github.com/datasnack/datahub/commit/a3468c3b4679bd1146a4904e8d84b1f5fd4c7cc9))
+
 ## [0.9.0](https://github.com/datasnack/datahub/compare/v0.8.10..v0.9.0) - 2025-06-11
 
 - Switch navigation from top to sidebar nav with offcanvas.
