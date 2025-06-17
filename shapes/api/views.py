@@ -169,7 +169,7 @@ def shape_bbox(request):
 
     fmt = request.GET.get("format", "geojson")
 
-    geom = shape.geometry.shapely_geometry()
+    geom = shape.shapely_geometry()
     envelope = geom.envelope
     bounds = geom.bounds
 
