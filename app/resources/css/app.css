@@ -168,6 +168,14 @@ dh-chart .aa-Form {
 	overflow: scroll;
 }
 
+.leaflet-top,
+.leaflet-bottom {
+	/* in the leaflet source this is 1000. bootstrap dropdown has z-index: 1000 as well.
+	to prevent the leaflet controls being over the bootstrap controls we reduce it. */
+	z-index: 999;
+}
+
+
 
 .row-striped {
 	--bs-table-color-type: var(--bs-table-striped-color);
