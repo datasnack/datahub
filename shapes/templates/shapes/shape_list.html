@@ -2,6 +2,7 @@
 {% load humanize %}
 {% load i18n %}
 {% load l10n %}
+{% load apiurl %}
 
 {% block title %}{{ title }}{% endblock %}
 
@@ -15,7 +16,21 @@
 			<ul class="dropdown-menu dropdown-menu-end">
 				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
 				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=geojson">{% translate "GeoJSON" %}</a></li>
-				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=csv">{% translate "CSV" %}</a></li>
+
+				<li>
+					<div class="d-flex">
+
+						{% apiurl 'shape_geometry' shape_type=type.key format="geojson" as the_url %}
+
+						<a class="dropdown-item" href="{{ the_url }}">GeoJSON</a>
+
+						<div class="border-start ms-1 ps-1">
+							{% include "app/partials/copy2clipboard.html" with url=the_url %}
+						</div>
+					</div>
+				</li>
+
+				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=csv">{% translate "CSV (WKT)" %}</a></li>
 			</ul>
 		</div>
 
@@ -91,7 +106,7 @@
 </script>
 
 
-<script type="module">
+<script type="modul#e">
 $(document).ready(function() {
     $('#shapes').DataTable({
       pageLength: 25,

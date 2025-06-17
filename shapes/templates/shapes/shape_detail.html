@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load markdown %}
 {% load i18n %}
+{% load apiurl %}
 
 {% block title %}{% blocktranslate with name=shape.name type=shape.type.name %}{{ name }} ({{ type}}){% endblocktranslate %}{% endblock %}
 
@@ -13,7 +14,31 @@
 			</button>
 			<ul class="dropdown-menu dropdown-menu-end">
 				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.gpkg" href="{% url 'shape_geometry' %}?shape_id={{ shape.id }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
-				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.geojson" href="{% url 'shape_geometry' %}?shape_id={{ shape.id }}&format=geojson">{% translate "GeoJSON" %}</a></li>
+				<li>
+					<div class="d-flex">
+						{% apiurl 'shape_geometry' shape_id=shape.id format="geojson" as the_url %}
+
+						<a class="dropdown-item" download="{{ shape.name|slugify}}.geojson" href="{{ the_url }}">{% translate "GeoJSON" %}</a>
+
+						<div class="border-start ms-1 ps-1">
+							{% include "app/partials/copy2clipboard.html" with url=the_url %}
+						</div>
+					</div>
+				</li>
+
+				<li>
+					<div class="d-flex">
+
+						{% apiurl 'shape_geometry' shape_id=shape.id format="wkt" as the_url %}
+
+						<a class="dropdown-item" href="{{ the_url }}">{% translate "WKT" %}</a>
+
+						<div class="border-start ms-1 ps-1">
+							{% include "app/partials/copy2clipboard.html" with url=the_url %}
+						</div>
+					</div>
+				</li>
+
 			</ul>
 		</div>
 

@@ -69,3 +69,6 @@ window.loadPlotly = async function() {
 	}
 	return Plotly;
 }
+
+
+import "./copy2clipboard";
