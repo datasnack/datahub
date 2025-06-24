@@ -268,10 +268,6 @@ LOCALE_PATHS = [
 
 LANGUAGE_CODE = "en"
 
-LANGUAGES = [
-    ("en", _("English")),
-    ("de", _("German")),
-]
 LANGUAGES = []
 for k, v in env("LANGUAGES").items():
     LANGUAGES.append((k, v))
