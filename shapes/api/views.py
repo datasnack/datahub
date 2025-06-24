@@ -151,6 +151,18 @@ def shape_geometry(request):
             open(file_name, "rb"), as_attachment=True, filename=f"{name}.shp.zip"
         )
 
+    if fmt == "wkt":
+        gdf_wkt = gdf.to_wkt()
+        if len(gdf_wkt) == 1:
+            content = gdf_wkt.at[0, "geometry"]
+            response = HttpResponse(content, content_type="text/plain")
+            response["Content-Disposition"] = f'attachment; filename="{name}.wkt"'
+            return response
+
+        return HttpResponseBadRequest(
+            "WKT export only works for single geometry, use CSV for multiple WKT instead."
+        )
+
     if fmt == "csv":
         file = BytesIO()
         gdf.to_csv(file, index=False)
