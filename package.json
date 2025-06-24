@@ -7,7 +7,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@algolia/autocomplete-js": "^1.17.2",
+    "@algolia/autocomplete-js": "^1.19.2",
     "@algolia/autocomplete-theme-classic": "^1.17.2",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.6",
@@ -21,6 +21,7 @@
     "plotly.js-dist": "^2.34.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.1.1",
     "sass": "^1.77.8",
     "svelte": "^4.2.18",
