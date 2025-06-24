@@ -15,8 +15,6 @@
 			</button>
 			<ul class="dropdown-menu dropdown-menu-end">
 				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
-				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=geojson">{% translate "GeoJSON" %}</a></li>
-
 				<li>
 					<div class="d-flex">
 
@@ -106,7 +104,7 @@
 </script>
 
 
-<script type="modul#e">
+<script type="module">
 $(document).ready(function() {
     $('#shapes').DataTable({
       pageLength: 25,
