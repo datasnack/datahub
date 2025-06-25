@@ -188,6 +188,7 @@ TEMPLATES = [
                 "datalayers.context_processors.add_navigation",
             ],
             "builtins": [
+                "django.templatetags.static",
                 "app.templatetags.icon",
             ],
         },
@@ -281,7 +282,9 @@ STATIC_ROOT = BASE_DIR / "static"
 
 STATIC_URL = "static/"
 
-STATICFILES_DIRS = []
+STATICFILES_DIRS = [
+    "docs/images/"  # images used inside markdown docs
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
