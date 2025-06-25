@@ -28,7 +28,7 @@
 
 <h3>Snack your Data</h3>
 <p>
-	To access the gathered open data sources you can browse them via the above mentiond shape types or the <a href="{% url "app:tools_picker" %}">location picker</a>.
+	To access the gathered open data sources you can browse them via the above mentioned shape types or the <a href="{% url "app:tools_picker" %}">location picker</a>.
 	Upon choosing your area of interest, you can tailor your data selection through our download configurator, which also offers a basic preview (spatial and temporal description) of the data for your convenience.
 </p>
 
@@ -43,8 +43,6 @@
 	In addition, the Data Hub shall be cited as contributing service as follows:
 </p>
 
-<p class="ps-3 text-muted" style="border-left: 3px solid #ccc; font-style: italic;">
-	Ströbele, J., &amp; Boenecke, J. (2024). Data Hub (Version {{ DATAHUB_VERSION }}) [Computer software]. <a href="https://github.com/datasnack/datahub">https://github.com/datasnack/datahub</a>
-</p>
+{% include "app/citation.html" %}
 
 {% endblock %}

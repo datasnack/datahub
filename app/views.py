@@ -1,23 +1,23 @@
-import mistune
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.crypto import get_random_string
+from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
-from django.http import Http404
 
 from app.utils import prase_date_or_today
 from datalayers.models import Datalayer
 from shapes.models import Shape, Type
 
+from .docs import extract_title_from_md, get_docs_structure, render_dj_md_to_html
 from .models import BearerToken
-from .docs import get_docs_structure, extract_title_from_md
 
 
 @require_GET
@@ -29,6 +29,31 @@ Disallow: /api/
 
 
 def home(request):
+    # check for translated file
+    home_file = None
+    language_code = get_language()
+    if language_code != "en":  # en is always or default
+        translation_file = Path(f"docs/Home.{language_code}.md")
+        if translation_file.exists():
+            home_file = translation_file
+
+    # no translation found, use default
+    if home_file is None:
+        default_file = Path("docs/Home.md")
+        if default_file.exists():
+            home_file = default_file
+
+    if home_file:
+        text, title = extract_title_from_md(home_file.read_text(), "Home")
+        rendered = render_dj_md_to_html(request, text)
+
+        return render(
+            request,
+            "app/markdown_page.html",
+            {"html": rendered, "title": title},
+        )
+
+    # no home file found, return default page
     return render(
         request,
         "app/home.html",
@@ -63,11 +88,21 @@ def docs_view(request, path=""):
     title = ""
 
     try:
+        language_code = get_language()
+        if language_code != "en" and language_code in item.translations:
+            item = item.translations[language_code]
+
         text, title = extract_title_from_md(item.path.read_text(), item.name)
+        rendered = render_dj_md_to_html(request, text)
+
     except (OSError, UnicodeDecodeError):
         raise Http404("Could not read wiki page")
 
-    return render(request, "app/markdown_page.html", {"markdown": text, "title": title})
+    return render(
+        request,
+        "app/markdown_page.html",
+        {"html": rendered, "title": title},
+    )
 
 
 def changelog(request):
@@ -94,7 +129,7 @@ def changelog(request):
     return render(
         request,
         "app/markdown_page.html",
-        {"markdown": text, "title": title},
+        {"html": render_dj_md_to_html(request, text), "title": title},
     )
 
 
