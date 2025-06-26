@@ -680,7 +680,6 @@ var map = new MyMap('map');
 
 $('#js-load-data').on('click', function(e) {
 	map.load_data_for_layer({
-		datalayer_id: {{ datalayer.id}},
 		datalayer_key: '{{datalayer.key}}',
 
 		{% with callback=datalayer.leaflet_popup %}

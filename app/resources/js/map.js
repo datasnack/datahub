@@ -84,7 +84,7 @@ export class MyMap {
 		});
 	}
 
-	load_data_for_layer(dl) {
+	load_data_for_layer(query) {
 		var self = this;
 
 		var name = "Raw data";
@@ -97,19 +97,19 @@ export class MyMap {
 		self.map.fire("dataloading");
 
 		$.getJSON(
-			`/api/datalayers/vector/?datalayer_id=${dl.datalayer_id}`,
-			function (data) {
+			`/api/datalayers/vector/?datalayer_key=${query.datalayer_key}`,
+			(data) => {
 				var m = L.geoJSON(data, {
 					style: {
 						color: "red",
 					},
-					onEachFeature: function (feature, layer) {
+					onEachFeature: (feature, layer) => {
 						var html = "";
 
-						if (dl.format_callback) {
-							html = dl.format_callback(feature);
+						if (query.format_callback) {
+							html = query.format_callback(feature);
 						} else {
-							Object.keys(feature.properties).forEach(function (key) {
+							Object.keys(feature.properties).forEach((key) => {
 								var value = feature.properties[key];
 
 								// ignore empty values (not all properties are set on each feature)
@@ -119,12 +119,12 @@ export class MyMap {
 								}
 
 								// the values of same special keys can be enhanced with additional formatting
-								if (key == "wikidata") {
+								if (key === "wikidata") {
 									value = `<a href="https://www.wikidata.org/wiki/${value}" target="_blank">${value}</a>`;
-								} else if (key == "nodes") {
+								} else if (key === "nodes") {
 									// usually a long list of OSM ids
 									value = value.substring(0, 20) + "…";
-								} else if (key == "meteostat_id") {
+								} else if (key === "meteostat_id") {
 									value = `<a href="https://meteostat.net/de/station/${value}" target="_blank">${value}</a>`;
 								}
 
@@ -143,7 +143,7 @@ export class MyMap {
 
 				self.map.fire("dataload");
 			},
-		).fail(function (data) {
+		).fail((data) => {
 			alert("Something went wrong during loading the data.");
 			self.map.fire("dataload");
 		});
