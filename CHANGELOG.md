@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.4](https://github.com/datasnack/datahub/compare/v0.9.3..v0.9.4) - 2025-06-26
+
+### Changed
+
+- Use dl key instead of id for loading vector data ([7d96316](https://github.com/datasnack/datahub/commit/7d96316550dcb54c7a1abbc1bf1aa2589abb004f))
+
+### Fixed
+
+- Capitalize language names in dropdown ([340fb5d](https://github.com/datasnack/datahub/commit/340fb5dfb03fd04972352a5030a14e1c0c0e3210))
+
 ## [0.9.3](https://github.com/datasnack/datahub/compare/v0.9.2..v0.9.3) - 2025-06-26
 
 ### Fixed
