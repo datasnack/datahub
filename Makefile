@@ -29,7 +29,7 @@ release: update_python_deps
 	@# Display hint to create commit and tag
 	@echo "--------------------------------------------------"
 	@echo "To finalize the release, please commit the changes:"
-	@echo "    git add CHANGELOG.md datahub/__init__.py CITATION.cff"
+	@echo "    git add CHANGELOG.md datahub/__init__.py CITATION.cff requirements.txt"
 	@echo "    git commit -m 'chore: release $(VERSION)'"
 	@echo "    git tag $(VERSION)"
 	@echo "    git push origin main --tags"
