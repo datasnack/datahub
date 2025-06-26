@@ -171,6 +171,14 @@ class BaseLayer:
             }
         )
 
+    def has_value(self, shape, temporal) -> bool:
+        """Check if a value for the given shape/temporal is already collected."""
+        for row in self.rows:
+            if row["shape_id"] == shape.id and row[f"{str(self.time_col)}"] == temporal:
+                return True
+
+        return False
+
     def len_values(self) -> int:
         """Get the amount of added values."""
         return len(self.rows)
