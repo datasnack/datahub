@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3](https://github.com/datasnack/datahub/compare/v0.9.2..v0.9.3) - 2025-06-26
+
+### Fixed
+
+- Requirements.txt was not committed ([5f56172](https://github.com/datasnack/datahub/commit/5f5617239bfeaa94aa99d29709b38953d5c38930))
+
 ## [0.9.2](https://github.com/datasnack/datahub/compare/v0.9.1..v0.9.2) - 2025-06-26
 
 ### Added
