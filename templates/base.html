@@ -94,7 +94,7 @@
 								<input type="hidden" name="language" value="{{ language.code }}">
 								<input type="hidden" name="next" value="{{ redirect_to }}">
 								<button type="submit" class="dropdown-item{% if language.code == LANGUAGE_CODE %} active{% endif %}">
-									{{ language.name_local }}
+									{{ language.name_local|capfirst }}
 								</button>
 								</form>
 							</li>
