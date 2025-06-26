@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2](https://github.com/datasnack/datahub/compare/v0.9.1..v0.9.2) - 2025-06-26
+
+### Added
+
+- Localized docs pages, home page can be set with markdown ([98743c4](https://github.com/datasnack/datahub/commit/98743c4632a2c57376e4afc4f10d55759644120c))
+- Add icon for week temporal resolution ([bd7ba5f](https://github.com/datasnack/datahub/commit/bd7ba5f672a1e26165e89f60a44208d2cea25d68))
+- Has_value function ([f2512b5](https://github.com/datasnack/datahub/commit/f2512b5654c767e493d94cf9156c68ccc104a335))
+- Copy to clipboard via request, used for GeoJSON/WKT geometries ([45c1457](https://github.com/datasnack/datahub/commit/45c1457cad02bcce0bb565f4c40020f8ed8dcabe))
+
+### Changed
+
+- Use biome js for linting/formatting JavsScript ([2cab131](https://github.com/datasnack/datahub/commit/2cab13101d4ec75264caf055274d085f0fbcab9c))
+- Move svgs to resource folder, update octicons, split octicons from other icons ([bfa54b4](https://github.com/datasnack/datahub/commit/bfa54b48ef6a7165c2c86495d554f72fbace82b2))
+
+### Fixed
+
+- Api call for bbox ([2e93010](https://github.com/datasnack/datahub/commit/2e930108ddcad89a22afd19bf19973d6ce9e02ca))
+- Prevent lefleat controls overlapping the Bootstrap dropdowns ([a3a6902](https://github.com/datasnack/datahub/commit/a3a69027901b630f8fc690f29d801a363a0008f5))
+
 ## [0.9.1](https://github.com/datasnack/datahub/compare/v0.9.0..v0.9.1) - 2025-06-14
 
 ### Fixed
