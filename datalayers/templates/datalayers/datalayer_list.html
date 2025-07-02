@@ -29,154 +29,179 @@
 </div>
 
 
-<div class="dropdown d-inline-block me-3" id="dt-columns">
-	<button class="btn btn-sm dropdown-toggle fs-6" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-		{% translate "Columns" %}
-	</button>
-	<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-		{% for column in columns %}
-		<li>
-			<span class="dropdown-item">
-				<div class="form-check">
-					<input class="form-check-input js-dt-toggle-col" data-column="{{ forloop.counter0|add:3 }}" type="checkbox" value="" id="dt-col{{ forloop.counter0|add:3 }}">
-					<label class="form-check-label" for="dt-col{{ forloop.counter0|add:3 }}">{{ column }}</label>
-				</div>
-			</span>
-		</li>
-		{% endfor %}
-	</ul>
+{% if full %}
+<div class="table-responsive">
+	<table class="table table-sm" id="datalayers">
+		<thead>
+			<tr>
+				<th>{% translate "Category" %}</th>
+				<th>{% translate "Name" %}</th>
+				<th>{% translate "Key" %}</th>
+				<th>{% translate "State" %}</th>
+
+				<th>{% translate "Source" %}</th>
+				<th>{% translate "PID" %}</th>
+				<th>{% translate "Format" %}</th>
+				<th>{% translate "Spatial resolution" %}</th>
+				<th>{% translate "Spatial coverage" %}</th>
+				<th>{% translate "Temporal resolution" %}</th>
+				<th>{% translate "Temporal coverage" %}</th>
+				<th>{% translate "Language" %}</th>
+				<th>{% translate "License" %}</th>
+
+				<th>{% translate "Date published" %}</th>
+				<th>{% translate "Last accessed" %}</th>
+			</tr>
+		</thead>
+
+	<tbody class="table-group-divider">
+	{% for dl in datalayers %}
+		{% with is_even=forloop.counter|divisibleby:2 %}
+			{% with dl.sources.all as sources %}
+				{% if sources|length %}
+					{% for source in dl.sources.all %}
+						<tr class="{% if is_even %}row-striped{%endif%}">
+							{% if forloop.first %}
+							<td rowspan="{{ dl.sources.all|length }}" class="align-middle">
+								{% with category=dl.category %}
+									{% if category %}
+										<a class="link-secondary" href="{{ category.get_absolute_url}}">
+											{{ category }}
+										</a>
+									{% else %}
+										-
+									{% endif %}
+								{% endwith %}
+							</td>
+							<td rowspan="{{ dl.sources.all|length }}" class="align-middle">
+								{% if dl.has_class %}
+									<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
+									{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
+										{% icon dl_temporal_icon ignore_missing=True %}
+									{% endwith %}
+									</span>
+								{% endif %}
+
+								<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
+							</td>
+							<td rowspan="{{ dl.sources.all|length }}" class="align-middle"><code>{{ dl.key }}</code></td>
+							<td class="text-nowrap dl-state-pill align-middle" rowspan="{{ dl.sources.all|length }}" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.has_files|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
+								{% include "datalayers/datalayer_states.html" with mode="inline" datalayer=dl %}
+							</td>
+							{%endif%}
+
+							<td>{{ source.name }}</td>
+
+							<td>
+								{% if source.pid_type == 'DOI'%}
+									<a class="c-pidbadge" href="https://doi.org/{{ source.pid }}">
+										<span class="c-pidbadge-type">{{ source.pid_type}}</span><span class="c-pidbadge-pid">{{ source.pid }}</span>
+									</a>
+
+									{% include "app/partials/copy2clipboard.html" with content=source.pid %}
+
+								{% elif source.pid_type == 'URL'%}
+									<a href="{{ source.pid}}">{{ source.pid }}</a>
+								{% else %}
+									{{ source.pid_type }} | {{ source.pid }}
+								{% endif %}
+							</td>
+
+
+							<td>{{ source.format }}</td>
+							<td>{{ source.spatial_resolution }}</td>
+							<td>{{ source.spatial_coverage }}</td>
+							<td>{{ source.temporal_resolution }}</td>
+
+							<td>
+								{% if source.temporal_coverage_start == source.temporal_coverage_end %}
+									{{ source.temporal_coverage_start }}
+								{% elif source.temporal_coverage_start and source.temporal_coverage_end %}
+								{{ source.temporal_coverage_start }}–{{ source.temporal_coverage_end }}
+								{%else %}
+									{{ source.temporal_coverage_start }}
+									{{ source.temporal_coverage_end }}
+								{%endif%}
+							</td>
+							<td>{{ source.language }}</td>
+							<td class="text-nowrap">{{ source.license }}</td>
+							<td class="text-nowrap">{{ source.date_published }}</td>
+							<td class="text-nowrap">{{ source.date_last_accessed }}</td>
+						</tr>
+
+					{% endfor %}
+				{% else %}
+
+					<tr class="{% if is_even %}row-striped{%endif%}">
+						<td class="align-middle">
+							{% with category=dl.category %}
+								{% if category %}
+									<a class="link-secondary" href="{{ category.get_absolute_url}}">
+										{{ category }}
+									</a>
+								{% else %}
+									-
+								{% endif %}
+							{% endwith %}
+						</td>
+						<td class="align-middle">
+							{% if dl.has_class %}
+								<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
+								{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
+									{% icon dl_temporal_icon ignore_missing=True %}
+								{% endwith %}
+								</span>
+							{% endif %}
+
+							<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
+							{% include "datalayers/partials/tags.html" with datalayer=dl %}
+						</td>
+						<td  class="align-middle"><code>{{ dl.key }}</code></td>
+
+						<td class="dl-state-pill" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.has_files|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
+							{% include "datalayers/datalayer_states.html" with mode="inline" datalayer=dl %}
+						</td>
+						<td>-</td>
+						<td>-</td>
+
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+
+					</tr>
+				{% endif %}
+			{%endwith %}
+		{%endwith %}
+	{% endfor %}
+	</tbody>
+	</table>
 </div>
 
 
-{% if full %}
-
-
-
-
-
-
-
-<div class="table-responsive">
-<table class="table table-sm" id="datalayers">
-    <thead>
-        <tr>
-            <th>{% translate "Category" %}</th>
-            <th>{% translate "Name" %}</th>
-            <th>{% translate "Key" %}</th>
-
-			{% comment %}
-			{% for column in columns %}
-				<th class="dt-default-hidden">{{ column }}</th>
-			{% endfor %}
-			{% endcomment %}
-
-            <th>{% translate "State" %}</th>
-
-			<th>{% translate "Source" %}</th>
-			<th>{% translate "PID" %}</th>
-			<th>{% translate "Format" %}</th>
-			<th>{% translate "Spatial resolution" %}</th>
-			<th>{% translate "Spatial coverage" %}</th>
-			<th>{% translate "Temporal resolution" %}</th>
-			<th>{% translate "Temporal coverage" %}</th>
-			<th>{% translate "Language" %}</th>
-			<th>{% translate "License" %}</th>
-
-			<th>{% translate "Date published" %}</th>
-			<th>{% translate "Last accessed" %}</th>
-        </tr>
-    </thead>
-
-<tbody class="table-group-divider">
-{% for dl in datalayers %}
-
-	{% with is_even=forloop.counter|divisibleby:2 %}
-
-
-	{% with dl.sources.all as sources %}
-
-		{% if sources|length %}
-
-		{% for source in dl.sources.all %}
-			<tr class="{% if is_even %}row-striped{%endif%}">
-
-
-				{% if forloop.first %}
-				<td rowspan="{{ dl.sources.all|length }}" class="align-middle">
-					{% with category=dl.category %}
-						{% if category %}
-							<a class="link-secondary" href="{{ category.get_absolute_url}}">
-								{{ category }}
-							</a>
-						{% else %}
-							-
-						{% endif %}
-					{% endwith %}
-				</td>
-				<td rowspan="{{ dl.sources.all|length }}" class="align-middle">
-					{% if dl.has_class %}
-						<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
-						{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
-							{% icon dl_temporal_icon ignore_missing=True %}
-						{% endwith %}
-						</span>
-					{% endif %}
-
-					<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
-				</td>
-				<td rowspan="{{ dl.sources.all|length }}" class="align-middle"><code>{{ dl.key }}</code></td>
-				<td class="text-nowrap dl-state-pill align-middle" rowspan="{{ dl.sources.all|length }}" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.has_files|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
-					{% include "datalayers/datalayer_states.html" with mode="inline" datalayer=dl %}
-				</td>
-				{%endif%}
-
-				<td>{{ source.name }}</td>
-
-				<td>
-					{% if source.pid_type == 'DOI'%}
-						<a class="c-pidbadge" href="https://doi.org/{{ source.pid }}">
-							<span class="c-pidbadge-type">{{ source.pid_type}}</span><span class="c-pidbadge-pid">{{ source.pid }}</span>
-						</a>
-
-						{% include "app/partials/copy2clipboard.html" with content=source.pid %}
-
-					{% elif source.pid_type == 'URL'%}
-						<a href="{{ source.pid}}">{{ source.pid }}</a>
-					{% else %}
-						{{ source.pid_type }} | {{ source.pid }}
-					{% endif %}
-				</td>
-
-
-				<td>{{ source.format }}</td>
-				<td>{{ source.spatial_resolution }}</td>
-				<td>{{ source.spatial_coverage }}</td>
-				<td>{{ source.temporal_resolution }}</td>
-
-				<td>
-					{% if source.temporal_coverage_start == source.temporal_coverage_end %}
-						{{ source.temporal_coverage_start }}
-					{% elif source.temporal_coverage_start and source.temporal_coverage_end %}
-					{{ source.temporal_coverage_start }}–{{ source.temporal_coverage_end }}
-					{%else %}
-						{{ source.temporal_coverage_start }}
-						{{ source.temporal_coverage_end }}
-					{%endif%}
-				</td>
-				<td>{{ source.language }}</td>
-				<td class="text-nowrap">{{ source.license }}</td>
-				<td class="text-nowrap">{{ source.date_published }}</td>
-				<td class="text-nowrap">{{ source.date_last_accessed }}</td>
+{% comment %}
+standard, not full view starts here.
+{% endcomment %}
+{% else %}
+	<table class="table table-sm table-striped" id="datalayers">
+		<thead>
+			<tr>
+				<th>{% translate "Category" %}</th>
+				<th>{% translate "Name" %}</th>
+				<th>{% translate "Key" %}</th>
+				<th>{% translate "State" %}</th>
+				<th class="no-sort text-end">{% translate "Actions" %}</th>
 			</tr>
+		</thead>
 
-		{% endfor %}
-
-
-
-		{% else %}
-
-
-			<tr class="{% if is_even %}row-striped{%endif%}">
+		<tbody>
+		{% for dl in datalayers %}
+			<tr>
 				<td class="align-middle">
 					{% with category=dl.category %}
 						{% if category %}
@@ -200,117 +225,25 @@
 					<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
 					{% include "datalayers/partials/tags.html" with datalayer=dl %}
 				</td>
-				<td  class="align-middle"><code>{{ dl.key }}</code></td>
+				<td class="align-middle"><code>{{ dl.key }}</code></td>
 
 				<td class="dl-state-pill" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.has_files|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
 					{% include "datalayers/datalayer_states.html" with mode="inline" datalayer=dl %}
 				</td>
-				<td>-</td>
-				<td>-</td>
-
-				<td>-</td>
-				<td>-</td>
-				<td>-</td>
-				<td>-</td>
-				<td>-</td>
-				<td>-</td>
-				<td>-</td>
-				<td>-</td>
-				<td>-</td>
-
+				<td>
+					<div class="d-flex justify-content-end">
+						<a href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link text-nowrap">
+							<span class="d-none d-sm-inline">{% translate "Details" %}</span>
+							{% icon "arrow-right" %}
+						</a>
+					</div>
+				</td>
 			</tr>
-		{% endif %}
-	{%endwith %}
-	{%endwith %}
-
-{% endfor %}
-</tbody>
-</table>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{% else %}
-<table class="table table-sm table-striped dt-uninitialized" id="datalayers">
-    <thead>
-        <tr>
-            <th>{% translate "Category" %}</th>
-            <th>{% translate "Name" %}</th>
-            <th>{% translate "Key" %}</th>
-
-			{% for column in columns %}
-				<th class="dt-default-hidden">{{ column }}</th>
-			{% endfor %}
-
-            <th>{% translate "State" %}</th>
-            <th class="no-sort text-end">{% translate "Actions" %}</th>
-        </tr>
-    </thead>
-
-<tbody>
-{% for dl in datalayers %}
-    <tr>
-        <td class="align-middle">
-			{% with category=dl.category %}
-				{% if category %}
-					<a class="link-secondary" href="{{ category.get_absolute_url}}">
-						{{ category }}
-					</a>
-				{% else %}
-					-
-				{% endif %}
-			{% endwith %}
-		</td>
-        <td class="align-middle">
-			{% if dl.has_class %}
-				<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
-				{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
-					{% icon dl_temporal_icon ignore_missing=True %}
-				{% endwith %}
-				</span>
-			{% endif %}
-
-			<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
-			{% include "datalayers/partials/tags.html" with datalayer=dl %}
-		</td>
-        <td class="align-middle"><code>{{ dl.key }}</code></td>
-
-		{% for column in columns %}
-			<td class="dt-default-hidden">{{ dl|get_attr:column }}</td>
 		{% endfor %}
-
-        <td class="dl-state-pill" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.has_files|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
-			{% include "datalayers/datalayer_states.html" with mode="inline" datalayer=dl %}
-        </td>
-        <td>
-            <div class="d-flex justify-content-end">
-                <a href="{{ dl.get_absolute_url }}"  class="btn btn-sm btn-link text-nowrap">
-					<span class="d-none d-sm-inline">{% translate "Details" %}</span>
-					{% icon "arrow-right" %}
-				</a>
-            </div>
-        </td>
-    </tr>
-{% endfor %}
-</tbody>
-</table>
+		</tbody>
+	</table>
 {%endif %}
+
 {% endblock %}
 
 {% block footer %}
@@ -322,34 +255,8 @@ var table = $('#datalayers').DataTable({
 	//order: [[0, 'asc']],
 	columnDefs: [
 		{targets: 'no-sort', orderable: false },
-		{ visible: false, targets: [{% for column in columns %}{{ forloop.counter0|add:3 }},{%endfor%}] }
 	],
-	layout: {
-		topEnd: [document.getElementById('dt-columns'), 'search']
-	},
-	initComplete: function() {
-		// apply inline-block style to search so dt-columns and dt-search
-		// or along side each other and not stacked.
-		$('.dt-search').addClass('d-inline-block');
-
-		$('.dt-uninitialized').removeClass('dt-uninitialized');
-	}
 });
 {%endif %}
-
-document.querySelectorAll('input.js-dt-toggle-col').forEach((el) => {
-	el.addEventListener('change', function (e) {
-		e.preventDefault();
-
-		let columnIdx = e.target.getAttribute('data-column');
-		let column = table.column(columnIdx);
-
-		// Toggle the visibility
-		column.visible(!column.visible());
-	});
-});
-
-// prevent columns selector dropdown from being closed after one toggle
-document.querySelector('#dt-columns .dropdown-menu').addEventListener('click', (e) => {e.stopPropagation()});
 </script>
 {% endblock %}
