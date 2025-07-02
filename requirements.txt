@@ -38,7 +38,7 @@ cligj==0.7.2
     #   rasterio
 datacite==1.1.3
     # via datahub (pyproject.toml)
-django==5.1.11
+django==5.2.3
     # via
     #   datahub (pyproject.toml)
     #   django-taggit
@@ -76,9 +76,9 @@ jsonschema==4.24.0
     # via datacite
 jsonschema-specifications==2025.4.1
     # via jsonschema
-lxml==5.4.0
+lxml==6.0.0
     # via datacite
-meteostat==1.6.8
+meteostat==1.7.4
     # via datahub (pyproject.toml)
 mistune==3.1.3
     # via datahub (pyproject.toml)
@@ -149,7 +149,7 @@ requests==2.32.4
     #   ecmwf-datastores-client
     #   multiurl
     #   osmnx
-rpds-py==0.25.1
+rpds-py==0.26.0
     # via
     #   jsonschema
     #   referencing
