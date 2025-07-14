@@ -73,7 +73,10 @@ class Command(BaseCommand):
             self.stdout.write(f"{i}. {version}")
 
         # Ask the user to select a version
-        choice = input("Select a version (enter the number): ")
+        try:
+            choice = input("Select a version (enter the number): ")
+        except KeyboardInterrupt:
+            sys.exit(0)
 
         try:
             choice = int(choice)
