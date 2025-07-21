@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.6](https://github.com/datasnack/datahub/compare/v0.9.5..v0.9.6) - 2025-07-21
+
+### Changed
+
+- Allow data layer filter for temporal type  by [Y], etc ([c6bf249](https://github.com/datasnack/datahub/commit/c6bf249bd0643ff410f7fcf7eddf490ddc50e277))
+
+### Fixed
+
+- Image max width on docs pages ([9c2fbc4](https://github.com/datasnack/datahub/commit/9c2fbc424436cd1c5ebb0e8c5d92f7cf5efa4e4e))
+- Check for tregex first in dl selection for dl_download/process ([808d5ec](https://github.com/datasnack/datahub/commit/808d5ec4ca50fff556c1d6c5f6ab591c2ba9cd78))
+- Missing week in epxected value for week ([6f79054](https://github.com/datasnack/datahub/commit/6f79054f90512ae900daa2992d3891984945d1b6))
+- Catch ctrl+c in swap command to prevent stacktrace on abort ([b131c5f](https://github.com/datasnack/datahub/commit/b131c5f78f9f371597704786960b7694a3c7bcb6))
+- Fix typos ([9b393c8](https://github.com/datasnack/datahub/commit/9b393c8867568fcac495b985565fd12a3819db35))
+
 ## [0.9.5](https://github.com/datasnack/datahub/compare/v0.9.4..v0.9.5) - 2025-07-02
 
 ### Fixed

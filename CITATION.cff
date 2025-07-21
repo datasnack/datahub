@@ -16,5 +16,5 @@ authors:
     orcid: 'https://orcid.org/0000-0002-6327-8152'
 repository-code: 'https://github.com/datasnack/datahub'
 license: MIT
-version: 0.9.5
-date-released: '2025-07-02'
+version: 0.9.6
+date-released: '2025-07-21'
