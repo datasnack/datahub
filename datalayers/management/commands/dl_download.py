@@ -17,7 +17,7 @@ class Command(BaseCommand):
         keys = [s.strip() for s in options["keys"].split(",")]
 
         for key in keys:
-            dls = Datalayer.objects.filter(key__iregex=key)
+            dls = Datalayer.objects.filter_by_key(key)
 
             if dls.count() == 0:
                 self.stdout.write(

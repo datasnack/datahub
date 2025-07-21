@@ -189,6 +189,13 @@ class DatalayerManager(models.Manager):
     def get_by_natural_key(self, key):
         return self.get(key=key)
 
+    def filter_by_key(self, key: str):
+        """Key can be an exact match or a regex."""
+        if key.replace("_", "").isalnum():
+            return self.filter(key=key)
+
+        return self.filter(key__iregex=key)
+
 
 class Datalayer(models.Model):
     DATA_TYPES = (
