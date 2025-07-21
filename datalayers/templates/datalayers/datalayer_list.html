@@ -216,6 +216,9 @@ standard, not full view starts here.
 				<td class="align-middle">
 					{% if dl.has_class %}
 						<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
+
+						<span class="visually-hidden">[{{ dl.temporal_resolution.letter }}]</span>
+
 						{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
 							{% icon dl_temporal_icon ignore_missing=True %}
 						{% endwith %}
