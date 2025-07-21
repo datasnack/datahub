@@ -754,7 +754,7 @@ class Datalayer(models.Model):
 
         return actual / expected
 
-    def expected_value_count(self, shape_type: Optional[Type] = None) -> int:
+    def expected_value_count(self, shape_type: Type | None = None) -> int:
         if not self.is_loaded():
             return None
 
@@ -775,7 +775,8 @@ class Datalayer(models.Model):
                 return ((last - first).days + 1) * type_multiplier
             case LayerTimeResolution.WEEK:
                 # last and first are each the monday of the corresponding week
-                delta_days = (last - first).days
+                # to divide correctly we need all days of the last week, so we add 7
+                delta_days = (last - first).days + 7
                 delta_weeks = delta_days // 7
 
                 return delta_weeks * type_multiplier
@@ -787,7 +788,7 @@ class Datalayer(models.Model):
             case _:
                 raise ValueError(f"Unknown time_col={self.temporal_resolution}")
 
-    def count_values(self, shape_type: Optional[Type] = None):
+    def count_values(self, shape_type: Type | None = None):
         if not self.is_loaded():
             return None
 
