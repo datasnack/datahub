@@ -945,10 +945,11 @@ class SourceMetadata(models.Model):
     )
 
     class SourcePIDType(models.TextChoices):
-        URL = "URL", _("URL")
         DOI = "DOI", _("DOI")
         ROR = "ROR", _("ROR")
         ORCID = "ORCID", _("ORCID")
+        URL = "URL", _("URL")
+        URN = "URN", _("URN")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

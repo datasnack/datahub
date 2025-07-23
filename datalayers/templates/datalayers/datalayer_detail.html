@@ -376,6 +376,8 @@
 
 								{% elif s.pid_type == 'URL'%}
 									<a href="{{ s.pid}}">{{ s.pid }}</a>
+								{% elif s.pid_type == 'URN'%}
+									<code>urn:{{ s.pid }}</code>
 								{% else %}
 									{{s.pid_type }} | {{ s.pid }}
 								{% endif %}
