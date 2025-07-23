@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.7](https://github.com/datasnack/datahub/compare/v0.9.6..v0.9.7) - 2025-07-23
+
+### Added
+
+- Add netcfd and rioxarray deps for nc file processing ([7134d3f](https://github.com/datasnack/datahub/commit/7134d3f6b95c874dcf93a4d812f444c585b86d1b))
+- Add urn pid type ([151896b](https://github.com/datasnack/datahub/commit/151896b1eb606d2877fd0fd9213557a0a91bd40b))
+
 ## [0.9.6](https://github.com/datasnack/datahub/compare/v0.9.5..v0.9.6) - 2025-07-21
 
 ### Changed
