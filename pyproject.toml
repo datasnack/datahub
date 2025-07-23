@@ -24,11 +24,13 @@ dependencies = [
   "django-taggit==6.1.0",
   "geojson==3.1.0",
   "cdsapi>=0.7.4",
-  "xarray==2024.5.0",
+  "xarray>=2025.7.1",
   "fiona", # TiffLayer uses fiona for openening mask files, refactor to not depend on it
   "mistune>=3.0.2",
   "gpxpy>=1.6.2",
   "pyyaml>=6.0.2",
+  "rioxarray>=0.17.0",
+  "netcdf4>=1.7.2",
 ]
 
 [tool.uv]
