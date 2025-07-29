@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load get_attr %}
-
+{% load apiurl %}
 
 {% block title %}{{ title }}{% endblock %}
 
@@ -19,8 +19,8 @@
 				{% icon "download" %} {% translate "Data Layer metadata" %}
 			</button>
 			<ul class="dropdown-menu dropdown-menu-end">
-				<li><a class="dropdown-item" href="{% url 'datalayer_datalayer' %}?format=csv">{% translate "CSV" %}</a></li>
-				<li><a class="dropdown-item" href="{% url 'datalayer_datalayer' %}?format=excel">{% translate "Excel" %}</a></li>
+				<li><a class="dropdown-item" href="{% apiurl 'datalayer' format="csv" %}">{% translate "CSV" %}</a></li>
+				<li><a class="dropdown-item" href="{% apiurl 'datalayer' format="excel" %}">{% translate "Excel" %}</a></li>
 			</ul>
 		</div>
 	</div>

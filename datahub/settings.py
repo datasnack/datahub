@@ -140,6 +140,7 @@ INSTALLED_APPS = [
     "datalayers",
     "shapes",
     "taggit",
+    "ninja",
     "django.contrib.admin",  # lower position to allow core apps to overwrite admin templates
     "src.datalayer",
 ]
@@ -161,7 +162,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "app.middleware.require_login_middleware.RequireLoginMiddleware",
-    "app.middleware.api_auth_middleware.ApiAuthMiddleware",
 ]
 
 # Enable debug toolbar only if DEBUG=True and the package is installed

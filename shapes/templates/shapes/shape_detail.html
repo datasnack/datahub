@@ -13,7 +13,7 @@
 				{% icon "download" %} {% translate "Shape geometry" %}
 			</button>
 			<ul class="dropdown-menu dropdown-menu-end">
-				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.gpkg" href="{% url 'shape_geometry' %}?shape_id={{ shape.id }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
+				<li><a class="dropdown-item" download="{{ shape.name|slugify}}.gpkg" href="{% apiurl 'shape_geometry' shape_id=shape.id format="gpkg" %}">{% translate "GeoPackage" %}</a></li>
 				<li>
 					<div class="d-flex">
 						{% apiurl 'shape_geometry' shape_id=shape.id format="geojson" as the_url %}

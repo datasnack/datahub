@@ -20,7 +20,7 @@ def apiurl(context, route_name, full=False, **kwargs):
     {% apiurl 'api_users' full=True page=2 %}
     """
     # Resolve the base URL (no parameters)
-    base_url = reverse(route_name)
+    base_url = reverse(f"api-1.0.0:{route_name}")
 
     # Add GET parameters if any
     if kwargs:

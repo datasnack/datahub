@@ -1,7 +1,9 @@
 from io import BytesIO
+from typing import Literal
 
 import numpy as np
 import pandas as pd
+from ninja import File, Query, Router, Schema, Field
 from psycopg import sql
 
 from django.db import connection
@@ -20,27 +22,43 @@ from datalayers.models import Datalayer
 from datalayers.utils import get_conn_string
 from shapes.models import Shape, Type
 
-# Create your views here.
+router = Router(tags=["Data Layers"])
 
 
-def _get_datalayer_from_request(request) -> Datalayer:
+class DatalayerFilterSchema(Schema):
+    datalayer_id: int | None = Field(
+        None, description="Required if datalayer_key is not set."
+    )
+    datalayer_key: str | None = Field(
+        None, description="Required if datalayer_id is not set."
+    )
+
+
+def _get_datalayer_from_request(filters) -> Datalayer:
     """
     Detect Datalayer from request by ID or key.
 
     We can reference a datalayer via ID (datalayer_id) or key (datalayer_key)
     in the request. This function checks for both, but ID has priority over key.
     """
-    datalayer_id = request.GET.get("datalayer_id", None)
-    datalayer_key = request.GET.get("datalayer_key", None)
+    datalayer_id = filters.datalayer_id
+    datalayer_key = filters.datalayer_key
 
     if datalayer_id:
         return get_object_or_404(Datalayer, pk=datalayer_id)
-    else:
-        return get_object_or_404(Datalayer, key=datalayer_key)
+
+    return get_object_or_404(Datalayer, key=datalayer_key)
 
 
-def datalayer(request):
-    fmt = request.GET.get("format", "json")
+@router.get("datalayer/", summary="Data Layer metadata")
+def datalayer(
+    request,
+    fmt: Literal["json", "csv", "excel"] = Query(  # noqa: B008
+        "json",
+        description="File format of response.",
+        alias="format",
+    ),
+):
     datalayers = Datalayer.objects.all()
     rows = []
     name = "datalayers"
@@ -130,29 +148,51 @@ def datalayer(request):
             return HttpResponseBadRequest("Invalid format")
 
 
-def data(request):
-    fmt = request.GET.get("format", "json")
-
+@router.get(
+    "data/",
+    summary="Data download",
+    description="Access the harmonized data of a Data Layer.",
+)
+def data(
+    request,
+    filters: DatalayerFilterSchema = Query(...),
+    shape_id: int | None = Query(
+        None,
+        description="Filter to specific Shape",
+    ),
+    shape_type_key: str | None = Query(
+        None, description="Filter to specific Shape Type", alias="shape_type"
+    ),
+    start_date: str | None = Query(
+        None,
+        description="Include only data at/after the given date. Format according to Data Layer time type.",
+    ),
+    end_date: str | None = Query(
+        None,
+        description="Include only data before/at the given date. Format according to Data Layer time type.",
+    ),
+    resample: str | None = Query(
+        None,
+        description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
+    ),
+    fmt: Literal["json", "csv", "excel", "plotly"] = Query(
+        "json",
+        description="File format of response.",
+        alias="format",
+    ),
+):
     # determine filters
-    datalayer = _get_datalayer_from_request(request)
+    datalayer = _get_datalayer_from_request(filters)
     name = datalayer.key
 
-    shape_id = request.GET.get("shape_id", None)
     shape = None
     if shape_id is not None:
         shape = get_object_or_404(Shape, pk=shape_id)
         name = f"{name}_{slugify(shape.name)}"
 
-    shape_type_key = request.GET.get("shape_type", None)
     shape_type = None
     if shape_type_key is not None:
         shape_type = get_object_or_404(Type, key=shape_type_key)
-
-    start_date = request.GET.get("start_date", None)
-    end_date = request.GET.get("end_date", None)
-
-    # resample?
-    resample = request.GET.get("resample", "")
 
     # get data
     df = datalayer.data(
@@ -198,8 +238,8 @@ def data(request):
 
             json_data = {
                 "name": name,
+                "type": "scatter",
                 "mode": "lines+markers",
-                # "type": "bar",
                 "x": df[str(datalayer.temporal_resolution)].tolist(),
                 "y": df["value"].tolist(),
             }
@@ -208,8 +248,16 @@ def data(request):
             return HttpResponseBadRequest("Invalid format")
 
 
-def vector(request):
-    datalayer = _get_datalayer_from_request(request)
+@router.get(
+    "vector/",
+    summary="Data Layer vector data",
+    description="Returns associated vector data with the Data Layer if available.",
+)
+def vector(
+    request,
+    filters: DatalayerFilterSchema = Query(...),
+):
+    datalayer = _get_datalayer_from_request(filters)
 
     if not datalayer.has_vector_data():
         return HttpResponseNotFound("Data Layer has no raw vector data")
@@ -218,9 +266,17 @@ def vector(request):
     return JsonResponse(geojson)
 
 
-def plotly(request):
-    shape_type_key = request.GET.get("shape_type", None)
-    datalayer = _get_datalayer_from_request(request)
+@router.get("plotly/", summary="Plotly min/max/mean traces")
+def plotly(
+    request,
+    filters: DatalayerFilterSchema = Query(...),
+    shape_type_key: str | None = Query(..., alias="shape_type"),
+    resample: str | None = Query(
+        None,
+        description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
+    ),
+):
+    datalayer = _get_datalayer_from_request(filters)
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
     # Aggregation over a shape type is not possible with categorical values
@@ -229,9 +285,6 @@ def plotly(request):
         LayerValueType.ORDINAL,
     ]:
         return JsonResponse({"traces": []})
-
-    # resample?
-    resample = request.GET.get("resample", "")
 
     query = sql.SQL(
         "SELECT {temporal_column}, AVG(value) AS value, MIN(value) AS min, MAX(value) AS max \
@@ -290,8 +343,12 @@ def plotly(request):
     return JsonResponse(json_data)
 
 
-def meta(request):
-    datalayer = _get_datalayer_from_request(request)
+@router.get("meta/", summary="Data Layer Meta and Plot configuration")
+def meta(
+    request,
+    filters: DatalayerFilterSchema = Query(...),
+):
+    datalayer = _get_datalayer_from_request(filters)
 
     layout = {
         "title": {
@@ -308,6 +365,7 @@ def meta(request):
             "x": 0,
             "y": -0.2,
         },
+        "height": 450,
         "margin": {"l": 50, "r": 10, "b": 100, "t": 50, "pad": 4},
     }
 
@@ -322,10 +380,10 @@ def meta(request):
         layout["yaxis"]["title"] = "Value"
 
     if datalayer.value_type == LayerValueType.PERCENTAGE:
-        layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision() }%"
+        layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision()}%"
         layout["yaxis"]["range"] = [0, 1]
     elif datalayer.value_type == LayerValueType.VALUE:
-        layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision() }f"
+        layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision()}f"
 
     shape_types = [
         {"name": st.name, "key": st.key} for st in datalayer.get_available_shape_types

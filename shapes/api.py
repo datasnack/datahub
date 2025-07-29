@@ -1,10 +1,13 @@
 import tempfile
+from enum import Enum
 from io import BytesIO
 
 import geopandas
 import shapely
 import shapely.geometry
 from geojson import Feature, FeatureCollection, Point, Polygon
+from ninja import File, Query, Router, Schema
+from pydantic import Field
 
 from django.conf import settings
 from django.core.cache import caches
@@ -21,34 +24,53 @@ from django.utils.text import slugify
 from app.utils import datahub_key, generate_unique_hash
 from shapes.models import Shape, Type
 
-# Create your views here.
+router = Router(tags=["Shapes"])
 
 
-def shape_geometry(request):
-    """
-    Provide download of geometries for specified shapes in a format like GeoJSON or GeoPackage.
+class ShapeOutputFormat(str, Enum):
+    geojson = "geojson"
+    gpkg = "gpkg"
+    shp = "shp"
+    wkt = "wkt"
+    csv = "csv"
 
-    Probably could be speed up with not using the ORM, tough the ORM classes
-    for models provide ways to access the URL etc. Maybe utilize some sort of
-    file caching.
 
-    GeoDjango provides a serializer for GeoJSON like:
-
-    >>> from django.core.serializers import serialize
-    >>> serialized_data = serialize("geojson", t.shapes.all(), geometry_field="geometry", fields=["name"])
-
-    But it's unclear to me how put something like the URL or type name into the
-    fields. Also the performance seemed not great. Due to the different needed
-    formats the approach with GeoPandas and using the same structure seems
-    preferable anyway.
-    """
+@router.get(
+    "/geometry",
+    summary="Shape geometries",
+    description="Select geometries of Shapes in different formats.",
+)
+def shape_geometry(
+    request,
+    shape_id: int | None = Query(
+        None,
+        description="ID of the shape",
+    ),
+    shape_type: str | None = Query(
+        None,
+        description="key of the shape type",
+    ),
+    shape_parent_id: int | None = Query(
+        None,
+        description="ID of a Shape (if present)",
+    ),
+    simplify: float | None = Query(
+        settings.DATAHUB_GEOMETRY_SIMPLIFY,
+        description="Apply [`.simplify()`](https://shapely.readthedocs.io/en/latest/manual.html#object.simplify) to the geometries to reduce file size.",
+    ),
+    fmt: ShapeOutputFormat = Query(  # noqa: B008
+        "geojson",
+        description="File format of response.",
+        alias="format",
+    ),
+):
     cache = caches["geojson"]
     query = {
-        "shape_id": request.GET.get("shape_id") or None,
-        "shape_type": request.GET.get("shape_type") or None,
-        "shape_parent_id": request.GET.get("shape_parent_id") or None,
-        "format": request.GET.get("format", "geojson"),
-        "simplify": request.GET.get("simplify", settings.DATAHUB_GEOMETRY_SIMPLIFY),
+        "shape_id": shape_id,
+        "shape_type": shape_type,
+        "shape_parent_id": shape_parent_id,
+        "format": fmt,
+        "simplify": simplify,
     }
     if isinstance(query["simplify"], str):
         try:
@@ -172,7 +194,8 @@ def shape_geometry(request):
     return HttpResponseBadRequest("Invalid format")
 
 
-def shape_bbox(request):
+@router.get("/bbox")
+def shape_bbox(request, shape_id: int):
     if shape_id := request.GET.get("shape_id", None):
         shape = Shape.objects.get(pk=shape_id)
         name = slugify(shape.name)

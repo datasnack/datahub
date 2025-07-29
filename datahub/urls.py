@@ -26,6 +26,8 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
+from .api import api
+
 logger = logging.getLogger(__name__)
 
 urlpatterns = [
@@ -39,8 +41,7 @@ urlpatterns += [
     path("accounts/login/", auth_views.LoginView.as_view()),
     path("datalayers/", include("datalayers.urls")),
     path("shapes/", include("shapes.urls")),
-    path("api/", include("shapes.api.urls")),
-    path("api/", include("datalayers.api.urls")),
+    path("api/", api.urls),
 ]
 
 # check if user apps have urls

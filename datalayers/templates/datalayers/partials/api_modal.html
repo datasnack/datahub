@@ -60,8 +60,8 @@ q = {
     #'end_date': '',
 }
 response = requests.get(
-    f"{HOST}/api/datalayers/data/?{urlencode(q)}",
-    headers={"Authorization": f"Bearer {TOKEN}"},
+    f"{HOST}/api/datalayers/data?{urlencode(q)}",
+    headers={"X-API-Key": TOKEN},
     auth=AUTH,
 )
 if response.status_code == 200:

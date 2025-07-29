@@ -63,8 +63,8 @@ q = {
     # "simplify": 0.01
 }
 response = requests.get(
-    f"{HOST}/api/shapes/geometry/?{urlencode(q)}",
-    headers={"Authorization": f"Bearer {TOKEN}"},
+    f"{HOST}/api/shapes/geometry?{urlencode(q)}",
+    headers={"X-API-Key": TOKEN},
     auth=AUTH,
 )
 if response.status_code == 200:

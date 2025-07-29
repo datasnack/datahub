@@ -2,6 +2,7 @@
 {% load datalayer_value %}
 {% load datalayerformat %}
 {% load generate_uuid %}
+{% load apiurl %}
 
 {# The snippet can be included multiple times on the same page, so we need to make sure IDs are unique #}
 {% if not id %}
@@ -165,8 +166,8 @@
 						</button>
 						{% if dl.is_available %}
 						<ul class="dropdown-menu">
-							<li><a class="dropdown-item" title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{shape.id}}&format=csv">{% translate "CSV" %}</a></li>
-							<li><a class="dropdown-item" title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% url "datalayer_data" %}?datalayer_key={{ dl.key}}&shape_id={{shape.id}}&format=excel">{% translate "Excel" %}</a></li>
+							<li><a class="dropdown-item" title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% apiurl "data" datalayer_key=dl.key shape_id=shape.id format="csv" %}">{% translate "CSV" %}</a></li>
+							<li><a class="dropdown-item" title="{% translate "Download processed data for this shape and Data Layer" %}" rel="nofollow" href="{% apiurl "data" datalayer_key=dl.key shape_id=shape.id format="excel" %}">{% translate "Excel" %}</a></li>
 						</ul>
 						{% endif %}
 					</div>

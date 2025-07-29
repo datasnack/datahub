@@ -61,7 +61,7 @@ export class MyMap {
 		var query_string = new URLSearchParams(query).toString();
 
 		self.map.fire("dataloading");
-		$.getJSON(`/api/shapes/geometry/?${query_string}`, function (data) {
+		$.getJSON(`/api/shapes/geometry?${query_string}`, function (data) {
 			var m = L.geoJSON(data, {
 				onEachFeature: function (feature, layer) {
 					const p = feature.properties;
@@ -97,7 +97,7 @@ export class MyMap {
 		self.map.fire("dataloading");
 
 		$.getJSON(
-			`/api/datalayers/vector/?datalayer_key=${query.datalayer_key}`,
+			`/api/datalayers/vector?datalayer_key=${query.datalayer_key}`,
 			(data) => {
 				var m = L.geoJSON(data, {
 					style: {
@@ -170,7 +170,7 @@ export class MyMap {
 		var query_string = new URLSearchParams(query).toString();
 
 		self.map.fire("dataloading");
-		$.getJSON(`/api/shapes/bbox/?${query_string}`, function (data) {
+		$.getJSON(`/api/shapes/bbox?${query_string}`, function (data) {
 			var m = L.geoJSON(data, {
 				onEachFeature: function (feature, layer) {
 					const p = feature.properties;

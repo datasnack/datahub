@@ -14,7 +14,7 @@
 				{% icon "download" %} {% translate "Shape geometries" %}
 			</button>
 			<ul class="dropdown-menu dropdown-menu-end">
-				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=gpkg">{% translate "GeoPackage" %}</a></li>
+				<li><a class="dropdown-item" href="{% apiurl 'shape_geometry' shape_type=type.key format="gpkg" %}">{% translate "GeoPackage" %}</a></li>
 				<li>
 					<div class="d-flex">
 
@@ -28,7 +28,7 @@
 					</div>
 				</li>
 
-				<li><a class="dropdown-item" href="{% url 'shape_geometry' %}?shape_type={{ type.key }}&format=csv">{% translate "CSV (WKT)" %}</a></li>
+				<li><a class="dropdown-item" href="{% apiurl 'shape_geometry' shape_type=type.key format="csv" %}">{% translate "CSV (WKT)" %}</a></li>
 			</ul>
 		</div>
 

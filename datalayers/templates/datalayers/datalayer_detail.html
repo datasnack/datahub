@@ -8,6 +8,7 @@
 {% load call_method %}
 {% load link_license %}
 {% load iso_calendar_week %}
+{% load apiurl %}
 
 {% block title %}{{ datalayer.name }}{% endblock %}
 
@@ -20,8 +21,8 @@
 			</button>
 			{% if datalayer.is_available %}
 			<ul class="dropdown-menu">
-				<li><a class="dropdown-item" rel="nofollow" href="{% url 'datalayer_data' %}?datalayer_key={{ datalayer.key}}&format=csv">{% translate "CSV" %}</a></li>
-				<li><a class="dropdown-item" rel="nofollow" href="{% url 'datalayer_data' %}?datalayer_key={{ datalayer.key}}&format=excel">{% translate "Excel" %}</a></li>
+				<li><a class="dropdown-item" rel="nofollow" href="{% apiurl 'data' datalayer_key=datalayer.key format="csv" %}">{% translate "CSV" %}</a></li>
+				<li><a class="dropdown-item" rel="nofollow" href="{% apiurl 'data' datalayer_key=datalayer.key format="excel" %}">{% translate "Excel" %}</a></li>
 			</ul>
 			{% endif %}
 		</div>
@@ -760,7 +761,7 @@ $('#js-add-to-map').on('click', async function() {
 		shape_type: shape_type,
 	};
 	let query_string = new URLSearchParams(query).toString();
-	$.getJSON(`/api/shapes/geometry/?${query_string}`, function(data) {
+	$.getJSON(`/api/shapes/geometry?${query_string}`, function(data) {
 		// if there are results from a earlier request deltee them,
 		// so we don't have stacked charts on the map
 		if (currentResult) {

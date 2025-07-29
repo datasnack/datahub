@@ -31,6 +31,7 @@ dependencies = [
   "pyyaml>=6.0.2",
   "rioxarray>=0.17.0",
   "netcdf4>=1.7.2",
+  "django-ninja>=1.4.3",
 ]
 
 [tool.uv]
