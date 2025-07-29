@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0](https://github.com/datasnack/datahub/compare/v0.9.7..v0.10.0) - 2025-07-29
+
+### Changed
+
+- Update snippet of api suggestions ([5c67d7e](https://github.com/datasnack/datahub/commit/5c67d7e337b3f78391b3d5e003079d81e581b70f))
+- Switch to django-ninja for API ([c92d873](https://github.com/datasnack/datahub/commit/c92d87363d7f93b4dc965f8094154f95fa9dfda2))
+
 ## [0.9.7](https://github.com/datasnack/datahub/compare/v0.9.6..v0.9.7) - 2025-07-23
 
 ### Added
