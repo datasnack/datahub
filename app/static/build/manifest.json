@@ -1,6 +1,6 @@
 {
-  "_plotly-Dr-OhdF7.js": {
-    "file": "assets/plotly-Dr-OhdF7.js",
+  "_plotly-BMkmQsqJ.js": {
+    "file": "assets/plotly-BMkmQsqJ.js",
     "name": "plotly",
     "isDynamicEntry": true,
     "imports": [
@@ -13,13 +13,13 @@
     "isEntry": true
   },
   "app/resources/js/app.js": {
-    "file": "assets/app-MExs6QPz.js",
+    "file": "assets/app-BsWTCMQW.js",
     "name": "app",
     "src": "app/resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "_plotly-Dr-OhdF7.js",
-      "_plotly-Dr-OhdF7.js"
+      "_plotly-BMkmQsqJ.js",
+      "_plotly-BMkmQsqJ.js"
     ]
   }
 }
