@@ -10,8 +10,9 @@
 			<div class="modal-body">
 
 				<p>
-					{% blocktranslate %}
-						The Data Layers data can be accessed via an API. Below you see minimal code snippets to query the data. For more information regarding the API please look at the <a href="https://datasnack.org/guide/docs/api.html">documentation</a>.
+					{% url 'api-1.0.0:openapi-view' as url %}
+					{% blocktranslate with open_api_url=url %}
+						The Data Layers data can be accessed via an API. Below you see minimal code snippets to query the data. For more information regarding the API please look at the <a href="{{ open_api_url }}">OpenAPI documentation</a>.
 					{% endblocktranslate %}
 				</p>
 
@@ -37,7 +38,6 @@
 							<div class="tab-pane show active" id="api-python-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
 
 								<pre class="mb-0"><code class="language-python">import requests
-from requests.auth import HTTPBasicAuth
 from urllib.parse import urlencode
 
 import pandas as pd
@@ -45,12 +45,25 @@ import matplotlib.pyplot as plt
 
 # set host, like http://localhost:8000, to where your Data Hub is running
 HOST = ''
-# in case of basic auth set to HTTPBasicAuth('user', 'password')
-AUTH = None
 # API TOKEN
 TOKEN = ""
 
-q = {
+
+def dh_data(query: dict) -> pd.DataFrame:
+    response = requests.get(
+        f"{HOST}/api/datalayers/data?{urlencode(query)}", headers={"X-API-Key": TOKEN}
+    )
+    if response.status_code == 200:
+        d = response.json()
+    else:
+        raise Exception(f"Request failed ({response.status_code}): {response.text}")
+
+    df = pd.DataFrame(d["data"])
+    df[d["time_col"]] = pd.to_datetime(df[d["time_col"]], format="ISO8601")
+
+    return df
+
+{{ datalayer.key }}_df = dh_data({
     'datalayer_key': '{{ datalayer.key }}',
 
     # Optional filters to narrow down the returned data:
@@ -58,19 +71,7 @@ q = {
     #'shape_type': '',
     #'start_date': '',
     #'end_date': '',
-}
-response = requests.get(
-    f"{HOST}/api/datalayers/data?{urlencode(q)}",
-    headers={"X-API-Key": TOKEN},
-    auth=AUTH,
-)
-if response.status_code == 200:
-    d = response.json()
-else:
-    raise Exception(f"Request failed ({response.status_code}): {response.text}")
-
-{{ datalayer.key }}_df = pd.DataFrame(d['data'])
-{{ datalayer.key }}_df['{{ datalayer.temporal_resolution.string}}'] = pd.to_datetime({{ datalayer.key }}_df['{{ datalayer.temporal_resolution.string}}'], format="{{ datalayer.temporal_resolution.format }}")</code></pre>
+})</code></pre>
 							</div>
 
 							<div class="tab-pane" id="api-r-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">

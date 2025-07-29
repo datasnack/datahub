@@ -10,8 +10,9 @@
 			<div class="modal-body">
 
 				<p>
-					{% blocktranslate %}
-						The Shapes can be accessed via an API. Below you see minimal code snippets to query the data. For more information regarding the API please look at the <a href="https://datasnack.org/guide/docs/api.html">documentation</a>.
+					{% url 'api-1.0.0:openapi-view' as url %}
+					{% blocktranslate with open_api_url=url %}
+						The Shapes can be accessed via an API. Below you see minimal code snippets to query the data. For more information regarding the API please look at the <a href="{{ open_api_url }}">OpenAPI documentation</a>.
 					{% endblocktranslate %}
 				</p>
 
@@ -42,36 +43,37 @@
 							<div class="tab-pane show active" id="api_{{ shape.key }}-python-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
 
 								<pre class="mb-0"><code class="language-python">import requests
-from requests.auth import HTTPBasicAuth
 from urllib.parse import urlencode
 from io import BytesIO
 import geopandas
 
 # set host, like http://localhost:8000, to where your Data Hub is running
 HOST = ""
-# in case of basic auth set to HTTPBasicAuth('user', 'password')
-AUTH = None
 # API TOKEN
 TOKEN = ""
 
-q = {
-    "shape_id": {{ shape.id }},
+
+def dh_shapes(query: dict):
+    response = requests.get(
+        f"{HOST}/api/shapes/geometry?{urlencode(query)}",
+        headers={"X-API-Key": TOKEN}
+    )
+    if response.status_code == 200:
+        gdf = geopandas.read_file(BytesIO(response.content))
+        d = response.json()
+    else:
+        raise Exception(f"Request failed ({response.status_code}): {response.text}")
+    return gdf
+
+
+shape_gdf = dh_shapes({
+    "shape_id":  {{ shape.id }},
 
     # Simplify geometry to reduce complexity/size in unit of Shapes,
     # for WGS84 degree: 0.001 ~> 111.3m
     # https://shapely.readthedocs.io/en/latest/manual.html#object.simplify
     # "simplify": 0.01
-}
-response = requests.get(
-    f"{HOST}/api/shapes/geometry?{urlencode(q)}",
-    headers={"X-API-Key": TOKEN},
-    auth=AUTH,
-)
-if response.status_code == 200:
-    shape_{{shape.key}}_gdf = geopandas.read_file(BytesIO(response.content))
-    d = response.json()
-else:
-    raise Exception(f"Request failed ({response.status_code}): {response.text}")</code></pre>
+})</code></pre>
 							</div>
 
 							<div class="tab-pane" id="api_{{ shape.key }}-r-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">

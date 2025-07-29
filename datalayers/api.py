@@ -3,7 +3,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
-from ninja import File, Query, Router, Schema, Field
+from ninja import Field, File, Query, Router, Schema
 from psycopg import sql
 
 from django.db import connection
@@ -218,6 +218,7 @@ def data(
         case "json":
             return JsonResponse(
                 {
+                    "time_col": str(datalayer.temporal_resolution),
                     "data": df.fillna(np.nan)
                     .replace([np.nan], [None])
                     .to_dict("records"),
