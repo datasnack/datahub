@@ -4,6 +4,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 from ninja import Field, File, Query, Router, Schema
+from ninja.security import SessionAuth
 from psycopg import sql
 
 from django.db import connection
@@ -400,5 +401,27 @@ def meta(
             "shape_types": shape_types,
         },
     }
+
+    return JsonResponse(res)
+
+
+@router.get(
+    "datacite/",
+    auth=[SessionAuth()],
+    include_in_schema=False,
+    summary="Fetch DOI metadata from DataCite API",
+)
+def datacite(request, pid: str):
+    from datacite import DataCiteRESTClient
+    from datacite.errors import DataCiteNotFoundError
+
+    dc = DataCiteRESTClient(None, None, None)
+    res = {}
+    try:
+        datacite = dc.get_metadata(pid)
+        res["datacite"] = datacite
+
+    except DataCiteNotFoundError:
+        res["datacite"] = {}
 
     return JsonResponse(res)
