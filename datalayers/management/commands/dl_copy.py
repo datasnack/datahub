@@ -57,7 +57,9 @@ class Command(BaseCommand):
             ) from None
 
         source_tags = dl.tags.all()
-        source_sources = dl.sources.all()
+        source_sources = list(
+            dl.sources.all()
+        )  # we need to persist the result before saving the model again. list() does that
 
         # Reset pk/_state.adding of old class and save new. Yes it's the Django way.
         dl.pk = None
