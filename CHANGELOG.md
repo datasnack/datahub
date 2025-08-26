@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1](https://github.com/datasnack/datahub/compare/v0.10.0..v0.10.1) - 2025-08-26
+
+### Changed
+
+- Provide CLI commands for resetting processed data ([b4646be](https://github.com/datasnack/datahub/commit/b4646beca463bfd8a51e966ca163dfc71e88ffe3))
+- Make swap command extendable with configs ([0963c56](https://github.com/datasnack/datahub/commit/0963c56ed0e62701fb1795204c9ab66f905828e4))
+
+### Fixed
+
+- Show percentage of all known shape types, not only from available ([4cf1b22](https://github.com/datasnack/datahub/commit/4cf1b222a330869a9b0bf2ca362022c2847ebef4))
+- Cast admin column to int/null ([ab62171](https://github.com/datasnack/datahub/commit/ab621715d275439b8aa58fb26b16b70afd67966f))
+- Sources were not copied ([c753910](https://github.com/datasnack/datahub/commit/c7539106d0940703083200d7d590d99e52441839))
+
+
 ## [0.10.0](https://github.com/datasnack/datahub/compare/v0.9.7..v0.10.0) - 2025-07-29
 
 ### Changed
