@@ -618,6 +618,23 @@ class Datalayer(models.Model):
 
     # --
 
+    def reset(self, *, data: bool = True, log: bool = False):
+        if not self.is_loaded():
+            return
+
+        # drop processed dat
+        if data:
+            query = sql.SQL("DROP TABLE {table}").format(table=sql.Identifier(self.key))
+
+            with connection.cursor() as c:
+                c.execute(query)
+
+        # drop log for data layer
+        if log:
+            self.logentries.all().delete()
+
+    # --
+
     def leaflet_popup(self):
         if self.has_class():
             if hasattr(self._get_class(), "leaflet_popup") and callable(
