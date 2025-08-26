@@ -759,6 +759,9 @@ class Datalayer(models.Model):
         expected = self.expected_value_count(shape_type)
         actual = self.count_values(shape_type)
 
+        if expected is None or actual is None:
+            return None
+
         return actual / expected
 
     def expected_value_count(self, shape_type: Type | None = None) -> int:
@@ -767,6 +770,9 @@ class Datalayer(models.Model):
 
         first = self.first_time(shape_type)
         last = self.last_time(shape_type)
+
+        if first is None or last is None:
+            return None
 
         if shape_type is None:
             type_multiplier = Shape.objects.count()
@@ -855,6 +861,9 @@ class Datalayer(models.Model):
             c.execute(query, params)
             result = c.fetchone()
 
+        if not result:
+            return None
+
         return result[0]
 
     def last_time(
@@ -895,6 +904,9 @@ class Datalayer(models.Model):
         with connection.cursor() as c:
             c.execute(query, params)
             result = c.fetchone()
+
+        if not result:
+            return None
 
         return result[0]
 

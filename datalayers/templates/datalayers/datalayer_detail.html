@@ -208,7 +208,7 @@
 					</tr>
 				</thead>
 				<tbody class="table-group-divider">
-					{% for type in datalayer.get_available_shape_types %}
+					{% for type in nav_shape_types %}
 					<tr class="small">
 						<td>
 							<a href="{{ type.get_absolute_url }}">{{type.name}}</a>
