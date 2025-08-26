@@ -74,6 +74,9 @@ class Command(BaseCommand):
             if col not in gdf.columns:
                 raise CommandError(f"{col} column inside geo data is required")
 
+        # column types matching the database schema
+        gdf["admin"] = gdf["admin"].astype("Int16")  # cast to int with NULL support
+
         # first create types from strings
         order_position = 1
         type_map = {}
