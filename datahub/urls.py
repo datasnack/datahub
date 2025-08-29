@@ -37,8 +37,11 @@ urlpatterns = [
 urlpatterns += [
     path("", include("app.urls")),
     path("admin/", admin.site.urls),
+    path(
+        "accounts/login/",
+        auth_views.LoginView.as_view(redirect_authenticated_user=True),
+    ),
     path("accounts/", include("django.contrib.auth.urls")),
-    path("accounts/login/", auth_views.LoginView.as_view()),
     path("datalayers/", include("datalayers.urls")),
     path("shapes/", include("shapes.urls")),
     path("api/", api.urls),
