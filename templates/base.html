@@ -82,7 +82,7 @@
 					{% if LANGUAGES|length > 1 %}
 					<div class="input-group input-group-sm me-1">
 						<span class="input-group-text">{% icon "globe" %}</span>
-						<button class="btn btn-outline-secondary btn-language-toggle btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+						<button class="btn dropdown-toggle btn-language-toggle btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 							{{ LANGUAGE_CODE }}
 						</button>
 						<ul class="dropdown-menu dropdown-menu-end">
@@ -109,12 +109,20 @@
 						</button>
 						<ul class="dropdown-menu dropdown-menu-end">
 							{% if user.is_authenticated %}
-							<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Admin" %}</a></li>
+							<li>
+								<span style="font-size: 11px" class="dropdown-item-text text-uppercase fw-medium text-nowrap">
+									{% blocktranslate with name=user.username %}Signed in as <strong>{{name}}</strong>{% endblocktranslate  %}
+								</span>
+							</li>
+							<li><hr class="dropdown-divider my-1"></li>
 							<li><a class="dropdown-item" href="{% url 'app:settings' %}">{% translate "Settings" %}</a></li>
+							<li><hr class="dropdown-divider my-1"></li>
+							<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Administration" %}</a></li>
+							<li><hr class="dropdown-divider my-1"></li>
 							<li>
 								<form action="{% url 'logout' %}" method="post">
 									{% csrf_token %}
-									<button class="btn btn-link" type="submit">{% translate "Logout" %}</button>
+									<button class="dropdown-item" type="submit">{% icon "sign-out" %} {% translate "Logout" %}</button>
 								</form>
 							</li>
 							{% else %}
