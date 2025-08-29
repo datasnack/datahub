@@ -55,6 +55,8 @@ class ShapeListView(ListView):
 
 class ShapeDetailView(DetailView):
     model = Shape
+    slug_field = "key"
+    slug_url_kwarg = "key"
     context_object_name = "shape"
 
     def get_context_data(self, **kwargs):

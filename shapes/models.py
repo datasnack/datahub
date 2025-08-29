@@ -103,7 +103,7 @@ class Shape(models.Model):
         return str(self.name)
 
     def get_absolute_url(self):
-        return reverse("shapes:shape_detail", kwargs={"pk": self.id})
+        return reverse("shapes:shape_detail", kwargs={"key": self.key})
 
     def has_parent(self) -> bool:
         return self.parent is not None
