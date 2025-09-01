@@ -1,6 +1,6 @@
 {
-  "_plotly-BMkmQsqJ.js": {
-    "file": "assets/plotly-BMkmQsqJ.js",
+  "_plotly-Dx7dZkVx.js": {
+    "file": "assets/plotly-Dx7dZkVx.js",
     "name": "plotly",
     "isDynamicEntry": true,
     "imports": [
@@ -8,18 +8,18 @@
     ]
   },
   "app/resources/css/app.css": {
-    "file": "assets/app-Bz_bL4zK.css",
+    "file": "assets/app-Dj_rdKnz.css",
     "src": "app/resources/css/app.css",
     "isEntry": true
   },
   "app/resources/js/app.js": {
-    "file": "assets/app-BsWTCMQW.js",
+    "file": "assets/app-JvfnbUQy.js",
     "name": "app",
     "src": "app/resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "_plotly-BMkmQsqJ.js",
-      "_plotly-BMkmQsqJ.js"
+      "_plotly-Dx7dZkVx.js",
+      "_plotly-Dx7dZkVx.js"
     ]
   }
 }
