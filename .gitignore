@@ -243,10 +243,10 @@ data/
 # In case of multi tenant setup (i.e., for development)
 # ignore the specific data/src/.env folders/files.
 # See also the python manage.py swap command.
-data.*
-docs.*
-src.*
-.env.*
+/data.*
+/docs.*
+/src.*
+/.env.*
 !.env.example
 
 !/app/static/build/
