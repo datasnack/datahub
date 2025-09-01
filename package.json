@@ -23,7 +23,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.0.0",
     "@sveltejs/vite-plugin-svelte": "^5.1.0",
-    "sass": "^1.77.8",
+    "sass": "1.78.0",
     "svelte": "^5",
     "svelte-preprocess": "^6.0.2",
     "vite": "^6.3.5"
