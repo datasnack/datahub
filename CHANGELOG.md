@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2](https://github.com/datasnack/datahub/compare/v0.10.1..v0.10.2) - 2025-09-16
+
+### Changed
+
+- Use shape key as slug for urls instead of id ([bacbe7c](https://github.com/datasnack/datahub/commit/bacbe7cc623886f92a50113ca614b4d6f29a449f))
+
+### Fixed
+
+- Visual fixes, show username in user dropdown ([b004191](https://github.com/datasnack/datahub/commit/b004191328c67081d570972a35b68073cc055d14))
+- Redirect for already authenticated users if they open the login page ([c5573ae](https://github.com/datasnack/datahub/commit/c5573ae059291a1a7eb75f3fc686f5c2abe32e8d))
+
 ## [0.10.1](https://github.com/datasnack/datahub/compare/v0.10.0..v0.10.1) - 2025-08-26
 
 ### Changed
