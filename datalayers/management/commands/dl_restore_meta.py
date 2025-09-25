@@ -1,13 +1,13 @@
 from pathlib import Path
 
 from django.contrib import messages
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from datalayers.utils import loaddata
 
 
 class Command(BaseCommand):
-    help = "Dump complete database for backup/later restoration."
+    help = "Restore Data Layers from previously serialized dump."
 
     def add_arguments(self, parser):
         parser.add_argument("file", type=str)

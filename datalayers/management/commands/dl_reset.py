@@ -1,7 +1,6 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from datalayers.models import Datalayer
-from shapes.models import Shape
 
 
 class Command(BaseCommand):
@@ -35,7 +34,7 @@ class Command(BaseCommand):
                 if not dl.is_loaded():
                     self.stdout.write(
                         self.style.WARNING(
-                            f"The Data Layer {dl.key} can't be resetted, since it's not loaded."
+                            f"The Data Layer {dl.key} can't be reset, since it's not loaded."
                         )
                     )
                     continue

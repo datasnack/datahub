@@ -30,6 +30,14 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
+            "-t",
+            "--tables",
+            nargs="+",
+            required=False,
+            help="List of tables to dump (space-separated).",
+        )
+
+        parser.add_argument(
             "--exclude-user-data",
             action="store_true",
             help="Exclude data of user tables (but keep table definition), useful for export to new instances.",
@@ -45,11 +53,13 @@ class Command(BaseCommand):
             "--format",
             choices=["plain", "custom"],
             default="custom",
-            help='Specify the data format, choose either "plain" or "custom"',
+            help='Specify the data format, choose either "plain" (SQL) or "custom" (pg_dump)',
         )
 
     def handle(self, *args, **options):
         file = options["file"]
+        tables = options["tables"]
+
         output_format = options["format"]
         extension = "dump"
         if output_format == "plain":
@@ -68,6 +78,10 @@ class Command(BaseCommand):
                 f"{path}",
                 get_conn_string(sqlalchemy=False),
             ]
+
+            if tables:
+                for table in tables:
+                    params.extend(["-t", table])
 
             # active sessions should never be dumped
             params.append("--exclude-table-data")

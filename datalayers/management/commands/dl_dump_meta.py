@@ -1,18 +1,13 @@
-import datetime as dt
-import subprocess
 from pathlib import Path
 
-from taggit.models import TaggedItem
-
-from django.core import serializers
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from datalayers.models import Datalayer
 from datalayers.utils import dumpdata
 
 
 class Command(BaseCommand):
-    help = "Dump complete database for backup/later restoration."
+    help = "Serialize Data Layer metadata into JSON."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -22,8 +17,8 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-            "-o",
-            "--output",
+            "-f",
+            "--file",
             type=str,
             help="Specify a file to write the output to instead of the CLI",
         )
@@ -35,7 +30,7 @@ class Command(BaseCommand):
         datalayers = []
 
         for key in keys:
-            dls = Datalayer.objects.filter(key__iregex=key)
+            dls = Datalayer.objects.filter_by_key(key)
             for dl in dls:
                 datalayers.append(dl)
 

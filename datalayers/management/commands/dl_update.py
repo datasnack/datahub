@@ -36,11 +36,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         keys = [s.strip() for s in options["keys"].split(",")]
+        dls = []
 
         for key in keys:
-            dls = Datalayer.objects.filter(key__iregex=key)
+            tmpdls = Datalayer.objects.filter_by_key(key)
+            for dl in tmpdls:
+                dls.append(dl)
 
-        if dls.count() == 0:
+        if len(dls) == 0:
             self.stdout.write(
                 self.style.WARNING(f'No Data Layer were found for "{key}".')
             )
@@ -77,7 +80,6 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(f'Data Layer has no attribute "{options["attr"]}".')
             )
-
             return
 
         for dl in dls:
