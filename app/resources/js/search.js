@@ -28,6 +28,7 @@ function createSearch() {
 		initialState: {
 			isOpen: true,
 		},
+		defaultActiveItemId: 0,
 		//onStateChange: function(e) {
 		// onStateChange catches a lot of events, even multiple
 		// per key stroke. Also there doesn't seem to be a way to

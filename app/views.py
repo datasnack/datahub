@@ -153,8 +153,10 @@ def search(request):
         for s in shapes:
             results.append(
                 {
+                    "type": "shape",
                     "url": s.get_absolute_url(),
-                    "label": f"{s.name} ({s.type.name})",
+                    "label": s.name,
+                    "key": s.type.name,
                     "objectID": s.id,
                 }
             )
@@ -176,8 +178,10 @@ def search(request):
         for d in datalayers:
             results.append(
                 {
+                    "type": "datalayer",
                     "url": d.get_absolute_url(),
-                    "label": f"{d.name} ({d.key})",
+                    "label": d.name,
+                    "key": d.key,
                     "objectID": d.id,
                 }
             )
