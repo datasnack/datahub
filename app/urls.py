@@ -6,6 +6,11 @@ app_name = "app"
 urlpatterns = [
     path("robots.txt", views.robots_txt),
     path("", views.home, name="home"),
+    path(
+        "file/<path:file_path>",
+        views.file_download,
+        name="file_download",
+    ),
     path("changelog", views.changelog, name="changelog"),
     path("search", views.search, name="search"),
     path("settings", views.user_settings, name="settings"),
@@ -21,4 +26,5 @@ urlpatterns = [
     ),
     path("tools/picker", views.tools_picker, name="tools_picker"),
     re_path(r"^docs/(?P<path>.+)/$", views.docs_view, name="docs_page"),
+    path("tools/compare", views.tools_compare, name="tools_compare"),
 ]

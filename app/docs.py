@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import unquote
 
 import mistune
 import yaml
@@ -10,6 +11,8 @@ from django.template import RequestContext, Template
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import get_language
+
+from app.utils.mistune import DjangoTemplateRenderer
 
 
 def get_docs_root() -> Path:
@@ -22,6 +25,23 @@ def clean_filename(filename: str) -> str:
     name = filename.rsplit(".", 1)[0]
     cleaned = re.sub(r"^\d+_", "", name)
     cleaned = re.sub(r"\.[a-z]{2}$", "", cleaned)
+
+    return cleaned
+
+
+def clean_path(path: str) -> str:
+    path = path.removeprefix("./")
+    path = unquote(path)
+
+    parts = path.split("/")
+    cleaned = ""
+
+    # folders
+    for i in range(len(parts) - 1):
+        cleaned += slugify(parts[i]) + "/"
+
+    # filenames
+    cleaned += slugify(clean_filename(parts[-1]))
 
     return cleaned
 
@@ -204,7 +224,19 @@ def render_dj_md_to_html(request, text):
     template = Template(text)
     context = RequestContext(request, None)
     rendered = template.render(context)
-    html = mistune.html(rendered)
+
+    markdown = mistune.create_markdown(
+        renderer=DjangoTemplateRenderer(escape=False),
+        escape=False,
+        plugins=[
+            "strikethrough",
+            "footnotes",
+            "table",
+            "speedup",
+        ],
+    )
+    html = markdown(rendered)
+    # html = mistune.html(rendered)
 
     html = html.replace("<table>", '<table class="table table-sm">')
 

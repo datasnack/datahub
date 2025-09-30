@@ -190,6 +190,7 @@ TEMPLATES = [
             "builtins": [
                 "django.templatetags.static",
                 "app.templatetags.icon",
+                "app.templatetags.file",
             ],
         },
     },

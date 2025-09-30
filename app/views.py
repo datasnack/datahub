@@ -1,11 +1,12 @@
 from pathlib import Path
+from urllib.parse import unquote
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.db.models import Q
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.crypto import get_random_string
 from django.utils.translation import get_language
@@ -16,7 +17,12 @@ from app.utils import prase_date_or_today
 from datalayers.models import Datalayer
 from shapes.models import Shape, Type
 
-from .docs import extract_title_from_md, get_docs_structure, render_dj_md_to_html
+from .docs import (
+    extract_title_from_md,
+    get_docs_structure,
+    render_dj_md_to_html,
+    DocItem,
+)
 from .models import BearerToken
 
 
@@ -65,10 +71,34 @@ def home(request):
     )
 
 
+def file_download(request, file_path):
+    file_path = unquote(file_path)
+    base_dir = Path(settings.BASE_DIR) / "docs"
+
+    try:
+        # Fully resolve both base and target file
+        # We resolve also the base directory because it could be symlinked
+        base_dir_resolved = base_dir.resolve(strict=True)
+        abs_path = (base_dir / file_path).resolve(strict=True)
+    except FileNotFoundError:
+        raise Http404("File not found.") from None
+
+    # Confirm abs_path is within base_dir (after resolving symlinks)
+    try:
+        abs_path.relative_to(base_dir_resolved)
+    except ValueError:
+        raise Http404("File not found.") from None
+
+    if not abs_path.is_file():
+        raise Http404("File not found.")
+
+    return FileResponse(abs_path.open("rb"), as_attachment=True)
+
+
 def docs_view(request, path=""):
     docs = get_docs_structure()
 
-    def rec_search_item(path, docs):
+    def rec_search_item(path: str, docs: list[DocItem]) -> DocItem:
         match = None
         for item in docs:
             if item.is_dir():
