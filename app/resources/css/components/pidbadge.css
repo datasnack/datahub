@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 .c-pidbadge {
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, .3);
 	--border-radius: 3px;

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+
 export * from "d3-array";
 export * from "d3-axis";
 export * from "d3-fetch";

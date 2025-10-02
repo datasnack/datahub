@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # Data Hub
 
 The Data Hub is a geographic information system (GIS) featuring a data fusion engine designed for data harmonization, alongside an interactive dashboard for effective data exploration and collaboration. Its key objective is to merge data of multiple formats and sources across temporal and spatial axes, allowing users to combine, analyze, and interpret the data.

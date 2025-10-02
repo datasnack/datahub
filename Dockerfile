@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
 
 RUN apt-get update && apt-get install -y \

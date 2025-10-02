@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from django.db.models import Max
 from django.db.models.signals import pre_save
 from django.dispatch import receiver

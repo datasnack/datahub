@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 import logging
 
 from django.shortcuts import get_object_or_404, render

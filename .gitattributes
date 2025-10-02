@@ -1,5 +1,9 @@
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # Prevent .sh scripts failing after docker build on Windows
 *.sh text eol=lf
 
-# To simplify build/deployment processes we keep compliled assets for now
+# To simplify build/deployment processes we keep compiled assets for now
 /app/static/build/* binary

@@ -1,8 +1,12 @@
+// SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import fs from 'fs';
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
-
+import { createViteLicensePlugin } from 'rollup-license-plugin'
 
 /**
  * Simple plugin to create a "hot" file while dev mode is running. tThis file contains
@@ -12,6 +16,11 @@ import { sveltePreprocess } from 'svelte-preprocess';
  * https://github.com/laravel/vite-plugin/blob/7271dcd048a8450afc92d9cb861e2795b2b43ec6/src/index.ts#L209
  *
  */
+// SPDX-SnippetBegin
+// SPDX-SnippetCopyrightText: Taylor Otwell
+// SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+//
+// SPDX-License-Identifier: MIT
 const hotFilePlugin = () => ({
 	name: 'hotfile-server',
 	configureServer(server) {
@@ -76,6 +85,7 @@ const hotFilePlugin = () => ({
 		}
 	},
 });
+// SPDX-SnippetEnd
 
 export default defineConfig({
 	//root: 'app/resources',
@@ -101,6 +111,7 @@ export default defineConfig({
 			compilerOptions: {
 				customElement: true,
 			},
-		})
+		}),
+		createViteLicensePlugin()
 	],
 })

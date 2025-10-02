@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _

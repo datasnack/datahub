@@ -1,5 +1,9 @@
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
+# Visit https://citation-file-format.github.io/cff-initializer-javascript/
 
 cff-version: 1.2.0
 title: Data Hub
@@ -15,6 +19,6 @@ authors:
     family-names: Boenecke
     orcid: 'https://orcid.org/0000-0002-6327-8152'
 repository-code: 'https://github.com/datasnack/datahub'
-license: MIT
+license: AGPL-3.0-only
 version: 0.10.2
 date-released: '2025-09-16'

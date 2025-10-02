@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+
 document.querySelectorAll(".js-clipboard").forEach((button) => {
 	button.addEventListener("click", (event) => {
 		// in case the button is inside a dropdown, we don't want to close it by clicking on it

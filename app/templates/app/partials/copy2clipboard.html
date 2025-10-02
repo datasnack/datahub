@@ -1,3 +1,9 @@
+{% comment %}
+SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+
+SPDX-License-Identifier: AGPL-3.0-only
+{% endcomment %}
+
 {% load i18n %}
 <button type="button" class="btn btn-sm btn-link text-body js-clipboard" data-clipboard-content="{{ content }}" data-clipboard-source="{{ source }}" data-clipboard-url="{{ url }}">
 	<span title="{%translate "Copy to clipboard" %}" class="js-copy">{% icon "copy" %}</span>

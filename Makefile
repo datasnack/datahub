@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 update_python_deps:
 	# Without --upgrade uv will reuse the already pinnend version from the requirements.txt.
 	# https://docs.astral.sh/uv/pip/compile/#upgrading-requirements

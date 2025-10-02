@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # wait for PostgreSQL/PostGIS to be ready before running migrations
 readonly SLEEP_TIME=2
 until PGPASSWORD=$DB_PASSWORD timeout 3 psql -h $DB_HOST -U $DB_USER -c "select 1" -d $DB_NAME > /dev/null

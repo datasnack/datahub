@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+
+# SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 """Django's command-line utility for administrative tasks."""
 
 import os

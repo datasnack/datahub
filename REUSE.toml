@@ -1,0 +1,53 @@
+version = 1
+
+[[annotations]]
+path = [
+    "app/static/favicon.ico",
+    "app/resources/svg/calendar-date-16.svg",
+    "app/resources/svg/calendar-month-16.svg",
+    "app/resources/svg/calendar-week-16.svg",
+    "app/resources/svg/calendar-year-16.svg",
+    ".env.example",
+    "package.json",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Jonathan Ströbele <mail@jonathanstroebele.de>"
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# Language files
+
+[[annotations]]
+path = "**.po"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Contributors to Data Hub"
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# GitHub Octicons
+[[annotations]]
+path = "app/resources/svg/octicons/*"
+SPDX-FileCopyrightText = "2025 GitHub Inc."
+SPDX-License-Identifier = "MIT"
+
+# Django migration files
+[[annotations]]
+path = [
+    "**/migrations/*.py"
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Jonathan Ströbele <mail@jonathanstroebele.de>"
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# Computer-generated files.
+[[annotations]]
+path = [
+    "uv.lock",
+    "package-lock.json",
+    "requirements.txt",
+    ".python-version",
+    "app/static/build/manifest.json",
+    "app/resources/iso3166/iso-3166-1-alpha3.json",
+    "app/resources/iso639/iso-639-3.json",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "CC0-1.0"

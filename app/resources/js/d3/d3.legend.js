@@ -1,5 +1,7 @@
-// Copyright 2021, Observable Inc.
-// Released under the ISC license.
+// SPDX-FileCopyrightText: 2021 Observable Inc.
+//
+// SPDX-License-Identifier: ISC
+//
 // https://observablehq.com/@d3/color-legend
 export function Legend(
 	color,
