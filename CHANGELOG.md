@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.3](https://github.com/datasnack/datahub/compare/v0.10.2..v0.10.3) - 2025-10-13
+
+### Changed
+
+- Load md images directly, not via static files ([6510354](https://github.com/datasnack/datahub/commit/6510354bfed491d65adbf872e2a5cd70e4c920f9))
+- Streamline Data Layer management commands ([59d5b3f](https://github.com/datasnack/datahub/commit/59d5b3fe4686d7b489f49101855b0dd6e946b250))
+- Build JavaScript/CSS assets in CI
+
+### Fixed
+
+- Autoselect first autocomplete item ([bad08b3](https://github.com/datasnack/datahub/commit/bad08b368649a51a1f64e30b142bbcd539df4c8f))
+- Format shapes/Datalayers in autocomplete ([a677455](https://github.com/datasnack/datahub/commit/a677455473915702e568610d8537f1a793120e05))
+
 ## [0.10.2](https://github.com/datasnack/datahub/compare/v0.10.1..v0.10.2) - 2025-09-16
 
 ### Changed
