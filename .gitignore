@@ -249,5 +249,5 @@ data/
 /.env.*
 !.env.example
 
-!/app/static/build/
+/app/static/build/
 /app/static/hot
