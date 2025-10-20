@@ -40,7 +40,13 @@ The Data Hub is an open-source software (OSS) developed through the [DiDEX](http
 
 The source code of the Data Hub is informed by the [results](https://github.com/MARS-Group-HAW/esida-db) of the ESIDA project.
 
+## Contributing
+
+At this time, we are not accepting pull requests as we are currently deciding on our contribution model, including whether a Contributor License Agreement (CLA) will be required. We are exploring options such as dual licensing to ensure the long-term sustainability and development of the project.
+
+In the meantime we are happy to discuss bugs or features via the [Issues](https://github.com/datasnack/datahub/issues).
+
 
 ## License
 
-MIT
+AGPLv3
