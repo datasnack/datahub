@@ -23,9 +23,9 @@ certifi==2025.10.5
     #   pyproj
     #   rasterio
     #   requests
-cftime==1.6.4.post1
+cftime==1.6.5
     # via netcdf4
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 click==8.3.0
     # via
@@ -50,7 +50,7 @@ django==5.2.7
     #   django-taggit
 django-environ==0.11.2
     # via datahub (pyproject.toml)
-django-ninja==1.4.3
+django-ninja==1.4.5
     # via datahub (pyproject.toml)
 django-taggit==6.1.0
     # via datahub (pyproject.toml)
@@ -90,7 +90,7 @@ mistune==3.1.4
     # via datahub (pyproject.toml)
 multiurl==0.3.7
     # via ecmwf-datastores-client
-netcdf4==1.7.2
+netcdf4==1.7.3
     # via datahub (pyproject.toml)
 networkx==3.5
     # via osmnx
@@ -127,13 +127,13 @@ pandas==2.2.3
     #   meteostat
     #   osmnx
     #   xarray
-psycopg==3.2.10
+psycopg==3.2.11
     # via datahub (pyproject.toml)
-psycopg-binary==3.2.10
+psycopg-binary==3.2.11
     # via psycopg
-pydantic==2.12.0
+pydantic==2.12.3
     # via django-ninja
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pyogrio==0.11.1
     # via geopandas
@@ -158,7 +158,7 @@ rasterio==1.4.3
     # via
     #   datahub (pyproject.toml)
     #   rioxarray
-referencing==0.36.2
+referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
