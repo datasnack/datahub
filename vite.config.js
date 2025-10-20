@@ -6,7 +6,6 @@ import fs from 'fs';
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
-import { createViteLicensePlugin } from 'rollup-license-plugin'
 
 /**
  * Simple plugin to create a "hot" file while dev mode is running. tThis file contains
@@ -111,7 +110,6 @@ export default defineConfig({
 			compilerOptions: {
 				customElement: true,
 			},
-		}),
-		createViteLicensePlugin()
+		})
 	],
 })
