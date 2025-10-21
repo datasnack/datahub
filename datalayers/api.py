@@ -242,10 +242,13 @@ def data(
             if shape:
                 name = f"{shape.name} ({shape.type.name})"
 
+            chart_type = "scatter"
+            if datalayer.chart_type == "bar":
+                chart_type = "bar"
+
             json_data = {
                 "name": name,
-                "type": "scatter",
-                "mode": "lines+markers",
+                "type": chart_type,
                 "x": df[str(datalayer.temporal_resolution)].tolist(),
                 "y": df["value"].tolist(),
             }
@@ -327,6 +330,10 @@ def plotly(
     # error bars, this reduces the visual noise in the chart.
     show_error = not ((df["value_plus"] == 0).all() and (df["value_minus"] == 0).all())
 
+    chart_type = "scatter"
+    if datalayer.chart_type == "bar":
+        chart_type = "bar"
+
     json_data = {
         "traces": [
             {
@@ -334,6 +341,15 @@ def plotly(
                 "name": f"{shape_type.name} (mean)",
                 "x": df[str(datalayer.temporal_resolution)].tolist(),
                 "y": df["value"].tolist(),
+                "type": chart_type,
+                "error_y": {
+                    "type": "data",
+                    "symmetric": False,
+                    "array": df["value_plus"].tolist(),
+                    "arrayminus": df["value_minus"].tolist(),
+                }
+                if show_error
+                else None,
             }
         ]
     }

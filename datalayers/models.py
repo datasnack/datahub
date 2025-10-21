@@ -346,6 +346,13 @@ class Datalayer(models.Model):
         return None
 
     @property
+    def chart_type(self) -> LayerValueType | None:
+        if self.has_class():
+            return self._get_class().chart_type
+
+        return None
+
+    @property
     def is_categorical(self) -> bool:
         if self.has_class():
             return self.get_class().value_type in [

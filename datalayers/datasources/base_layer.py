@@ -85,6 +85,9 @@ class BaseLayer:
         self.nominal_values = []
         self.ordinal_values = []
 
+        # line or bar chart
+        self.chart_type = "line"
+
         # Set this to a table name, in that the download method stores raw
         # data, it's expected that those raw data contain a geometry column
         # with some sort of geometry (POINT, POLYGON, ...)
