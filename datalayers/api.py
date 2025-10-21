@@ -319,6 +319,14 @@ def plotly(
         df[str(datalayer.temporal_resolution)] = df.index
         df = df.dropna()
 
+    # calculate deviation from mean
+    df["value_plus"] = df["max"] - df["value"]
+    df["value_minus"] = df["value"] - df["min"]
+
+    # if both max/min series are 0 there is no deviation and we do not need to show
+    # error bars, this reduces the visual noise in the chart.
+    show_error = not ((df["value_plus"] == 0).all() and (df["value_minus"] == 0).all())
+
     json_data = {
         "traces": [
             {
@@ -326,23 +334,7 @@ def plotly(
                 "name": f"{shape_type.name} (mean)",
                 "x": df[str(datalayer.temporal_resolution)].tolist(),
                 "y": df["value"].tolist(),
-            },
-            {
-                "name": f"{shape_type.name} (lower)",
-                "x": df[str(datalayer.temporal_resolution)].tolist(),
-                "y": df["min"].tolist(),
-                "fill": "tonexty",
-                "fillcolor": "rgba(68, 68, 68, 0.3)",
-                "line": {"width": 0},
-            },
-            {
-                "name": f"{shape_type.name} (upper)",
-                "x": df[str(datalayer.temporal_resolution)].tolist(),
-                "y": df["max"].tolist(),
-                "fill": "tonexty",
-                "fillcolor": "rgba(68, 68, 68, 0.3)",
-                "line": {"width": 0},
-            },
+            }
         ]
     }
 
