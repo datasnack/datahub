@@ -473,7 +473,7 @@ class Datalayer(models.Model):
 
         years = []
         for row in results:
-            years.append(row[0])
+            years.append(int(row[0]))
 
         return years
 
