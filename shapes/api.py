@@ -130,6 +130,7 @@ def shape_geometry(
         rows.append(
             {
                 "shape_id": s.id,
+                "parent_id": s.parent_id,
                 "key": s.key,
                 "url": request.build_absolute_uri(s.get_absolute_url()),
                 "name": s.name,
