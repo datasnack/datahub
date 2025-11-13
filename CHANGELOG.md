@@ -11,6 +11,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1](https://github.com/datasnack/datahub/compare/v0.11.0..v0.11.1) - 2025-11-13
+
+### Changed
+
+- MapLibre based map chart component ([ab126d7](https://github.com/datasnack/datahub/commit/ab126d77fdcbce204db67f051a7ebee6c3ec457f))
+- Rework plotly chart component ([c98eaa7](https://github.com/datasnack/datahub/commit/c98eaa7812ee883a55285a091ca1a42269e41aa1))
+- Configurable chart type (line/bar) ([e2972ef](https://github.com/datasnack/datahub/commit/e2972efa2de2ce346d5598439c5af8b1ead5c6d8))
+
+### Fixed
+
+- Cast year for end_date in data() ([e6f9000](https://github.com/datasnack/datahub/commit/e6f9000cea9862214b091fa2d0ec86ae5887e07f))
+- Return parent id in shapes api, to allow aggregation on client ([772afd8](https://github.com/datasnack/datahub/commit/772afd86b70cbe2d582c57418725ffc0f22e6d3e))
+- Use Data Snack logo as favicon ([49dbb69](https://github.com/datasnack/datahub/commit/49dbb69d97a3d85599c1a164d0477a2864977ff7))
+- Use plotly error_y insteaf of sparate min/max lines ([372b988](https://github.com/datasnack/datahub/commit/372b988c082ca3208b7f940ff7543961e6110373))
+
+### Removed
+
+- Remove static file dir of md images, are downloaded directly view custom view ([763ea0c](https://github.com/datasnack/datahub/commit/763ea0c09efdbbfa88a6c6e56fa97ddef288c807))
+
 ## [0.11.0](https://github.com/datasnack/datahub/compare/v0.10.4..v0.11.0) - 2025-10-20
 
 ### Changed
