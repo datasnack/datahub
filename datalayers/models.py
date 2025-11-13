@@ -778,6 +778,11 @@ class Datalayer(models.Model):
             params["start_date"] = start_date
 
         if end_date:
+            if self.temporal_resolution == LayerTimeResolution.YEAR and isinstance(
+                end_date, dt.date
+            ):
+                end_date = end_date.year
+
             query += "AND {temporal_column} <= %(end_date)s "
             params["end_date"] = end_date
 
