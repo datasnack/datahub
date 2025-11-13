@@ -12,10 +12,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script>
     import { onMount } from "svelte";
-    import { autocomplete } from "@algolia/autocomplete-js";
 
     //import Plotly, { addTraces, reverse } from 'plotly.js-dist';
 
+    export let title = "Temporal";
     export let dl;
     export let query = "";
     export let show_remove = false;
@@ -27,7 +27,6 @@ SPDX-License-Identifier: AGPL-3.0-only
         shape_types: [],
     };
     let chart;
-    let shapeselect;
 
     let data = [];
     let layout = {};
@@ -35,8 +34,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 
     let resampleTo = "";
     let shapeType = "";
-    let zoomStart;
-    let zoomEnd;
+    let shapeId = "";
+
+    let aggregate;
+    let dateStart;
+    let dateEnd;
 
     onMount(async () => {
         Plotly = await import("plotly.js-dist");
@@ -49,63 +51,31 @@ SPDX-License-Identifier: AGPL-3.0-only
         config = meta.plotly.config;
         datalayer = meta.datalayer;
 
+        shapeType = datalayer.shape_types[0].key;
+        shapeId = datalayer.shapes[0].id;
+
         Plotly.newPlot(chart, data, layout, config);
 
         if (query && (typeof query === "string" || query instanceof String)) {
             addTrace(JSON.parse(query));
         }
-
-        autocomplete({
-            container: shapeselect,
-            placeholder: "Add individual shapes…",
-            getSources({ query }) {
-                return [
-                    {
-                        sourceId: "suggestions",
-                        getItems() {
-                            return fetch(
-                                "/search?f=shapes&q=" +
-                                    encodeURIComponent(query),
-                            )
-                                .then((response) => response.json())
-                                .then((data) => {
-                                    return data.results;
-                                })
-                                .catch((error) => {
-                                    return [];
-                                });
-                        },
-                        onSelect: function (event) {
-                            addTrace(
-                                {
-                                    shape_id: event.item.objectID,
-                                    resample: resampleTo,
-                                },
-                                { name: event.item.label },
-                            );
-                        },
-                        templates: {
-                            item({ item, createElement }) {
-                                return createElement("div", {
-                                    dangerouslySetInnerHTML: {
-                                        __html: `${item.label}`,
-                                    },
-                                });
-                            },
-                            noResults() {
-                                return "No results matching.";
-                            },
-                        },
-                    },
-                ];
-            },
-        });
     });
 
     async function addTrace(query, traceOverwrites = {}) {
         let newTraces;
 
-        query["resample"] = resampleTo;
+        if (aggregate) {
+            query["aggregate"] = aggregate;
+        }
+        if (resampleTo) {
+            query["resample"] = resampleTo;
+        }
+        if (dateStart) {
+            query["start_date"] = dateStart;
+        }
+        if (dateEnd) {
+            query["end_date"] = dateEnd;
+        }
 
         if ("shape_type" in query) {
             const res = await fetch(
@@ -128,14 +98,20 @@ SPDX-License-Identifier: AGPL-3.0-only
         addTrace({
             shape_type: shapeType,
         });
-        shapeType = "";
+    }
+
+    async function addShape(event) {
+        addTrace({
+            shape_id: shapeId,
+        });
     }
 
     function zoomChart() {
-        var update = {
-            "xaxis.range": [zoomStart.toString(), zoomEnd.toString()],
-        };
-        Plotly.relayout(chart, update);
+        if (dateStart && dateEnd) {
+            Plotly.relayout(chart, {
+                "xaxis.range": [dateStart.toString(), dateEnd.toString()],
+            });
+        }
     }
 
     function clearTraces() {
@@ -145,68 +121,113 @@ SPDX-License-Identifier: AGPL-3.0-only
 </script>
 
 <div bind:this={container} class="card bg-light mb-3">
+    <div class="card-header">{title}</div>
+
     <div class="rounded-top overflow-hidden">
         <div style="min-height: 450px" bind:this={chart}></div>
     </div>
 
     <div class="card-body">
-        <p class="mb-1">Add data to the chart:</p>
-        <div class="row mb-3">
-            <div class="col-4 col-md-2">
-                {#if datalayer.temporal_resolution == "date"}
-                    <select class="form-select" bind:value={resampleTo}>
-                        <option value="">Original resolution</option>
-                        <option value="W-MON">Resample on week (W-MON)</option>
-                        <option value="M">Resample on month (M)</option>
-                    </select>
-                {:else if datalayer.temporal_resolution == "week"}
-                    <select class="form-select" bind:value={resampleTo}>
-                        <option value="">Original resolution</option>
-                        <option value="M">Resample on month (M)</option>
-                        <option value="Y">Resample on year (Y)</option>
-                    </select>
-                {:else}
-                    <div class="col-form-label text-muted fst-italic">
-                        No resampling.
-                    </div>
-                {/if}
-            </div>
-            <div class="col-8 col-md-4">
-                <select
-                    class="form-select mb-3 mb-md-0"
-                    bind:value={shapeType}
-                    on:change={addShapeType}
-                >
-                    <option value="">Add shape types…</option>
-                    {#each datalayer.shape_types as shape_type}
-                        <option value={shape_type.key}>{shape_type.name}</option
-                        >
-                    {/each}
-                </select>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <div bind:this={shapeselect}></div>
-            </div>
-        </div>
-
-        <p class="mb-1 border-top pt-3">Work with the chart:</p>
         <div class="row">
-            <div class="col-12 col-md-6">
-                <div class="input-group mb-3 mb-md-0">
+            <div class="col-6 col-md-3 col-lg-2">
+                <div class="mb-3">
+                    <label for="temporal_resolution" class="form-label small"
+                        >Temporal resolution</label
+                    >
+
+                    {#if datalayer.temporal_resolution == "date"}
+                        <select
+                            id="temporal_resolution"
+                            class="form-select form-select-sm"
+                            bind:value={resampleTo}
+                        >
+                            <option value="">Original (D)</option>
+                            <option value="W-MON">Week (W-MON)</option>
+                            <option value="M">Month (M)</option>
+                            <option value="Y">Year (Y)</option>
+                        </select>
+                    {:else if datalayer.temporal_resolution == "week"}
+                        <select
+                            id="temporal_resolution"
+                            class="form-select form-select-sm"
+                            bind:value={resampleTo}
+                        >
+                            <option value="">Original (W-MON)</option>
+                            <option value="M">Month (M)</option>
+                            <option value="Y">Year (Y)</option>
+                        </select>
+                    {:else}
+                        <div class="col-form-label-sm text-muted fst-italic">
+                            No resampling.
+                        </div>
+                    {/if}
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <div class="mb-3">
+                    <label for="aggregate_function" class="form-label small"
+                        >Aggregate function</label
+                    >
+
+                    <select
+                        id="aggregate_function"
+                        class="form-select form-select-sm"
+                        bind:value={aggregate}
+                    >
+                        <option value="">None</option>
+                        <option value="sum">sum</option>
+                        <option value="min">min</option>
+                        <option value="max">max</option>
+                        <option value="mean">mean</option>
+                        <option value="median">median</option>
+                        <option value="std">std</option>
+                        <option value="count">count</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-6 c col-md-3 col-lg-2">
+                <div class="mb-3">
+                    <label for="start_date" class="form-label small"
+                        >Start date</label
+                    >
+
                     {#if datalayer.temporal_resolution == "year"}
                         <select
+                            id="start_date"
                             class="form-select form-select-sm"
-                            bind:value={zoomStart}
+                            bind:value={dateStart}
                         >
                             <!-- expand the array with [...var] and reverse, so we don't reverse the original array! -->
                             {#each [...datalayer.available_years].reverse() as year}
                                 <option value={year}>{year}</option>
                             {/each}
                         </select>
+                    {:else if datalayer.temporal_resolution == "date"}
+                        <input
+                            id="start_date"
+                            type="date"
+                            class="form-control form-control-sm"
+                            bind:value={dateStart}
+                            min={datalayer.first_time}
+                            max={datalayer.last_time}
+                        />
+                    {/if}
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <div class="mb-3">
+                    <label for="end_date" class="form-label small"
+                        >End date</label
+                    >
+
+                    {#if datalayer.temporal_resolution == "year"}
                         <select
+                            id="end_date"
                             class="form-select form-select-sm"
-                            bind:value={zoomEnd}
+                            bind:value={dateEnd}
                         >
                             {#each datalayer.available_years as year}
                                 <option value={year}>{year}</option>
@@ -214,45 +235,102 @@ SPDX-License-Identifier: AGPL-3.0-only
                         </select>
                     {:else if datalayer.temporal_resolution == "date"}
                         <input
+                            id="end_date"
                             type="date"
                             class="form-control form-control-sm"
-                            bind:value={zoomStart}
-                            min={datalayer.first_time}
-                            max={datalayer.last_time}
-                        />
-                        <input
-                            type="date"
-                            class="form-control form-control-sm"
-                            bind:value={zoomEnd}
+                            bind:value={dateEnd}
                             min={datalayer.first_time}
                             max={datalayer.last_time}
                         />
                     {/if}
+                </div>
+            </div>
+
+            <div class="col-4 col-sm-6 col-md-2 d-flex align-items-end">
+                <div class="mb-3">
                     <button
                         on:click={zoomChart}
                         class="btn btn-sm btn-outline-secondary"
-                        type="button">Zoom</button
+                        type="button">Zoom chart</button
                     >
                 </div>
             </div>
-            <div class="col-12 col-md-6">
-                <div class="d-flex justify-content-end">
-                    <button
-                        on:click={clearTraces}
-                        class="btn btn-sm btn-outline-secondary"
-                        >Clear chart</button
-                    >
+        </div>
 
-                    {#if show_remove}
-                        <span class="ms-3 me-3 border-start d-inline-block"
-                        ></span>
-                        <button
-                            on:click={() => container.parentNode.remove()}
-                            class="btn btn-sm btn-outline-danger"
-                            >Delete chart</button
+        <div class="row">
+            <div class="col-4 col-md-2">
+                <div class="mb-3 mb-sm-0">
+                    <label for="formGroupExampleInput" class="form-label small"
+                        >Shape type means</label
+                    >
+                    <div class="input-group">
+                        <select
+                            class="form-select form-select-sm"
+                            bind:value={shapeType}
                         >
-                    {/if}
+                            {#each datalayer.shape_types as shape_type}
+                                <option value={shape_type.key}
+                                    >{shape_type.name}</option
+                                >
+                            {/each}
+                        </select>
+
+                        <button
+                            on:click={addShapeType}
+                            class="btn btn-sm btn-outline-secondary"
+                            type="button">Add</button
+                        >
+                    </div>
                 </div>
+            </div>
+            <div class="col-8 col-md-4">
+                <div class="mb-3 mb-sm-0">
+                    <label for="formGroupExampleInput" class="form-label small"
+                        >Individual Shape</label
+                    >
+                    <div class="input-group">
+                        <select
+                            class="form-select form-select-sm"
+                            bind:value={shapeId}
+                        >
+                            {#each datalayer.shapes as shape}
+                                {#if shape.disabled}
+                                    <option disabled value={shape.id}
+                                        >{shape.name}</option
+                                    >
+                                {:else}
+                                    <option value={shape.id}
+                                        >{shape.name}</option
+                                    >
+                                {/if}
+                            {/each}
+                        </select>
+
+                        <button
+                            on:click={addShape}
+                            class="btn btn-sm btn-outline-secondary"
+                            type="button">Add</button
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="col-12 col-md-6 d-flex align-items-end justify-content-end"
+            >
+                <button
+                    on:click={clearTraces}
+                    class="btn btn-sm btn-outline-secondary">Clear chart</button
+                >
+
+                {#if show_remove}
+                    <span class="ms-3 me-3 border-start d-inline-block"></span>
+                    <button
+                        on:click={() => container.parentNode.remove()}
+                        class="btn btn-sm btn-outline-danger"
+                        >Delete chart</button
+                    >
+                {/if}
             </div>
         </div>
     </div>

@@ -202,6 +202,8 @@ class DatalayerManager(models.Manager):
 
 
 class Datalayer(models.Model):
+    """Data Layer model."""
+
     DATA_TYPES = (
         ("primary", _("Primary data")),
         ("secondary", _("Secondary data")),
@@ -430,6 +432,24 @@ class Datalayer(models.Model):
             type_ids.append(row[0])
 
         return Type.objects.filter(id__in=type_ids).order_by("position")
+
+    def get_available_shapes(self) -> list[Shape]:
+        """Determine all shapes the datalayer has values for."""
+        if not self.is_loaded():
+            return []
+
+        with connection.cursor() as c:
+            query = sql.SQL("SELECT DISTINCT dl.shape_id FROM {table} AS dl").format(
+                table=sql.Identifier(self.key)
+            )
+            c.execute(query)
+            results = c.fetchall()
+
+        shape_ids = []
+        for row in results:
+            shape_ids.append(row[0])
+
+        return Shape.objects.filter(id__in=shape_ids).order_by("type")
 
     @cached_property
     def get_available_years(self) -> list[int]:

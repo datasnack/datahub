@@ -21,6 +21,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
+from django.db import connection
 
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
 from datalayers.models import Datalayer
@@ -176,6 +177,11 @@ def data(
         None,
         description="Include only data before/at the given date. Format according to Data Layer time type.",
     ),
+    aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
+    | None = Query(
+        None,
+        description="[Pandas aggregate function](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.aggregate.html) for `agg()` function to be applied before returning data.",
+    ),
     resample: str | None = Query(
         None,
         description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
@@ -204,6 +210,10 @@ def data(
         start_date=start_date, end_date=end_date, shape=shape, shape_type=shape_type
     )
 
+    # if a aggregate function is presents
+    if aggregate:
+        df = df.groupby("shape_id", as_index=False)["value"].agg(aggregate)
+
     # return data according to format
     match fmt:
         case "csv":
@@ -230,7 +240,29 @@ def data(
                 }
             )
         case "plotly":
-            if len(resample) > 0:
+            if shape:
+                name = f"{shape.name} ({shape.type.name})"
+
+            if aggregate:
+                if start_date is None:
+                    start_date = datalayer.first_time()
+                if end_date is None:
+                    end_date = datalayer.last_time()
+
+                x = df.loc[0, "value"]
+                if isinstance(x, np.integer):
+                    x = int(x)
+
+                json_data = {
+                    "name": f"{name} ({aggregate}, {start_date}-{end_date})",
+                    "mode": "lines",
+                    "x": [start_date, end_date],
+                    "y": [x, x],
+                    "line": {"width": 2, "dash": "dash"},
+                }
+                return JsonResponse(json_data)
+
+            if resample and len(resample) > 0:
                 df[str(datalayer.temporal_resolution)] = pd.to_datetime(
                     df[str(datalayer.temporal_resolution)]
                 )
@@ -238,9 +270,6 @@ def data(
                 df = df.resample(resample).mean()
                 df[str(datalayer.temporal_resolution)] = df.index
                 df = df.dropna()
-
-            if shape:
-                name = f"{shape.name} ({shape.type.name})"
 
             chart_type = "scatter"
             if datalayer.chart_type == "bar":
@@ -280,6 +309,11 @@ def plotly(
     request,
     filters: DatalayerFilterSchema = Query(...),
     shape_type_key: str | None = Query(..., alias="shape_type"),
+    aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
+    | None = Query(
+        None,
+        description="[Pandas aggregate function](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.aggregate.html) for `agg()` function to be applied before returning data.",
+    ),
     resample: str | None = Query(
         None,
         description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
@@ -313,7 +347,7 @@ def plotly(
         params={"type": shape_type.id},
     )
 
-    if len(resample) > 0:
+    if resample and len(resample) > 0:
         df[str(datalayer.temporal_resolution)] = pd.to_datetime(
             df[str(datalayer.temporal_resolution)]
         )
@@ -321,6 +355,27 @@ def plotly(
         df = df.resample(resample).mean()
         df[str(datalayer.temporal_resolution)] = df.index
         df = df.dropna()
+
+    if aggregate:
+        start_date = datalayer.first_time()
+        end_date = datalayer.last_time()
+
+        x = df["value"].agg(aggregate)
+        if isinstance(x, np.integer):
+            x = int(x)
+
+        json_data = {
+            "traces": [
+                {
+                    "name": f"{shape_type.name} ({aggregate}, {start_date}-{end_date})",
+                    "mode": "lines",
+                    "x": [start_date, end_date],
+                    "y": [x, x],
+                    "line": {"width": 2, "dash": "dash"},
+                }
+            ]
+        }
+        return JsonResponse(json_data)
 
     # calculate deviation from mean
     df["value_plus"] = df["max"] - df["value"]
@@ -402,15 +457,99 @@ def meta(
     shape_types = [
         {"name": st.name, "key": st.key} for st in datalayer.get_available_shape_types
     ]
+    shapes = []
+
+    datalayer_shapes = datalayer.get_available_shapes()
+    datalayer_shapes_ids = []
+    for s in datalayer_shapes:
+        datalayer_shapes_ids.append(s.id)
+
+    # todo: access to the shape hierarchy via the ORM is slow, for now we fetch the hierarchy manually.
+
+    # def collect_shapes(shapes: list[Shape], level: int = 0) -> list:
+    #    collected_entries = []
+    #    for shape in shapes:
+    #        prefix = level * " -" + " " if level > 0 else ""
+    #        collected_entries.append(
+    #            {
+    #                "name": f"{prefix}{shape.name} ({shape.key})",
+    #                "key": shape.key,
+    #                "id": shape.id,
+    #                "disabled": shape not in datalayer_shapes,
+    #            }
+    #        )
+    #
+    #        if child_shapes := shape.children.all():
+    #            collected_entries += collect_shapes(child_shapes, level + 1)
+    #
+    #    return collected_entries
+    #
+    # top_shapes = Shape.objects.filter(parent_id__isnull=True)
+    # shapes = collect_shapes(top_shapes, 0)
+
+    def load_shapes() -> list[dict]:
+        """Fetch shape infos without ORM for performance."""
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, name, parent_id, key
+                FROM shapes_shape
+            """)
+            columns = [col[0] for col in cursor.description]
+            rows = [dict(zip(columns, row, strict=True)) for row in cursor.fetchall()]
+        return rows  # noqa: RET504 connection needs to be open while we build rows
+
+    def build_tree(flat_list: list[dict]) -> list[dict]:
+        """Take flat list of shape dicts with id/parent_id keys and sort them hierarchical, by adding children: list."""
+        nodes = {item["id"]: {**item, "children": []} for item in flat_list}
+        roots = []
+
+        for node in nodes.values():
+            parent_id = node["parent_id"]
+            if parent_id is None:
+                roots.append(node)
+            else:
+                parent = nodes.get(parent_id)
+                if parent:
+                    parent["children"].append(node)
+
+        return roots
+
+    def collect_shapes(shapes: list, level: int = 0) -> list:
+        collected_entries = []
+        for shape in shapes:
+            prefix = level * " -" + " " if level > 0 else ""
+            collected_entries.append(
+                {
+                    "name": f"{prefix}{shape['name']} ({shape['key']})",
+                    "key": shape["key"],
+                    "id": shape["id"],
+                    "disabled": shape["id"] not in datalayer_shapes_ids,
+                }
+            )
+
+            if len(shape["children"]) > 0:
+                collected_entries += collect_shapes(shape["children"], level + 1)
+
+        return collected_entries
+
+    all_shapes = load_shapes()
+    tree = build_tree(all_shapes)
+    shapes = collect_shapes(tree, 0)
 
     res = {
         "plotly": {"layout": layout, "config": {"responsive": True}},
         "datalayer": {
+            "key": datalayer.key,
+            "has_vector_data": datalayer.has_vector_data(),
             "temporal_resolution": str(datalayer.temporal_resolution),
             "available_years": datalayer.get_available_years,
             "first_time": datalayer.first_time(),
             "last_time": datalayer.last_time(),
             "shape_types": shape_types,
+            "shapes": shapes,
+            "value_type": datalayer.value_type_str,
+            "name": datalayer.name,
+            "format_suffix": datalayer.format_suffix(),
         },
     }
 
