@@ -18,7 +18,9 @@
     "leaflet": "^1.9.4",
     "leaflet-fullscreen": "^1.0.2",
     "leaflet-loading": "^0.1.24",
-    "plotly.js-dist": "^3.1.0"
+    "maplibre-gl": "^5.11.0",
+    "plotly.js-dist": "^3.1.0",
+    "pmtiles": "^4.3.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.0",

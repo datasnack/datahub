@@ -47,6 +47,7 @@ path = [
     "app/static/build/manifest.json",
     "app/resources/iso3166/iso-3166-1-alpha3.json",
     "app/resources/iso639/iso-639-3.json",
+    "app/static/map/eox_cloudless.json",
 ]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "NONE"

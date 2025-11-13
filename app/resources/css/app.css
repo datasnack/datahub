@@ -25,6 +25,8 @@
 
 @import "modules/pageheader.css";
 @import "modules/searchbutton.css";
+@import "modules/maplibre.css";
+
 
 :root {
 	--sidebar-width: 220px;

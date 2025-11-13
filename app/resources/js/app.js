@@ -8,6 +8,7 @@
  *
  */
 import Chart from "./components/Chart.svelte";
+import Map from "./components/Map.svelte";
 
 import $ from "jquery";
 window.jQuery = window.$ = $;
