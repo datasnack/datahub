@@ -54,8 +54,8 @@ urlpatterns += [
 for app in settings.INSTALLED_USER_APPS:
     try:
         urlpatterns += [path("", include(f"{app}.urls"))]
-    except ModuleNotFoundError:
-        logger.warning("User app url could not be loaded: %s", app)
+    except ModuleNotFoundError as e:
+        logger.warning("User app url could not be loaded: %s (%s)", app, e)
 
 
 if settings.DEBUG and find_spec("debug_toolbar") is not None:
