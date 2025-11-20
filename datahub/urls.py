@@ -48,7 +48,6 @@ urlpatterns += [
     path("accounts/", include("django.contrib.auth.urls")),
     path("datalayers/", include("datalayers.urls")),
     path("shapes/", include("shapes.urls")),
-    path("api/", api.urls),
 ]
 
 # check if user apps have urls
@@ -63,3 +62,9 @@ if settings.DEBUG and find_spec("debug_toolbar") is not None:
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
     ]
+
+# Add django-ninja API URLs last. If they were added before the installed apps loop
+# would sometimes lead to strange error messages, as if the API URLs were added twice
+urlpatterns += [
+    path("api/", api.urls),
+]
