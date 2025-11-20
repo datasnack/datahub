@@ -200,6 +200,7 @@ standard, not full view starts here.
 			<tr>
 				<th>{% translate "Category" %}</th>
 				<th>{% translate "Name" %}</th>
+				<th>{% translate "Unit" %}</th>
 				<th>{% translate "Key" %}</th>
 				<th>{% translate "State" %}</th>
 				<th class="no-sort text-end">{% translate "Actions" %}</th>
@@ -234,6 +235,9 @@ standard, not full view starts here.
 
 					<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
 					{% include "datalayers/partials/tags.html" with datalayer=dl %}
+				</td>
+				<td>
+					{{ dl.database_unit }}
 				</td>
 				<td class="align-middle"><code>{{ dl.key }}</code></td>
 
