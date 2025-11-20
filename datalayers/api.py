@@ -7,7 +7,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
-from ninja import Field, File, Query, Router, Schema
+from ninja import Field, Query, Router, Schema
 from ninja.security import SessionAuth
 from psycopg import sql
 
@@ -21,7 +21,6 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
-from django.db import connection
 
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
 from datalayers.models import Datalayer

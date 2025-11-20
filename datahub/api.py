@@ -7,9 +7,9 @@ from ninja.security import APIKeyHeader, SessionAuth
 
 from django.conf import settings
 
+from app.models import BearerToken
 from datalayers.api import router as datalayers_router
 from shapes.api import router as shapes_router
-from app.models import BearerToken
 
 
 class ApiKey(APIKeyHeader):
