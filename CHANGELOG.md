@@ -11,6 +11,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2](https://github.com/datasnack/datahub/compare/v0.11.1..v0.11.2) - 2025-11-20
+
+### Fixed
+
+- Use correct "middle dot" unicode character ([8385f4b](https://github.com/datasnack/datahub/commit/8385f4b4eea28e080eb57492fc9c6ac70628f6bf))
+- Show actual url loading error for apps ([fae3ebd](https://github.com/datasnack/datahub/commit/fae3ebde3770d500d3e9875e296ced1faef0f74a))
+- Counter strange django-ninja url error ([4407b67](https://github.com/datasnack/datahub/commit/4407b67b221af00541e1f40d39f599a0ac701895))
+- Value rounding for FLOAT type datalayers in frontend ([7202f86](https://github.com/datasnack/datahub/commit/7202f863acbb149709106675c53d1e3d9b67e613))
+
 ## [0.11.1](https://github.com/datasnack/datahub/compare/v0.11.0..v0.11.1) - 2025-11-13
 
 ### Changed

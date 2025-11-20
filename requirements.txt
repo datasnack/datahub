@@ -4,7 +4,7 @@ affine==2.4.0
     # via rasterio
 annotated-types==0.7.0
     # via pydantic
-asgiref==3.10.0
+asgiref==3.11.0
     # via django
 attrs==25.4.0
     # via
@@ -27,7 +27,7 @@ cftime==1.6.5
     # via netcdf4
 charset-normalizer==3.4.4
     # via requests
-click==8.3.0
+click==8.3.1
     # via
     #   click-plugins
     #   cligj
@@ -50,7 +50,7 @@ django==5.2.8
     #   django-taggit
 django-environ==0.11.2
     # via datahub (pyproject.toml)
-django-ninja==1.4.5
+django-ninja==1.5.0
     # via datahub (pyproject.toml)
 django-taggit==6.1.0
     # via datahub (pyproject.toml)
@@ -60,7 +60,7 @@ et-xmlfile==2.0.0
     # via openpyxl
 fiona==1.10.1
     # via datahub (pyproject.toml)
-geoalchemy2==0.18.0
+geoalchemy2==0.18.1
     # via datahub (pyproject.toml)
 geojson==3.1.0
     # via datahub (pyproject.toml)
@@ -171,7 +171,7 @@ requests==2.32.5
     #   osmnx
 rioxarray==0.20.0
     # via datahub (pyproject.toml)
-rpds-py==0.28.0
+rpds-py==0.29.0
     # via
     #   jsonschema
     #   referencing
@@ -205,7 +205,7 @@ tzdata==2025.2
     # via pandas
 urllib3==2.5.0
     # via requests
-xarray==2025.10.1
+xarray==2025.11.0
     # via
     #   datahub (pyproject.toml)
     #   rioxarray
