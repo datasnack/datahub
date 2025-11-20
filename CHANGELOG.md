@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.3](https://github.com/datasnack/datahub/compare/v0.11.2..v0.11.3) - 2025-11-20
+
+### Fixed
+
+- Show database unit in overview tables ([fb7286d](https://github.com/datasnack/datahub/commit/fb7286ded136d40395f8d6c06944a361e01fdf5b))
+- Fallback for unavailable shape data ([5137f21](https://github.com/datasnack/datahub/commit/5137f21fdfb67b5d8c7ce38440b6c601002b998d))
+
 ## [0.11.2](https://github.com/datasnack/datahub/compare/v0.11.1..v0.11.2) - 2025-11-20
 
 ### Fixed
