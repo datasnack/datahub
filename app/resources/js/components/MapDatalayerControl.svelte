@@ -68,16 +68,19 @@ SPDX-License-Identifier: AGPL-3.0-only
             .then((geojsonData) => {
                 geojsonData.features.forEach((feature) => {
                     let shape_id = feature.properties.shape_id;
-                    let value = value_map.get(shape_id);
+
+                    // the shape might not have a known value and so not be
+                    // present in in the returned result
+                    let value = value_map.get(shape_id) || null;
 
                     feature.properties.alpha = 1;
 
-                    if (value) {
-                        feature.properties.value = value;
-                        feature.properties.color = color(value);
-                    } else {
+                    if (value === null) {
                         feature.properties.value = "n/a";
                         feature.properties.color = "rgba(0, 0, 0, 0.1)";
+                    } else {
+                        feature.properties.value = value;
+                        feature.properties.color = color(value);
                     }
                 });
 
