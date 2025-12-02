@@ -223,48 +223,70 @@ def shape_bbox(request, shape_id: int):
     p_nw = Point((bounds[0], bounds[3]))
     f_nw = Feature(
         geometry=p_nw,
-        properties={"name": "North-West", "lat": bounds[3], "lng": bounds[0]},
+        properties={
+            "name": "North-West",
+            "values": {"lat": bounds[3], "lng": bounds[0]},
+        },
     )
 
     p_ne = Point((bounds[2], bounds[3]))
     f_ne = Feature(
         geometry=p_ne,
-        properties={"name": "North-East", "lat": bounds[3], "lng": bounds[2]},
+        properties={
+            "name": "North-East",
+            "values": {"lat": bounds[3], "lng": bounds[2]},
+        },
     )
 
     p_sw = Point((bounds[0], bounds[1]))
     f_sw = Feature(
         geometry=p_sw,
-        properties={"name": "South-West", "lat": bounds[1], "lng": bounds[0]},
+        properties={
+            "name": "South-West",
+            "values": {"lat": bounds[1], "lng": bounds[0]},
+        },
     )
 
     p_se = Point((bounds[2], bounds[1]))
     f_se = Feature(
         geometry=p_se,
-        properties={"name": "South-East", "lat": bounds[1], "lng": bounds[2]},
+        properties={
+            "name": "South-East",
+            "values": {"lat": bounds[1], "lng": bounds[2]},
+        },
     )
 
     # Lines
     p_n = Point((bounds[0] + (bounds[2] - bounds[0]) / 2, bounds[3]))
-    f_n = Feature(geometry=p_n, properties={"name": "North", "lat": bounds[3]})
+    f_n = Feature(
+        geometry=p_n, properties={"name": "North", "values": {"lat": bounds[3]}}
+    )
 
     p_e = Point((bounds[2], bounds[1] + (bounds[3] - bounds[1]) / 2))
-    f_e = Feature(geometry=p_e, properties={"name": "East", "lng": bounds[2]})
+    f_e = Feature(
+        geometry=p_e, properties={"name": "East", "values": {"lng": bounds[2]}}
+    )
 
     p_s = Point((bounds[0] + (bounds[2] - bounds[0]) / 2, bounds[1]))
-    f_s = Feature(geometry=p_s, properties={"name": "South", "lng": bounds[1]})
+    f_s = Feature(
+        geometry=p_s, properties={"name": "South", "values": {"lng": bounds[1]}}
+    )
 
     p_w = Point((bounds[0], bounds[1] + (bounds[3] - bounds[1]) / 2))
-    f_w = Feature(geometry=p_w, properties={"name": "West", "lng": bounds[0]})
+    f_w = Feature(
+        geometry=p_w, properties={"name": "West", "values": {"lng": bounds[0]}}
+    )
 
     p_c = Point((geom.centroid.x, geom.centroid.y))
     f_c = Feature(
         geometry=p_c,
         properties={
             "name": "Centroid",
-            "": "geometric center of the shape",
-            "lat": geom.centroid.y,
-            "lng": geom.centroid.x,
+            "description": "Geometric center of the shape",
+            "values": {
+                "lat": geom.centroid.y,
+                "lng": geom.centroid.x,
+            },
         },
     )
 

@@ -123,10 +123,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div bind:this={container} class="card bg-light mb-3">
     <div class="card-header">{title}</div>
 
-    <div class="rounded-top overflow-hidden">
-        <div style="min-height: 450px" bind:this={chart}></div>
-    </div>
-
     <div class="card-body">
         <div class="row">
             <div class="col-6 col-md-3 col-lg-2">
@@ -333,5 +329,9 @@ SPDX-License-Identifier: AGPL-3.0-only
                 {/if}
             </div>
         </div>
+    </div>
+
+    <div class="rounded-bottom overflow-hidden">
+        <div style="min-height: 450px" bind:this={chart}></div>
     </div>
 </div>

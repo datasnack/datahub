@@ -49,7 +49,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div class="row">
 	{% if show_map %}
 	<div class="col-12 col-md-4 order-md-last">
-		<div class="mb-3 bg-light" id="map" style="width: 100%; height: 300px"></div>
+		<dh-map title="" height="350px" sources='[{"type": "shape", "name": "{{ type.name}}", "query": {"shape_type": "{{ type.key }}"}}]'></dh-map>
 	</div>
 	{% endif %}
 	<div class="col-12 {% if show_map %}col-md-8 order-md-first{% endif %}">
@@ -123,36 +123,5 @@ $(document).ready(function() {
     });
 });
 </script>
-
-{% if show_map %}
-<script type="module">
-	var map = new MyMap('map');
-	map.load_shape({shape_type: '{{ type.key }}', name: "{{ type.name}}"});
-
-  function highlightShape(e) {
-    map.eachLayer(function (layer) {
-      if (!layer.hasOwnProperty('feature')) {
-        return;
-      }
-
-      if (layer.feature.properties.shape_id == e) {
-          layer.setStyle({color: '#FF8000'});
-          layer.bringToFront();
-          map.flyToBounds(layer.getBounds());
-      } else {
-        // resetStyle() only works on GeoJSON layer and we it not in scope here
-        // so just reset the style to the default blue.
-        layer.setStyle({
-          color: '#3188FF'
-        });
-      }
-    });
-  }
-
-$('.js-highlight-shape').on('click', function(e) {
-  highlightShape(parseInt($(this).attr('data-shape_id')));
-});
-</script>
-{% endif %}
 
 {% endblock %}

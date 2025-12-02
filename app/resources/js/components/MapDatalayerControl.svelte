@@ -38,8 +38,8 @@ SPDX-License-Identifier: AGPL-3.0-only
     onMount(async () => {
         // todo: load datalayer meta if not set
 
-        // Data
         const query = source.query;
+
         const url = new URL("/api/datalayers/data/", window.location.origin);
         let params = {
             datalayer_key: query.datalayer_key,
@@ -51,13 +51,22 @@ SPDX-License-Identifier: AGPL-3.0-only
             params["aggregate"] = query.aggregate;
         }
         url.search = new URLSearchParams(params);
-        const response = await d3.json(url);
-        value_map = new Map(response.data.map((d) => [d.shape_id, d.value]));
+
+        // Data
+        if (source.value_map) {
+            value_map = source.value_map;
+        } else {
+            const response = await d3.json(url);
+            value_map = new Map(
+                response.data.map((d) => [d.shape_id, d.value]),
+            );
+        }
 
         buildColor();
 
         // Geometries
         const queryString = new URLSearchParams(query).toString();
+        console.log(queryString);
 
         fetch(`/api/shapes/geometry?${queryString}`)
             .then((response) => {
@@ -85,11 +94,11 @@ SPDX-License-Identifier: AGPL-3.0-only
                 });
 
                 let legend;
-                if (datalayer.value_type == "nominal") {
+                if (datalayer && datalayer.value_type == "nominal") {
                     legend = Swatches(color, {
                         //title: getSourceLabel(),
                     });
-                } else if (datalayer.value_type == "percentage") {
+                } else if (datalayer && datalayer.value_type == "percentage") {
                     legend = Legend(color, {
                         //title: getSourceLabel(),
                         tickFormat: "%",
@@ -150,7 +159,10 @@ SPDX-License-Identifier: AGPL-3.0-only
                     map.getCanvas().style.cursor = "";
                 });
             })
-            .catch((error) => console.error("Error loading GeoJSON:", error));
+            .catch((error) => {
+                console.error("Error loading GeoJSON:", error);
+                deleteLayer();
+            });
     });
 
     function buildColor() {
@@ -158,6 +170,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 
         if (source.mode && source.mode == "from0_1") {
             color = d3.scaleSequential([0, 1], interpolator);
+        } else if (source.extent) {
+            color = d3.scaleSequential(source.extent, interpolator);
         } else {
             color = d3.scaleSequential(
                 d3.extent(value_map.values()),
@@ -202,8 +216,9 @@ SPDX-License-Identifier: AGPL-3.0-only
     }
 
     function getSourceLabel() {
-        if (source.hasOwnProperty("label") && source.label) {
-            return source.label;
+        console.log(source);
+        if (source.hasOwnProperty("name") && source.name) {
+            return source.name;
         }
 
         let name = `${datalayer.name}`;
@@ -220,17 +235,28 @@ SPDX-License-Identifier: AGPL-3.0-only
         return `${name}, ${source.query.shape_type} (${date}${agg})`;
     }
 
-    function deleteLayer() {
-        const layers = map
-            .getStyle()
-            .layers.filter((l) => l.source === source.id);
+    function showControls() {
+        if (source.hasOwnProperty("showControls")) {
+            return source.showControls;
+        }
 
-        // Remove each layer
-        layers.forEach((layer) => {
-            if (map.getLayer(layer.id)) {
-                map.removeLayer(layer.id);
-            }
-        });
+        return true;
+    }
+
+    function deleteLayer() {
+        const style = map.getStyle();
+
+        // if the style has a problem loading, getStyle() returns nothing
+        if (style) {
+            const layers = style.layers.filter((l) => l.source === source.id);
+
+            // Remove each layer
+            layers.forEach((layer) => {
+                if (map.getLayer(layer.id)) {
+                    map.removeLayer(layer.id);
+                }
+            });
+        }
 
         // Remove the source
         if (map.getSource(source.id)) {
@@ -305,37 +331,41 @@ SPDX-License-Identifier: AGPL-3.0-only
         <span class="fw-bold">{getSourceLabel()}</span>
     </div>
 
-    <div class="d-flex align-items-center gap-2">
-        {#if datalayer && datalayer.value_type == "percentage"}
-            <select bind:value={source.mode} on:change={buildLegend}>
-                <option value="min_max">[min, max]</option>
-                <option value="from0_1">[0, 100]</option>
+    {#if showControls()}
+        <div class="d-flex align-items-center gap-2">
+            {#if datalayer && datalayer.value_type == "percentage"}
+                <select bind:value={source.mode} on:change={buildLegend}>
+                    <option value="min_max">[min, max]</option>
+                    <option value="from0_1">[0, 100]</option>
+                </select>
+            {/if}
+
+            <select bind:value={source.cmap} on:change={buildLegend}>
+                {#each Object.keys(colorModes) as name}
+                    <option value={name}>{name}</option>
+                {/each}
             </select>
-        {/if}
 
-        <select bind:value={source.cmap} on:change={buildLegend}>
-            {#each Object.keys(colorModes) as name}
-                <option value={name}>{name}</option>
-            {/each}
-        </select>
-
-        <label class="d-flex align-items-center">
-            <abbr title="Alpha">A</abbr>:
-            <input
-                class="ms-1"
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                bind:value={source.alpha}
-                on:input={setSourceAlpha}
-            />
-        </label>
-    </div>
+            <label class="d-flex align-items-center">
+                <abbr title="Alpha">A</abbr>:
+                <input
+                    class="ms-1"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    bind:value={source.alpha}
+                    on:input={setSourceAlpha}
+                />
+            </label>
+        </div>
+    {/if}
 
     <div bind:this={legendContainer}></div>
 
-    <button on:click={deleteLayer} class="maplibregl-popup-close-button"
-        >×</button
-    >
+    {#if showControls()}
+        <button on:click={deleteLayer} class="maplibregl-popup-close-button"
+            >×</button
+        >
+    {/if}
 </div>

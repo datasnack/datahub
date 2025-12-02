@@ -70,18 +70,22 @@ class StyleControl {
 		};
 
 		// store all dynamically added sources, identified by the ID prefix
-		const sources = this.map.getStyle().sources;
-		for (const [sourceId, source] of Object.entries(sources)) {
-			if (sourceId.startsWith('dh-')) {
-				this.customSourcesAndLayers.sources[sourceId] = source;
+		// if style has not loaded, getStyle() returns nothing
+		const style = this.map.getStyle();
+		if (style) {
+			const sources = style.sources;
+			for (const [sourceId, source] of Object.entries(sources)) {
+				if (sourceId.startsWith('dh-')) {
+					this.customSourcesAndLayers.sources[sourceId] = source;
+				}
 			}
-		}
 
-		// store all dynamically added layers, based on the previous sources
-		const layers = this.map.getStyle().layers;
-		for (const layer of layers) {
-			if (this.customSourcesAndLayers.sources[layer.source]) {
-				this.customSourcesAndLayers.layers.push(layer);
+			// store all dynamically added layers, based on the previous sources
+			const layers = style.layers;
+			for (const layer of layers) {
+				if (this.customSourcesAndLayers.sources[layer.source]) {
+					this.customSourcesAndLayers.layers.push(layer);
+				}
 			}
 		}
 	}
