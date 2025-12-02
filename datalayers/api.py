@@ -325,6 +325,7 @@ def plotly(
     if datalayer.value_type in [
         LayerValueType.NOMINAL,
         LayerValueType.ORDINAL,
+        LayerValueType.BINARY,
     ]:
         return JsonResponse({"traces": []})
 
