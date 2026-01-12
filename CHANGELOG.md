@@ -11,6 +11,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.4](https://github.com/datasnack/datahub/compare/v0.11.3..v0.11.4) - 2026-01-12
+
+### Changed
+
+- Update api names ([a7386e3](https://github.com/datasnack/datahub/commit/a7386e30d60820e39e1fdb4b2fe9e4a247333cf8))
+- Include shape details in data download + prefix dh specifc shape ID ([c3b81cc](https://github.com/datasnack/datahub/commit/c3b81cc4bdad044c988a6ecf8bb4c94da3cbe3c0))
+- Switch from Leaflet to Maplibre ([e8e5d3d](https://github.com/datasnack/datahub/commit/e8e5d3dc22f581112d772bff08a71af9ce4236f4))
+
+### Fixed
+
+- Only show admin link if user has permission ([67618cf](https://github.com/datasnack/datahub/commit/67618cff9b34246ade4e162d9a60c31563926796))
+- Front permission key in template ([d51c62b](https://github.com/datasnack/datahub/commit/d51c62be2b926361a274510845159ba44f4ec551))
+- Area is not a NONULL value, if it's not available return None ([3c744bf](https://github.com/datasnack/datahub/commit/3c744bfd5dabc90af1d2ed84ba6d735a0aab2782))
+- Plotly aggregation not possible for binary type ([2908dbc](https://github.com/datasnack/datahub/commit/2908dbc68ef91a870663a7a1e5bbe63ea1a6ef08))
+
 ## [0.11.3](https://github.com/datasnack/datahub/compare/v0.11.2..v0.11.3) - 2025-11-20
 
 ### Fixed

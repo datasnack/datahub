@@ -2,4 +2,4 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-__version__ = "0.11.3"
+__version__ = "0.11.4"
