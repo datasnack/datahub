@@ -43,6 +43,7 @@ dev-dependencies = [
   "rich>=13.9.2", # console log color output
   "django-debug-toolbar>=4.3.0",
   "pytest>=8.3.5",
+  "ty>=0.0.2",
 ]
 
 [tool.ruff]
