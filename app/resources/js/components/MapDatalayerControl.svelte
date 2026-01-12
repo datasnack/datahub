@@ -58,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         } else {
             const response = await d3.json(url);
             value_map = new Map(
-                response.data.map((d) => [d.shape_id, d.value]),
+                response.data.map((d) => [d.dh_shape_id, d.value]),
             );
         }
 
@@ -76,11 +76,11 @@ SPDX-License-Identifier: AGPL-3.0-only
             })
             .then((geojsonData) => {
                 geojsonData.features.forEach((feature) => {
-                    let shape_id = feature.properties.shape_id;
+                    const dh_shape_id = feature.properties.dh_shape_id;
 
                     // the shape might not have a known value and so not be
                     // present in in the returned result
-                    let value = value_map.get(shape_id) || null;
+                    let value = value_map.get(dh_shape_id) || null;
 
                     feature.properties.alpha = 1;
 

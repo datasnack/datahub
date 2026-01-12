@@ -122,15 +122,15 @@ def shape_geometry(
     name = datahub_key(name)
 
     # format
-    fmt = request.GET.get("format", "geojson")
+    fmt: str = request.GET.get("format", "geojson")
 
     # transform objects into GeoDataFrame
     rows = []
     for s in shapes:
         rows.append(
             {
-                "shape_id": s.id,
-                "parent_id": s.parent_id,
+                "dh_shape_id": s.id,
+                "dh_parent_id": s.parent_id,
                 "key": s.key,
                 "url": request.build_absolute_uri(s.get_absolute_url()),
                 "name": s.name,

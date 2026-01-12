@@ -624,8 +624,8 @@ class Datalayer(models.Model):
         on the source file to be present, i.e., for time_col. A loaded Data Layer
         without it's source file ise unusable.
         """
-        has_class = self.has_class()
-        is_loaded = self.is_loaded()
+        has_class: bool = self.has_class()
+        is_loaded: bool = self.is_loaded()
 
         if is_loaded and not has_class:
             # this get's logged b/c we have a loaded datalayer class WITHOUT a source
@@ -749,21 +749,28 @@ class Datalayer(models.Model):
 
     def data(
         self,
-        shape: Optional[Shape] = None,
+        shape: Shape | None = None,
         when: Optional[dt.datetime] = None,
         start_date: Optional[dt.datetime] = None,
         end_date: Optional[dt.datetime] = None,
         shape_type: Optional[Type] = None,
         select_shape_name=True,
         fallback_previous=False,
+        latest_value_only=False,
     ) -> pd.DataFrame:
         """Aggregate the specified data of the data layer."""
         params = {}
-        query = "SELECT value, shape_id, {temporal_column} FROM {table} "
+
+        distinct = ""
+        if latest_value_only:
+            distinct = "DISTINCT ON ({table}.shape_id) "
+
+        query = f"SELECT {distinct}"
+        query += "shape_id as dh_shape_id, s.key as shape_key, st.key as type_key, s.name, {temporal_column}, value FROM {table} "
 
         # JOIN
-        if shape_type or shape:
-            query += "JOIN shapes_shape s ON s.id = {table}.shape_id "
+        query += "JOIN shapes_shape s ON s.id = {table}.shape_id "
+        query += "JOIN shapes_type st ON st.id = s.type_id "
 
         # WHERE
         query += "WHERE 1=1 "
@@ -794,7 +801,10 @@ class Datalayer(models.Model):
             query += "AND s.type_id = %(type)s "
             params["type"] = shape_type.id
 
-        query += "ORDER BY {temporal_column} ASC"
+        if latest_value_only:
+            query += "ORDER BY {table}.shape_id, {temporal_column} DESC"
+        else:
+            query += "ORDER BY {temporal_column}, st.position ASC"
 
         query = sql.SQL(query).format(
             table=sql.Identifier(self.key),
