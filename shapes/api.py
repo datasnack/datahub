@@ -131,11 +131,11 @@ def shape_geometry(
             {
                 "dh_shape_id": s.id,
                 "dh_parent_id": s.parent_id,
-                "key": s.key,
+                "shape_key": s.key,
+                "shape_name": s.name,
                 "url": request.build_absolute_uri(s.get_absolute_url()),
-                "name": s.name,
                 "area_sqkm": s.area_sqkm,
-                "type": s.type.key,
+                "type_key": s.type.key,
                 "geometry": s.shapely_geometry(),
             }
         )

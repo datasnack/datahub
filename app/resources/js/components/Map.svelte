@@ -636,12 +636,12 @@ SPDX-License-Identifier: AGPL-3.0-only
         let content = '<div class="">';
 
         // Customize based on your GeoJSON properties
-        if (props.name) {
-            content += `<h5 class="mb-0">${props.name}</h5>`;
+        if (props.shape_name) {
+            content += `<h5 class="mb-0">${props.shape_name}</h5>`;
         }
 
-        if (props.type) {
-            content += `<div class="small text-muted mb-1">${props.type}</div>`;
+        if (props.type_key) {
+            content += `<div class="small text-muted mb-1">${props.type_key}</div>`;
         }
 
         if (props.value) {
@@ -651,8 +651,6 @@ SPDX-License-Identifier: AGPL-3.0-only
         if (props.url) {
             content += `<a href="${props.url}" class="">Details</a>`;
         }
-
-        console.log(props);
 
         // Add other properties
         let values = {};

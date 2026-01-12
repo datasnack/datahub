@@ -766,7 +766,7 @@ class Datalayer(models.Model):
             distinct = "DISTINCT ON ({table}.shape_id) "
 
         query = f"SELECT {distinct}"
-        query += "shape_id as dh_shape_id, s.key as shape_key, st.key as type_key, s.name, {temporal_column}, value FROM {table} "
+        query += "shape_id as dh_shape_id, s.key as shape_key, st.key as type_key, s.name as shape_name, {temporal_column}, value FROM {table} "
 
         # JOIN
         query += "JOIN shapes_shape s ON s.id = {table}.shape_id "
