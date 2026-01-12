@@ -122,8 +122,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</li>
 							<li><hr class="dropdown-divider my-1"></li>
 							<li><a class="dropdown-item" href="{% url 'app:settings' %}">{% translate "Settings" %}</a></li>
+							{% if user.is_staff %}
 							<li><hr class="dropdown-divider my-1"></li>
 							<li><a class="dropdown-item" href="{% url 'admin:index' %}">{% translate "Administration" %}</a></li>
+							{% endif %}
 							<li><hr class="dropdown-divider my-1"></li>
 							<li>
 								<form action="{% url 'logout' %}" method="post">
