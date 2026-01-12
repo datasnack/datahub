@@ -82,7 +82,9 @@ class Shape(models.Model):
 
     @property
     def area_sqkm(self):
-        return self.area_sqm / 1000000
+        if self.area_sqm:
+            return self.area_sqm / 1000000
+        return None
 
     @property
     def has_properties(self, default=None):
