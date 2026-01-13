@@ -211,7 +211,7 @@ def data(
 
     # if a aggregate function is presents
     if aggregate:
-        df = df.groupby("shape_id", as_index=False)["value"].agg(aggregate)
+        df = df.groupby("dh_shape_id", as_index=False)["value"].agg(aggregate)
 
     # return data according to format
     match fmt:
