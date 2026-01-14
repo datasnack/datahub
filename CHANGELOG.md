@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.5](https://github.com/datasnack/datahub/compare/v0.11.4..v0.11.5) - 2026-01-14
+
+### Fixed
+
+- Internal MapLibre internal API change broke color/alpha changing in Map Component ([37a75b5](https://github.com/datasnack/datahub/commit/37a75b55e062e3063a07375ddc9bbe48d4220ea2))
+- Regression in regard to Data Hub Shape ID field name change ([6ccc1ea](https://github.com/datasnack/datahub/commit/6ccc1ea82ff7e0727401cf37d804f5366be9c60a))
+
 ## [0.11.4](https://github.com/datasnack/datahub/compare/v0.11.3..v0.11.4) - 2026-01-12
 
 ### Changed
