@@ -66,7 +66,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
         // Geometries
         const queryString = new URLSearchParams(query).toString();
-        console.log(queryString);
 
         fetch(`/api/shapes/geometry?${queryString}`)
             .then((response) => {
@@ -204,19 +203,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 
     function setSourceColor() {
         const mapSource = map.getSource(source.id);
-        const data = mapSource._data; // OR keep your original GeoJSON reference
+        const data = mapSource._data; // Private MapLibre API, not update save!
 
-        data.features.forEach((feature) => {
+        data.geojson.features.forEach((feature) => {
             const value = feature.properties.value;
             if (value) {
                 feature.properties.color = color(value);
             }
         });
-        mapSource.setData(data);
+        mapSource.setData(data.geojson);
     }
 
     function getSourceLabel() {
-        console.log(source);
         if (source.hasOwnProperty("name") && source.name) {
             return source.name;
         }
@@ -269,15 +267,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 
     function setSourceAlpha() {
         const mapSource = map.getSource(source.id);
-        const data = mapSource._data; // OR keep your original GeoJSON reference
+        const data = mapSource._data; // Private MapLibre API, not update save!
 
-        // Modify all features
-        data.features.forEach((feature) => {
-            feature.properties.alpha = source.alpha; // add/change properties
+        data.geojson.features.forEach((feature) => {
+            feature.properties.alpha = source.alpha;
         });
 
-        // Update the source with modified data
-        mapSource.setData(data);
+        mapSource.setData(data.geojson);
     }
 
     function setSourceVisibility() {
