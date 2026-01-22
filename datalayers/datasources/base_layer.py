@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import geopandas
+import numpy as np
 import pandas as pd
 from psycopg import sql
 
@@ -155,7 +156,11 @@ class BaseLayer:
     def is_valid_value(self, value) -> bool:
         match self.value_type:
             case LayerValueType.PERCENTAGE:
-                return isinstance(value, float) and value >= 0.0 and value <= 1.0
+                return (
+                    isinstance(value, (float, np.floating))
+                    and value >= 0.0
+                    and value <= 1.0
+                )
             case LayerValueType.BINARY:
                 return isinstance(value, bool)
             case LayerValueType.NOMINAL:
@@ -165,7 +170,7 @@ class BaseLayer:
             case LayerValueType.INTEGER:
                 return isinstance(value, int)
             case LayerValueType.FLOAT:
-                return isinstance(value, float)
+                return isinstance(value, (float, np.floating))
             case LayerValueType.VALUE:
                 return True  # no validation of VALUE type
             case _:
