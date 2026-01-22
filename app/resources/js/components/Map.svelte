@@ -481,7 +481,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         });
     }
 
-    async function addVectorData() {
+    export async function addVectorData() {
         const sourceId = `dh-${datalayer.key}-vector`;
         if (map.getSource(sourceId)) {
             return;
