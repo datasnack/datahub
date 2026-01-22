@@ -11,6 +11,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.6](https://github.com/datasnack/datahub/compare/v0.11.5..v0.11.6) - 2026-01-22
+
+BREAKING CHANGE: in the data layer data API (`/api/datalayers/data`) response the field `time_col` was renamed to `temporal_column`.
+
+### Added
+
+- Add hda dependency for copernicus DEM download ([b829e93](https://github.com/datasnack/datahub/commit/b829e93550a17db3f022cd6d6a92fa4933e7c642))
+
+### Changed
+
+- API field name change + R usage example ([2ab4147](https://github.com/datasnack/datahub/commit/2ab414778238215cbdd59bf7f7f58741e87e2c08))
+
+### Fixed
+
+- Make week/month dates configurable in map component ([ca0d93d](https://github.com/datasnack/datahub/commit/ca0d93d7d1ec9e251626b9aaff76444ebe3246e4))
+- Make layer vector data accessible from outside web component ([92c3bc7](https://github.com/datasnack/datahub/commit/92c3bc7a46cd4825dc36e69bba55437fe6e19a24))
+- API start/end date parsing in resepct to queried data layer ([9e3353a](https://github.com/datasnack/datahub/commit/9e3353a15db088dd0634ae34e78de15ad06ce3f9))
+- Accept np.floating for LayerValueType PERCENTAGE and FLOAT ([7831217](https://github.com/datasnack/datahub/commit/783121791e3912e96ef66f1c187dbed9d230a831))
+
 ## [0.11.5](https://github.com/datasnack/datahub/compare/v0.11.4..v0.11.5) - 2026-01-14
 
 ### Fixed
