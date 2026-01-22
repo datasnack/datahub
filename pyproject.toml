@@ -36,6 +36,7 @@ dependencies = [
   "rioxarray>=0.17.0",
   "netcdf4>=1.7.2",
   "django-ninja>=1.4.3",
+  "hda>=2.39", # Copernicus data like DEM
 ]
 
 [tool.uv]
@@ -149,3 +150,6 @@ docstring-code-format = false
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
+
+[dependency-groups]
+temp = []
