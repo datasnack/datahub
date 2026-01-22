@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
+import datetime as dt
 from io import BytesIO
 from typing import Literal
 
@@ -15,6 +16,7 @@ from django.db import connection
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
+    HttpResponse,
     HttpResponseBadRequest,
     HttpResponseNotFound,
     JsonResponse,
@@ -204,9 +206,43 @@ def data(
     if shape_type_key is not None:
         shape_type = get_object_or_404(Type, key=shape_type_key)
 
+    # parse date to datetime
+    start_date_obj = None
+    end_date_obj = None
+    if start_date:
+        # we use ISO weeks exclusively so we need to tell the parser that it starts on monday.
+        if datalayer.temporal_resolution == LayerTimeResolution.WEEK:
+            start_date += "-1"
+        try:
+            start_date_obj = dt.datetime.strptime(
+                start_date, datalayer.temporal_resolution.format()
+            )
+        except ValueError:
+            return HttpResponse(
+                f"Start date is not valid for data layer, needed format is `{datalayer.temporal_resolution.format()}`",
+                status=422,
+            )
+    if end_date:
+        # we use ISO weeks exclusively so we need to tell the parser that it starts on monday.
+        if datalayer.temporal_resolution == LayerTimeResolution.WEEK:
+            end_date += "-1"
+
+        try:
+            end_date_obj = dt.datetime.strptime(
+                end_date, datalayer.temporal_resolution.format()
+            )
+        except ValueError:
+            return HttpResponse(
+                f"End date is not valid for data layer, needed format is `{datalayer.temporal_resolution.format()}`",
+                status=422,
+            )
+
     # get data
     df = datalayer.data(
-        start_date=start_date, end_date=end_date, shape=shape, shape_type=shape_type
+        start_date=start_date_obj,
+        end_date=end_date_obj,
+        shape=shape,
+        shape_type=shape_type,
     )
 
     # if a aggregate function is presents
