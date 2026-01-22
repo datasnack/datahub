@@ -97,13 +97,13 @@ library(jsonlite)
 
 # ===== CONFIGURATION =====
 # set host, like http://localhost:8000, to where your Data Hub is running
-HOST <- ""
+DH_HOST <- ""
 
 # Your personal API authentication token
 # ATTENTION: tokens should not be added to production code!
 # I.e, use a .Renviron file to store the token and set it like this:
-# TOKEN <- Sys.getenv("TOKEN")
-TOKEN <- ""
+# DH_TOKEN <- Sys.getenv("DH_TOKEN")
+DH_TOKEN <- ""
 
 # ===== MAIN FUNCTION =====
 dh_data <- function(query) {
