@@ -48,12 +48,30 @@ class LayerTimeResolution(Enum):
         raise ValueError("Unsupported time resolution")
 
     def format(self) -> str:
+        """Actual correct representation of the temporal information."""
         if self == LayerTimeResolution.YEAR:
             return "%Y"
         if self == LayerTimeResolution.MONTH:
             return "%Y-%m"
         if self == LayerTimeResolution.WEEK:
-            return "%Y-W%V"  # %V is the ISO8601 week
+            return "%G-W%V-%u"  # %V is the ISO8601 week, (-%u needs to be -1 for signaling the week starts on monday => ISO week)
+        if self == LayerTimeResolution.DAY:
+            return "%Y-%m-%d"
+
+        raise ValueError("Unsupported time resolution")
+
+    def format_db(self) -> str:
+        """
+        Format used in the date column in the database, and what will be used in exports.
+
+        We use y-m-d in the database to be able to use the DATE type for sorting/indexing.
+        """
+        if self == LayerTimeResolution.YEAR:
+            return "%Y"
+        if self == LayerTimeResolution.MONTH:
+            return "%Y-%m-%d"  # first day of month, day is always -01
+        if self == LayerTimeResolution.WEEK:
+            return "%Y-%m-%d"  # monday of corresponding week
         if self == LayerTimeResolution.DAY:
             return "%Y-%m-%d"
 

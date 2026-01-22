@@ -268,7 +268,8 @@ def data(
         case "json":
             return JsonResponse(
                 {
-                    "time_col": str(datalayer.temporal_resolution),
+                    "temporal_column": str(datalayer.temporal_resolution),
+                    "temporal_format": datalayer.temporal_resolution.format_db(),
                     "data": df.fillna(np.nan)
                     .replace([np.nan], [None])
                     .to_dict("records"),

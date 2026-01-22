@@ -35,7 +35,10 @@ window.Swatches = Swatches;
 
 import hljs from "highlight.js/lib/core";
 import python from "highlight.js/lib/languages/python";
+import r from "highlight.js/lib/languages/r";
+
 hljs.registerLanguage("python", python);
+hljs.registerLanguage("r", r);
 
 window.hljs = hljs;
 
