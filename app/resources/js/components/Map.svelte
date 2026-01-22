@@ -768,9 +768,17 @@ SPDX-License-Identifier: AGPL-3.0-only
                                 {/each}
                             </select>
                         {:else if datalayer.temporal_resolution == "month"}
-                            tbd
+                            <input
+                                class="form-control form-control-sm"
+                                bind:value={query.start_date}
+                                placeholder="yyyy-mm"
+                            />
                         {:else if datalayer.temporal_resolution == "week"}
-                            tbd
+                            <input
+                                class="form-control form-control-sm"
+                                bind:value={query.start_date}
+                                placeholder="yyyy-Www"
+                            />
                         {:else if datalayer.temporal_resolution == "date"}
                             <input
                                 type="date"
@@ -807,9 +815,21 @@ SPDX-License-Identifier: AGPL-3.0-only
                                 {/each}
                             </select>
                         {:else if datalayer.temporal_resolution == "month"}
-                            tbd
+                            <input
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="yyyy-mm"
+                                bind:value={query.end_date}
+                                on:change={handleEndDate}
+                            />
                         {:else if datalayer.temporal_resolution == "week"}
-                            tbd
+                            <input
+                                type="text"
+                                class="form-control form-control-sm"
+                                placeholder="yyyy-Www"
+                                bind:value={query.end_date}
+                                on:change={handleEndDate}
+                            />
                         {:else if datalayer.temporal_resolution == "date"}
                             <input
                                 type="date"
