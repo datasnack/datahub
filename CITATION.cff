@@ -20,5 +20,5 @@ authors:
     orcid: 'https://orcid.org/0000-0002-6327-8152'
 repository-code: 'https://github.com/datasnack/datahub'
 license: AGPL-3.0-only
-version: 0.11.6
-date-released: '2026-01-22'
+version: 0.11.7
+date-released: '2026-01-26'

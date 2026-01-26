@@ -11,6 +11,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.7](https://github.com/datasnack/datahub/compare/v0.11.6..v0.11.7) - 2026-01-26
+
+### Changed
+
+- Allow Data Layer processing for specific shape type and output to filesystem ([d76a46d](https://github.com/datasnack/datahub/commit/d76a46d3f5449208d6cbb2cf8dcde2d7b87b10ed))
+
+### Fixed
+
+- Wrong variable names in R template ([e620294](https://github.com/datasnack/datahub/commit/e620294116a41f0ec883f22e735674d14d2de764))
+
 ## [0.11.6](https://github.com/datasnack/datahub/compare/v0.11.5..v0.11.6) - 2026-01-22
 
 BREAKING CHANGE: in the data layer data API (`/api/datalayers/data`) response the field `time_col` was renamed to `temporal_column`.
