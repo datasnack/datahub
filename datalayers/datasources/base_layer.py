@@ -226,16 +226,18 @@ class BaseLayer:
         """Get the amount of added values."""
         return len(self.rows)
 
-    def save(self):
+    def save(self, *, db_if_exists: str = "replace", fs_path: Path | None = None):
         if self.df is None:
             self.df = pd.DataFrame(self.rows)
 
         if self.output == "db":
             self.df.to_sql(
-                self.layer.key, get_engine(), index=False, if_exists="replace"
+                self.layer.key, get_engine(), index=False, if_exists=db_if_exists
             )
         elif self.output == "fs":
-            self.df.to_csv(self.get_data_path() / f"{self.layer.key}.csv", index=False)
+            if fs_path is None:
+                fs_path = self.get_data_path() / f"{self.layer.key}.csv"
+            self.df.to_csv(fs_path, index=False)
         else:
             raise ValueError(f"Unknown save option {self.output}.")
 
