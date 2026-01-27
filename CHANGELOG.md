@@ -11,6 +11,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.8](https://github.com/datasnack/datahub/compare/v0.11.7..v0.11.8) - 2026-01-27
+
+### Changed
+
+- Sorting of data layer categories ([fd88ae4](https://github.com/datasnack/datahub/commit/fd88ae42bafc3cffc91e43c2a3ee1498fb96d856))
+
+### Fixed
+
+- Allow external color scale in map datalayer control ([eb59edd](https://github.com/datasnack/datahub/commit/eb59edd89404ca8c9f441a1db0e799ff25ab3527))
+- Color map swiching would set n/a color to black ([49c54bf](https://github.com/datasnack/datahub/commit/49c54bf945d82f10dad8812d3180bef284162961))
+- Make addVectorData accessable from outside ([4a0d8c0](https://github.com/datasnack/datahub/commit/4a0d8c0bca4cb54493b7d7f0e03952aa5ccd0e71))
+
 ## [0.11.7](https://github.com/datasnack/datahub/compare/v0.11.6..v0.11.7) - 2026-01-26
 
 ### Changed
