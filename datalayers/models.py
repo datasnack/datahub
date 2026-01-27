@@ -28,7 +28,7 @@ from .datasources.base_layer import BaseLayer, LayerTimeResolution, LayerValueTy
 logger = logging.getLogger(__name__)
 
 
-def camel(s):
+def camel(s: str) -> str:
     s = s.replace("_", " ")
     s = s.replace("-", " ")
     return string.capwords(s).replace(" ", "")
@@ -45,6 +45,7 @@ class Category(models.Model):
 
     name = models.CharField(max_length=255)
     key = models.SlugField(max_length=255, null=False, unique=True)
+    position = models.PositiveSmallIntegerField(default=1)
     description = models.TextField(blank=True)
 
     objects = CategoryManager()

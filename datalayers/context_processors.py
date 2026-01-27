@@ -6,5 +6,5 @@ from .models import Category
 
 
 def add_navigation(request):
-    categories = Category.objects.order_by("name")
+    categories = Category.objects.order_by("position", "name")
     return {"nav_datalayer_categories": categories}
