@@ -84,7 +84,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                     feature.properties.alpha = 1;
 
                     if (value === null) {
-                        feature.properties.value = "n/a";
+                        feature.properties.value = null;
                         feature.properties.color = "rgba(0, 0, 0, 0.1)";
                     } else {
                         feature.properties.value = value;
@@ -302,7 +302,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             content += `<div class="small text-muted mb-1">${props.type_key}</div>`;
         }
 
-        content += `<div class="">Value: ${props.value}</div>`;
+        content += `<div class="">Value: ${props.value ?? "n/a"}</div>`;
         content += `<a href="${props.url}" class="">Details</a>`;
 
         // Add other properties
