@@ -62,7 +62,12 @@ SPDX-License-Identifier: AGPL-3.0-only
             );
         }
 
-        buildColor();
+        // fixed, external color scale
+        if (source.color) {
+            color = source.color;
+        } else {
+            buildColor();
+        }
 
         // Geometries
         const queryString = new URLSearchParams(query).toString();
@@ -184,11 +189,13 @@ SPDX-License-Identifier: AGPL-3.0-only
         setSourceColor();
 
         let legend;
-        if (datalayer.value_type == "nominal") {
+        const value_type = datalayer?.value_type ?? source?.value_type ?? null;
+        console.log(value_type);
+        if (value_type == "nominal") {
             legend = Swatches(color, {
                 //title: getSourceLabel(),
             });
-        } else if (datalayer.value_type == "percentage") {
+        } else if (value_type == "percentage") {
             legend = Legend(color, {
                 //title: getSourceLabel(),
                 tickFormat: "%",
