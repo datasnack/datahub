@@ -481,8 +481,8 @@ SPDX-License-Identifier: AGPL-3.0-only
         });
     }
 
-    export async function addVectorData() {
-        const sourceId = `dh-${datalayer.key}-vector`;
+    export async function addVectorData(datalayer_key) {
+        const sourceId = `dh-${datalayer_key}-vector`;
         if (map.getSource(sourceId)) {
             return;
         }
@@ -492,7 +492,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             map.addControl(mapSourceControl, "top-left");
         }
 
-        fetch(`/api/datalayers/vector?datalayer_key=${datalayer.key}`)
+        fetch(`/api/datalayers/vector?datalayer_key=${datalayer_key}`)
             .then((response) => {
                 if (!response.ok)
                     throw new Error("Network response was not ok");
@@ -873,7 +873,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
                         {#if datalayer.has_vector_data}
                             <button
-                                on:click={addVectorData}
+                                on:click={() => addVectorData(datalayer.key)}
                                 class="btn btn-outline-primary btn-sm"
                                 >Load Vector date</button
                             >
