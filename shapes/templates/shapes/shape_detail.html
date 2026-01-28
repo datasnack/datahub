@@ -72,7 +72,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				{% if shape.parent %}
 				<tr>
 					<th>{% translate "Parent" %}</th>
-					<td><a href="{% url 'shapes:shape_detail' shape.parent.id %}">{{ shape.parent.name }}</a></td>
+					<td><a href="{{ shape.parent.get_absolute_url }}">{{ shape.parent.name }}</a></td>
 				</tr>
 				{% endif %}
 				<tr class="table-info">
