@@ -11,6 +11,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.9](https://github.com/datasnack/datahub/compare/v0.11.8..v0.11.9) - 2026-02-05
+
+### Changed
+
+- Manual dl_data_restore command ([e157981](https://github.com/datasnack/datahub/commit/e157981e8e8aff6c88e1634d0b3f499d76491266))
+- Forge link + forge issue shortctus ([3ae97d6](https://github.com/datasnack/datahub/commit/3ae97d660afe1bf214892b852e9900182f4dfd4c))
+
+### Fixed
+
+- Regression in showing categorical maps ([517aa33](https://github.com/datasnack/datahub/commit/517aa334bac7e004406b2e2702308f548bdf13b5))
+- Hardcoded id shape id in url, instead of absolute_url function ([105628f](https://github.com/datasnack/datahub/commit/105628fcddb312dcf44010af225fe9e9326db501))
+
 ## [0.11.8](https://github.com/datasnack/datahub/compare/v0.11.7..v0.11.8) - 2026-01-27
 
 ### Changed
