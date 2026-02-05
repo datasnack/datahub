@@ -585,8 +585,10 @@ def meta(
             "shape_types": shape_types,
             "shapes": shapes,
             "value_type": datalayer.value_type_str,
+            "is_categorical": datalayer.is_categorical,
             "name": datalayer.name,
             "format_suffix": datalayer.format_suffix(),
+            "categorical_values": datalayer.get_categorical_values(),
         },
     }
 

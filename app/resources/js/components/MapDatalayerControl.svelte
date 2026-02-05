@@ -98,7 +98,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                 });
 
                 let legend;
-                if (datalayer && datalayer.value_type == "nominal") {
+                if (datalayer && datalayer.is_categorical) {
                     legend = Swatches(color, {
                         //title: getSourceLabel(),
                     });
@@ -176,6 +176,11 @@ SPDX-License-Identifier: AGPL-3.0-only
             color = d3.scaleSequential([0, 1], interpolator);
         } else if (source.extent) {
             color = d3.scaleSequential(source.extent, interpolator);
+        } else if (datalayer.is_categorical) {
+            color = d3.scaleOrdinal(
+                datalayer.categorical_values,
+                d3.schemeCategory10,
+            );
         } else {
             color = d3.scaleSequential(
                 d3.extent(value_map.values()),
@@ -190,7 +195,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
         let legend;
         const value_type = datalayer?.value_type ?? source?.value_type ?? null;
-        console.log(value_type);
+
         if (value_type == "nominal") {
             legend = Swatches(color, {
                 //title: getSourceLabel(),
@@ -343,11 +348,13 @@ SPDX-License-Identifier: AGPL-3.0-only
                 </select>
             {/if}
 
-            <select bind:value={source.cmap} on:change={buildLegend}>
-                {#each Object.keys(colorModes) as name}
-                    <option value={name}>{name}</option>
-                {/each}
-            </select>
+            {#if datalayer && !datalayer.is_categorical}
+                <select bind:value={source.cmap} on:change={buildLegend}>
+                    {#each Object.keys(colorModes) as name}
+                        <option value={name}>{name}</option>
+                    {/each}
+                </select>
+            {/if}
 
             <label class="d-flex align-items-center">
                 <abbr title="Alpha">A</abbr>:
