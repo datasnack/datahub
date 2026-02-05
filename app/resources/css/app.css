@@ -201,6 +201,7 @@ dh-chart .aa-Form {
 }
 
 
+.btn-outline-secondary-light,
 .btn-language-toggle {
 	border-color: var(--bs-border-color);
 }

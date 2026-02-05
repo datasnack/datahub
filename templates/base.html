@@ -73,14 +73,29 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<div style="display: none" id="autocomplete"></div>
 				{% endif %}
 
-				<div class="d-flex ms-auto"> {% comment %} ms-auto makes sure the div is positioned on the "end" in the flex parent {% endcomment %}
-
+				<div class="d-flex align-items-center ms-auto"> {% comment %} ms-auto makes sure the div is positioned on the "end" in the flex parent {% endcomment %}
 					{% if not datahub_login_required or user.is_authenticated %}
-					{% if DATAHUB_GITHUB %}
-					<a class="btn btn-link text-body" href="{{ DATAHUB_GITHUB }}">
-						{% icon "mark-github" classes="c-icon--large" %}
-					</a>
-					{%endif %}
+						{% if DATAHUB_FORGE %}
+
+							{% if DATAHUB_FORGE_ISSUE_SHOW_ADD %}
+							<div class="btn-group me-1">
+								<button title="{% translate "Open new issue" %}" type="button" class="btn btn-sm btn-outline-secondary btn-outline-secondary-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+									{% icon "issue-opened" %}
+								</button>
+								<ul class="dropdown-menu dropdown-menu-end">
+									{% for item in DATAHUB_FORGE_ISSUE_TEMPLATES %}
+									<li><a class="dropdown-item" href="{{ item.url}}">{{ item.name }}</a></li>
+									{% endfor %}
+									<li><hr class="dropdown-divider my-1"></li>
+									<li><a class="dropdown-item" href="{{ DATAHUB_FORGE }}/issues">{% translate "Show issues" %}</a></li>
+								</ul>
+							</div>
+							{% endif %}
+
+							<a title="{% translate "Source code" %}" style="white-space: nowrap;" class="me-2 btn btn-sm btn-outline-secondary btn-outline-secondary-light" href="{{ DATAHUB_FORGE }}">
+								{% icon "git-branch" %}
+							</a>
+						{%endif %}
 					{% endif %}
 
 

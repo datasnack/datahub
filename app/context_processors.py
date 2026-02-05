@@ -5,6 +5,7 @@
 from django.conf import settings
 
 from app.docs import get_docs_structure
+from app.utils.issue_templates import enumerate_issue_templates
 
 
 def add_datahub_login_required(request):
@@ -17,6 +18,8 @@ def add_datahub_login_required(request):
         "datahub_name": settings.DATAHUB_NAME,
         "datahub_login_required": settings.DATAHUB_LOGIN_REQUIRED,
         "DATAHUB_HEAD": settings.DATAHUB_HEAD,
-        "DATAHUB_GITHUB": settings.DATAHUB_GITHUB,
+        "DATAHUB_FORGE": settings.DATAHUB_FORGE,
+        "DATAHUB_FORGE_ISSUE_SHOW_ADD": settings.DATAHUB_FORGE_ISSUE_SHOW_ADD,
+        "DATAHUB_FORGE_ISSUE_TEMPLATES": enumerate_issue_templates(),
         "DOCS_STRUCTURE": get_docs_structure(),
     }
