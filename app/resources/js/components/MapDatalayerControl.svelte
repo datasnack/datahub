@@ -84,7 +84,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 
                     // the shape might not have a known value and so not be
                     // present in in the returned result
-                    let value = value_map.get(dh_shape_id) || null;
+                    let value = value_map.has(dh_shape_id)
+                        ? value_map.get(dh_shape_id)
+                        : null;
 
                     feature.properties.alpha = 1;
 
@@ -219,7 +221,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
         data.geojson.features.forEach((feature) => {
             const value = feature.properties.value;
-            if (value) {
+            if (value !== null) {
                 feature.properties.color = color(value);
             }
         });
