@@ -48,7 +48,7 @@ django==5.2.11
     #   datahub (pyproject.toml)
     #   django-ninja
     #   django-taggit
-django-environ==0.12.0
+django-environ==0.13.0
     # via datahub (pyproject.toml)
 django-ninja==1.5.3
     # via datahub (pyproject.toml)
@@ -209,7 +209,7 @@ tzdata==2025.3
     # via pandas
 urllib3==2.6.3
     # via requests
-xarray==2026.1.0
+xarray==2026.2.0
     # via
     #   datahub (pyproject.toml)
     #   rioxarray

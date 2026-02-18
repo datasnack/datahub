@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.11](https://github.com/datasnack/datahub/compare/v0.11.10..v0.11.11) - 2026-02-18
+
+### Fixed
+
+- Update shape api examples with R template ([10dbac7](https://github.com/datasnack/datahub/commit/10dbac70b83d53b8f9582a931dd71c1087a31a8a))
+- Allow to overwrite user agent for downloading files ([de8775b](https://github.com/datasnack/datahub/commit/de8775b88ae51aab8d4a9450e632180f9762b723))
+
 ## [0.11.10](https://github.com/datasnack/datahub/compare/v0.11.9..v0.11.10) - 2026-02-13
 
 ### Fixed
