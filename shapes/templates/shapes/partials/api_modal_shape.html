@@ -28,6 +28,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 					{% endblocktranslate %}
 				</p>
 
+				<p>
+					{% url 'app:settings' as url %}
+					{% blocktranslate with settings_url=url %}
+						You can generate the required API token on <a href="{{ settings_url }}">your settings page</a>.
+					{% endblocktranslate %}
+				</p>
+
 				<div class="card">
 					<div class="card-header">
 
@@ -54,15 +61,18 @@ from io import BytesIO
 import geopandas
 
 # set host, like http://localhost:8000, to where your Data Hub is running
-HOST = ""
-# API TOKEN
-TOKEN = ""
+DH_HOST = ""
+# Your personal API authentication token
+# ATTENTION: tokens should not be included in production code!
+# I.e, use a environment variable to store the token and set it like this:
+# DH_TOKEN = os.environ["DH_TOKEN"]
+DH_TOKEN = ""
 
 
 def dh_shapes(query: dict):
     response = requests.get(
-        f"{HOST}/api/shapes/geometry?{urlencode(query)}",
-        headers={"X-API-Key": TOKEN}
+        f"{DH_HOST}/api/shapes/geometry?{urlencode(query)}",
+        headers={"X-API-Key": DH_TOKEN}
     )
     if response.status_code == 200:
         gdf = geopandas.read_file(BytesIO(response.content))
@@ -72,7 +82,7 @@ def dh_shapes(query: dict):
     return gdf
 
 
-shape_gdf = dh_shapes({
+shape_{{shape.key}}_gdf = dh_shapes({
     "shape_id":  {{ shape.id }},
 
     # Simplify geometry to reduce complexity/size in unit of Shapes,
@@ -84,9 +94,65 @@ shape_gdf = dh_shapes({
 
 							<div class="tab-pane" id="api_{{ shape.key }}-r-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
 
-								<div class="alert alert-info mb-0">
-									{% translate "There is no ready use snippet for API usage in R yet, though you can adapt the Python example to your R needs." %}
-								</div>
+
+
+
+
+<pre class="mb-0"><code class="language-r"># ===== LOAD LIBRARIES =====
+library(httr)
+library(sf)
+
+# ===== CONFIGURATION =====
+# set host, like http://localhost:8000, to where your Data Hub is running
+DH_HOST <- ""
+
+# Your personal API authentication token
+# ATTENTION: tokens should not be added to production code!
+# I.e, use a .Renviron file to store the token and set it like this:
+# DH_TOKEN <- Sys.getenv("DH_TOKEN")
+DH_TOKEN <- ""
+
+
+# ===== MAIN FUNCTION =====
+dh_shapes <- function(query_params) {
+  response <- GET(
+    url = paste0(DH_HOST, "/api/shapes/geometry"),
+    query = query_params,
+    add_headers("X-API-Key" = DH_TOKEN)
+  )
+
+  # Check if the request was successful (status code 200)
+  if (status_code(response) != 200) {
+    stop(sprintf("Request failed (%d): %s",
+                 status_code(response),
+                 content(response, "text")))
+  }
+
+  # reading GeoJSON
+  gdf <- st_read(
+    rawToChar(content(response, "raw")),
+    quiet = TRUE
+  )
+
+  return(gdf)
+}
+
+# ===== EXAMPLE USAGE =====
+shape_{{shape.key}}_gdf <- dh_shapes(list(
+  shape_id =  "{{ shape.id }}",
+  # Simplify geometry to reduce complexity/size in unit of Shapes,
+  # for WGS84 degree: 0.001 ~> 111.3m
+  # https://shapely.readthedocs.io/en/latest/manual.html#object.simplify
+  # "simplify": 0.01
+  )
+)
+</code></pre>
+
+
+
+
+
+
 							</div>
 						</div>
 
