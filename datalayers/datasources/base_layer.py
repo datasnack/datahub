@@ -244,7 +244,9 @@ class BaseLayer:
     def _create_data_dir_if_not_exists(self) -> None:
         Path(self.get_data_path()).mkdir(parents=True, exist_ok=True)
 
-    def _save_url_to_file(self, url, folder=None, file_name=None) -> bool:
+    def _save_url_to_file(
+        self, url, folder=None, file_name=None, user_agent: str | None = None
+    ) -> bool:
         """
         Save file from a URL to local directory.
 
@@ -268,6 +270,11 @@ class BaseLayer:
         try:
             # call wget to download file
             params = ["wget", "-O", folder / file_name, url]
+
+            if user_agent:
+                params.append("--user-agent")
+                params.append(user_agent)
+
             subprocess.check_output(params)
 
             # calculate and log md5 of downloaded file
