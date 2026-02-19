@@ -16,6 +16,7 @@ from psycopg import sql
 
 from django.db import connection
 from django.utils import formats
+from django.utils.translation import gettext as _
 
 from datalayers.utils import get_conn_string, get_engine
 
@@ -33,6 +34,19 @@ class LayerTimeResolution(Enum):
     def string(self) -> str:
         """Duplicated str method so we can call .string in Django templates."""
         return str(self.value)
+
+    def text(self) -> str:
+        """Local aware textual representation."""
+        if self == LayerTimeResolution.YEAR:
+            return _("Year")
+        if self == LayerTimeResolution.MONTH:
+            return _("Month")
+        if self == LayerTimeResolution.WEEK:
+            return _("Week")
+        if self == LayerTimeResolution.DAY:
+            return _("Day")
+
+        raise ValueError("Unsupported time resolution")
 
     def letter(self) -> str:
         """Unique letter/string describing the temporal resolution."""

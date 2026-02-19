@@ -198,6 +198,7 @@ TEMPLATES = [
                 "django.templatetags.static",
                 "app.templatetags.icon",
                 "app.templatetags.file",
+                "datalayers.templatetags.dl",
             ],
         },
     },
