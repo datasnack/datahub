@@ -6,6 +6,7 @@ from pathlib import Path
 
 from django import template
 from django.conf import settings
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 register = template.Library()
@@ -34,7 +35,7 @@ def icon(name, size=16, *, ignore_missing=False, classes=""):
 
     with file.open() as f:
         svg = f.read().strip()
-        svg = svg[:5] + f'class="c-icon {classes}" ' + svg[5:]
+        svg = svg[:5] + f'class="c-icon {escape(classes)}" ' + svg[5:]
         icon_cache[key] = svg
 
     return mark_safe(svg)  # noqa: S308
