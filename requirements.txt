@@ -129,9 +129,9 @@ pandas==2.2.3
     #   meteostat
     #   osmnx
     #   xarray
-psycopg==3.3.2
+psycopg==3.3.3
     # via datahub (pyproject.toml)
-psycopg-binary==3.3.2
+psycopg-binary==3.3.3
     # via psycopg
 pydantic==2.12.5
     # via django-ninja

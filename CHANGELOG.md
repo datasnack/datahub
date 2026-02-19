@@ -11,6 +11,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.12](https://github.com/datasnack/datahub/compare/v0.11.11..v0.11.12) - 2026-02-19
+
+### Changed
+
+- Dl_link|spatial|temporal template tags ([82f9099](https://github.com/datasnack/datahub/commit/82f909955d09ec2c21e1224997ab3c0d2b8d9926))
+
+### Fixed
+
+- Escape classes ([119a5d1](https://github.com/datasnack/datahub/commit/119a5d1c7c8ca5cebf894073bb012bdaa8b086e8))
+
 ## [0.11.11](https://github.com/datasnack/datahub/compare/v0.11.10..v0.11.11) - 2026-02-18
 
 ### Fixed
