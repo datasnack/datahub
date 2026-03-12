@@ -17,6 +17,7 @@ class Command(BaseCommand):
 
     user_data_tables = (
         "app_user",
+        "app_bearertoken",
         "app_user_groups",
         "app_user_user_permissions",
         "auth_group",
