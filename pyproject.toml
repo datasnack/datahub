@@ -37,6 +37,7 @@ dependencies = [
   "netcdf4>=1.7.2",
   "django-ninja>=1.4.3",
   "hda>=2.39", # Copernicus data like DEM
+  "xlrd>=2.0.2", # .xls files for pandas.read_excel() ("old style excel files")
 ]
 
 [tool.uv]
