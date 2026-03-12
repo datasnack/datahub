@@ -221,7 +221,7 @@ standard, not full view starts here.
 						{% endif %}
 					{% endwith %}
 				</td>
-				<td class="align-middle">
+				<td class="align-middle" data-sort="{{ dl.name}}">
 					{% if dl.has_class %}
 						<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
 
