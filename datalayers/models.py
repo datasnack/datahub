@@ -380,6 +380,18 @@ class Datalayer(models.Model):
                 return list(self.get_class().ordinal_values)
         return []
 
+    def get_categorical_colors(self) -> list[str]:
+        if not self.has_class():
+            return []
+
+        if self.value_type not in [LayerValueType.NOMINAL, LayerValueType.ORDINAL]:
+            return []
+
+        if hasattr(self.get_class(), "categorical_colors"):
+            return self.get_class().categorical_colors
+
+        return []
+
     def format_precision(self) -> int | None:
         if self.has_class():
             return self._get_class().precision

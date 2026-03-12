@@ -179,10 +179,31 @@ SPDX-License-Identifier: AGPL-3.0-only
         } else if (source.extent) {
             color = d3.scaleSequential(source.extent, interpolator);
         } else if (datalayer.is_categorical) {
-            color = d3.scaleOrdinal(
-                datalayer.categorical_values,
-                d3.schemeCategory10,
+            // use only colors of actual available values
+            const available_values = [...value_map.values()];
+            const indices = datalayer.categorical_values
+                .map((item, index) =>
+                    available_values.includes(item) ? index : -1,
+                )
+                .filter((index) => index !== -1);
+
+            const categorical_values = indices.map(
+                (i) => datalayer.categorical_values[i],
             );
+
+            if (datalayer.categorical_colors.length > 0) {
+                const colors = indices.map(
+                    (i) => datalayer.categorical_colors[i],
+                );
+
+                color = d3.scaleOrdinal(categorical_values, colors);
+            } else {
+                // no datalayer colors defined, use d3
+                color = d3.scaleOrdinal(
+                    categorical_values,
+                    d3.schemeCategory10,
+                );
+            }
         } else {
             color = d3.scaleSequential(
                 d3.extent(value_map.values()),

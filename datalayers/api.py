@@ -589,6 +589,7 @@ def meta(
             "name": datalayer.name,
             "format_suffix": datalayer.format_suffix(),
             "categorical_values": datalayer.get_categorical_values(),
+            "categorical_colors": datalayer.get_categorical_colors(),
         },
     }
 

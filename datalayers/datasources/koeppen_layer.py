@@ -47,6 +47,38 @@ class KoeppenLayer(TiffLayer):
         ET = 29  # Polar, tundra
         EF = 30  # Polar, frost
 
+    class ClimateColor(Enum):
+        Af = "#0000FF"
+        Am = "#0078FF"
+        Aw = "#46AAFA"
+        BWh = "#FF0000"
+        BWk = "#FF9696"
+        BSh = "#F5A500"
+        BSk = "#FFDC64"
+        Csa = "#FFFF00"
+        Csb = "#C8C800"
+        Csc = "#969600"
+        Cwa = "#96FF96"
+        Cwb = "#64C864"
+        Cwc = "#329632"
+        Cfa = "#C8FF50"
+        Cfb = "#64FF50"
+        Cfc = "#32C800"
+        Dsa = "#FF00FF"
+        Dsb = "#C800C8"
+        Dsc = "#963296"
+        Dsd = "#966496"
+        Dwa = "#AAAFFF"
+        Dwb = "#5A78DC"
+        Dwc = "#4B50B4"
+        Dwd = "#320087"
+        Dfa = "#00FFFF"
+        Dfb = "#37C8FF"
+        Dfc = "#007D7D"
+        Dfd = "#00465F"
+        EF = "#B2B2B2"
+        ET = "#666666"
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -108,10 +140,4 @@ class KoeppenLayer(TiffLayer):
         year_end = int(file[5:9])
 
         for year in range(year_start, year_end + 1):
-            self.rows.append(
-                {
-                    "year": year,
-                    "shape_id": shape.id,
-                    "value": proportion,
-                }
-            )
+            self.add_value(shape, year, proportion)
