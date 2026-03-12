@@ -42,6 +42,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<thead>
 			<tr>
 				<th>{% translate "Category" %}</th>
+				<th>{% translate "Type" %}</th>
+				<th><abbr title="{% translate "Temporal" %}">T</abbr></th>
 				<th>{% translate "Name" %}</th>
 				<th>{% translate "Key" %}</th>
 				<th>{% translate "State" %}</th>
@@ -68,7 +70,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 				{% if sources|length %}
 					{% for source in dl.sources.all %}
 						<tr class="{% if is_even %}row-striped{%endif%}">
+
 							{% if forloop.first %}
+
 							<td rowspan="{{ dl.sources.all|length }}" class="align-middle">
 								{% with category=dl.category %}
 									{% if category %}
@@ -80,7 +84,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 									{% endif %}
 								{% endwith %}
 							</td>
-							<td rowspan="{{ dl.sources.all|length }}" class="align-middle">
+
+							<td rowspan="{{ dl.sources.all|length }}" class="align-middle" data-order="{{ dl.value_type_str }}">
+								{% if dl.has_class %}
+									{{ dl.value_type_str }}
+								{% endif %}
+							</td>
+
+							<td rowspan="{{ dl.sources.all|length }}" class="align-middle" data-order="{{ dl.temporal_resolution_str }}">
 								{% if dl.has_class %}
 									<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
 									{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
@@ -88,9 +99,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 									{% endwith %}
 									</span>
 								{% endif %}
+							</td>
 
+							<td rowspan="{{ dl.sources.all|length }}" class="align-middle" data-order="{{ dl.name }}">
 								<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
 							</td>
+
+
 							<td rowspan="{{ dl.sources.all|length }}" class="align-middle"><code>{{ dl.key }}</code></td>
 							<td class="text-nowrap dl-state-pill align-middle" rowspan="{{ dl.sources.all|length }}" data-order="{{ dl.has_class|yesno:"1,0" }}{{ dl.has_files|yesno:"1,0" }}{{ dl.is_loaded|yesno:"1,0" }}">
 								{% include "datalayers/datalayer_states.html" with mode="inline" datalayer=dl %}
@@ -151,7 +166,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 								{% endif %}
 							{% endwith %}
 						</td>
-						<td class="align-middle">
+
+						<td class="align-middle" data-order="{{ dl.value_type_str }}">
+							{% if dl.has_class %}
+								{{ dl.value_type_str }}
+							{% endif %}
+						</td>
+
+						<td class="align-middle" data-order="{{ dl.temporal_resolution_str }}">
 							{% if dl.has_class %}
 								<span class="text-secondary" title="{% blocktranslate with resolution=dl.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
 								{% with "calendar-"|add:dl.temporal_resolution_str as dl_temporal_icon %}
@@ -159,7 +181,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 								{% endwith %}
 								</span>
 							{% endif %}
+						</td>
 
+						<td class="align-middle">
 							<a href="{{ dl.get_absolute_url }}">{{ dl.name }}</a>
 							{% include "datalayers/partials/tags.html" with datalayer=dl %}
 						</td>
