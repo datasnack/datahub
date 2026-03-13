@@ -150,9 +150,11 @@ SPDX-License-Identifier: AGPL-3.0-only
                     const coordinates = e.lngLat;
                     const feature = e.features[0];
 
+                    const popupFnc = source.getPopupContent || getPopupContent;
+
                     new maplibregl.Popup()
                         .setLngLat(coordinates)
-                        .setHTML(getPopupContent(feature))
+                        .setHTML(popupFnc(feature))
                         .addTo(map);
                 });
 
