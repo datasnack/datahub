@@ -11,6 +11,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.13](https://github.com/datasnack/datahub/compare/v0.11.12..v0.11.13) - 2026-03-13
+
+### Changed
+
+- Allow overwrite of popup gen function in Map ([6345418](https://github.com/datasnack/datahub/commit/63454188543da0ad827623ba2e5ecc4bfb538636))
+- Custom categorical colors in map charts ([ee7e9a5](https://github.com/datasnack/datahub/commit/ee7e9a5871aa541301cbbbcd0f6cbd3b4543c122))
+
+### Fixed
+
+- Include datalayer value type in full table view ([98e6a78](https://github.com/datasnack/datahub/commit/98e6a781316a5541aae3221af905b62488cebb81))
+- Sorting for datalayer names in table ([5361e30](https://github.com/datasnack/datahub/commit/5361e30db11d1c71e7ad62db1a4b0f4f1409308a))
+- Don't include bearer tokens for export without user data ([a7c99c6](https://github.com/datasnack/datahub/commit/a7c99c6ffee4b2e42d957ef2d07b6c59520e99b7))
+
 ## [0.11.12](https://github.com/datasnack/datahub/compare/v0.11.11..v0.11.12) - 2026-02-19
 
 ### Changed
