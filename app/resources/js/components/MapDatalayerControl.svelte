@@ -72,12 +72,14 @@ SPDX-License-Identifier: AGPL-3.0-only
         // Geometries
         const queryString = new URLSearchParams(query).toString();
 
-        fetch(`/api/shapes/geometry?${queryString}`)
-            .then((response) => {
-                if (!response.ok)
-                    throw new Error("Network response was not ok");
-                return response.json();
-            })
+        (source.geometry
+            ? Promise.resolve(source.geometry)
+            : fetch(`/api/shapes/geometry?${queryString}`).then((response) => {
+                  if (!response.ok)
+                      throw new Error("Network response was not ok");
+                  return response.json();
+              })
+        )
             .then((geojsonData) => {
                 geojsonData.features.forEach((feature) => {
                     const dh_shape_id = feature.properties.dh_shape_id;
