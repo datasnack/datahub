@@ -67,6 +67,8 @@ SPDX-License-Identifier: AGPL-3.0-only
     export let sources = [];
     export let show_remove = false;
 
+    export let layerControlNodeId = null;
+
     export let height = "500px";
 
     let container; // reference to the DOM node of the component
@@ -166,7 +168,20 @@ SPDX-License-Identifier: AGPL-3.0-only
     export async function loadSource(source) {
         if (source.type == "datalayer") {
             const ctrl = new LegendControl(source, datalayer);
-            map.addControl(ctrl, "top-left");
+
+            if (layerControlNodeId) {
+                // if a custom DOM node id is given to position the layer control
+                // components, we need to manually add the control to the map
+                // and then insert the html node to the target.
+                ctrl.onAdd(map);
+                document
+                    .getElementById(layerControlNodeId)
+                    .appendChild(ctrl.container);
+            } else {
+                map.addControl(ctrl, "top-left");
+            }
+
+            return ctrl;
         } else if (source.type == "shape") {
             addShape(source);
         } else {
