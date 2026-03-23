@@ -11,6 +11,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.14](https://github.com/datasnack/datahub/compare/v0.11.13..v0.11.14) - 2026-03-23
+
+### Added
+
+- Add orange to available color options ([ee3bb06](https://github.com/datasnack/datahub/commit/ee3bb0644c2b3c09565778a4c002145c355cc9c2))
+- Add logo to navbar ([5f74fe3](https://github.com/datasnack/datahub/commit/5f74fe37b276b182460c3772956619a3038e1268))
+
+### Changed
+
+- Allow setting data dynamically from outside ([8b4f2cc](https://github.com/datasnack/datahub/commit/8b4f2cc0d512f584c458fb338ee2d374b5516e73))
+
+### Fixed
+
+- Apply visibillity on load, in case the it was set to false on add ([ef4b094](https://github.com/datasnack/datahub/commit/ef4b0949c9dcac5ed16a4f2c3daa772aed19029a))
+- Allow custom location for data layer map controls ([800100c](https://github.com/datasnack/datahub/commit/800100c4e19d3240b2c4723c2c528d62a0b02a78))
+- Optionally allow to insert preloaded geometries into source ([9d87d5a](https://github.com/datasnack/datahub/commit/9d87d5aa92df76100c047adb1350252701c7066c))
+
 ## [0.11.13](https://github.com/datasnack/datahub/compare/v0.11.12..v0.11.13) - 2026-03-13
 
 ### Changed
