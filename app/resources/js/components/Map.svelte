@@ -35,7 +35,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             this.container.className =
                 "maplibregl-ctrl maplibregl-ctrl-group py-1 px-2";
 
-            let ui = mount(MapDatalayerControl, {
+            this.ctrl = mount(MapDatalayerControl, {
                 target: this.container,
                 props: {
                     map: map,
@@ -46,6 +46,10 @@ SPDX-License-Identifier: AGPL-3.0-only
             });
 
             return this.container;
+        }
+
+        setData(value_map) {
+            this.ctrl.setData(value_map);
         }
 
         onRemove() {

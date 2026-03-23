@@ -175,6 +175,35 @@ SPDX-License-Identifier: AGPL-3.0-only
             });
     });
 
+    export function setData(new_value_map) {
+        value_map = new_value_map;
+        buildColor();
+
+        const mapSource = map.getSource(source.id);
+        const data = mapSource._data; // Private MapLibre API, not update save!
+
+        data.geojson.features.forEach((feature) => {
+            const dh_shape_id = feature.properties.dh_shape_id;
+
+            // the shape might not have a known value and so not be
+            // present in in the returned result
+            let value = value_map.has(dh_shape_id)
+                ? value_map.get(dh_shape_id)
+                : null;
+
+            feature.properties.alpha = 1;
+
+            if (value === null) {
+                feature.properties.value = null;
+                feature.properties.color = "rgba(0, 0, 0, 0.1)";
+            } else {
+                feature.properties.value = value;
+                feature.properties.color = color(value);
+            }
+        });
+        mapSource.setData(data.geojson);
+    }
+
     function buildColor() {
         const interpolator = colorModes[source.cmap];
 
