@@ -169,6 +169,8 @@ SPDX-License-Identifier: AGPL-3.0-only
                 map.on("mouseleave", layerId, () => {
                     map.getCanvas().style.cursor = "";
                 });
+
+                setSourceVisibility();
             })
             .catch((error) => {
                 console.error("Error loading GeoJSON:", error);
