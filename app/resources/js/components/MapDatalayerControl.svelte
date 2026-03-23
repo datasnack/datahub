@@ -30,6 +30,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         Reds: d3.interpolateReds,
         Greens: d3.interpolateGreens,
         Blues: d3.interpolateBlues,
+        Oranges: d3.interpolateOranges,
     };
 
     let legendContainer;
