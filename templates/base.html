@@ -51,7 +51,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 				{% endif %}
 
-				<a class="navbar-brand" href="{% url 'app:home' %}">{{ datahub_name }}</a>
+				<a class="navbar-brand" href="{% url 'app:home' %}">
+					<img src="{% static 'datasnack-logo.svg' %}" alt="Logo" width="25" height="25" class="d-inline-block align-text-top">
+					{{ datahub_name }}
+				</a>
 
 				{% if not datahub_login_required or user.is_authenticated %}
 					<button id="open-search" type="button" class="btn btn-sm btn-outline-secondary m-searchbutton" aria-label="{% translate "Search" %}">
