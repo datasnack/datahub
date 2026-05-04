@@ -325,8 +325,8 @@ class Datalayer(models.Model):
     def temporal_resolution(self) -> LayerTimeResolution | None:
         if self.has_class():
             return self._get_class().time_col
-        else:
-            return None
+
+        return None
 
     @property
     def temporal_resolution_str(self) -> str | None:
