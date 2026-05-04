@@ -62,6 +62,7 @@ class FormatWidget(forms.TextInput):
             "image/tiff": "GeoTIFF",  # we could add `; application=geotiff` but I don't think it would add much benefit?
             "application/pdf": "PDF",
             "text/csv": "CSV",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "MS Excel (.xlsx)",
         }
         format_options = []
         for mime, mime_name in format_options_kv.items():
