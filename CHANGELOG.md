@@ -11,6 +11,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.15](https://github.com/datasnack/datahub/compare/v0.11.14..v0.11.15) - 2026-05-04
+
+### Added
+
+- Add excel file format ([b20c2ee](https://github.com/datasnack/datahub/commit/b20c2eea090f39eb53b00af0f5b24bb2695439ac))
+
+### Changed
+
+- Rename allows for bulk rename as well as modular rename operations ([df02d55](https://github.com/datasnack/datahub/commit/df02d55f9c003b389c60a7bf14f14dec03bc2d6d))
+- Unnecessary else block ([9a17873](https://github.com/datasnack/datahub/commit/9a17873906d40dfd9975d643ed43f4e657f6f325))
+
+### Fixed
+
+- Remvoe dark mode media query from SVG ([8c6e349](https://github.com/datasnack/datahub/commit/8c6e349a7a19577e7048ca627f626eed56ede06e))
+
 ## [0.11.14](https://github.com/datasnack/datahub/compare/v0.11.13..v0.11.14) - 2026-03-23
 
 ### Added
