@@ -113,6 +113,9 @@ def get_docs_structure() -> list[DocItem]:
             if relative_path == "" and item.name.lower().startswith("home."):
                 continue
 
+            if item.name.startswith("_"):
+                continue
+
             item_relative_path = (
                 f"{slugify(relative_path)}/{slugify(clean_filename(item.name))}".lstrip(
                     "/"
