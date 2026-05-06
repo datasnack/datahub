@@ -172,6 +172,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 					<li class="nav-item">
 
+						<span class="nav-link">
+							{% icon "tools" %}
+							<b>{% translate "Tools" %}</b></span>
+
+						<ul class="nav flex-column">
+							{% include 'app/nav_tools.html' %}
+							<li  class="nav-item"><a class="nav-link" href="{% url "app:tools_picker" %}">{% translate "Location picker" %}</a></li>
+						</ul>
+					</li>
+
+					<li class="nav-item">
+
 						<a href="{% url 'shapes:shape_detail_all' %}" class="nav-link">
 							{% icon "location" %}
 							{% translate "Shapes" %}</a>
@@ -199,20 +211,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</ul>
 
 					</li>
-
-
-					<li class="nav-item">
-
-						<span class="nav-link">
-							{% icon "tools" %}
-							<b>{% translate "Tools" %}</b></span>
-
-						<ul class="nav flex-column">
-							<li  class="nav-item"><a class="nav-link" href="{% url "app:tools_picker" %}">{% translate "Location picker" %}</a></li>
-							{% include 'app/nav_tools.html' %}
-						</ul>
-					</li>
-
 
 					<li class="nav-item">
 						<span class="nav-link">
