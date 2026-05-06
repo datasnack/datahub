@@ -205,3 +205,12 @@ dh-chart .aa-Form {
 .btn-language-toggle {
 	border-color: var(--bs-border-color);
 }
+
+/* Djangos error state is called `error`, for the flash message we duplicate the danger
+ class to be compatible with Django. */
+.alert-error {
+	--bs-alert-color: var(--bs-danger-text-emphasis);
+	--bs-alert-bg: var(--bs-danger-bg-subtle);
+	--bs-alert-border-color: var(--bs-danger-border-subtle);
+	--bs-alert-link-color: var(--bs-danger-text-emphasis);
+}
