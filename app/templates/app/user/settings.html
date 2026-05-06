@@ -23,6 +23,51 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 
 
+<div class="mb-3">
+
+	<h2 class="h4 border-bottom">{% translate "Account" %}</h2>
+
+
+	<div class="card">
+		<div class="card-header">
+			{% translate "Change password" %}
+		  </div>
+		<div class="card-body">
+
+			<form method="post">
+				{% csrf_token %}
+
+				{% for field in password_form %}
+					<div class="mb-3">
+						<label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+
+
+						<!-- add form-control class to the input -->
+
+							{{ field }}
+
+
+
+						<!-- field-level errors -->
+						{% if field.errors %}
+							{% for error in field.errors %}
+								<div class="invalid-feedback d-block">{{ error }}</div>
+							{% endfor %}
+						{% endif %}
+
+						{% if field.help_text %}
+							<div class="form-text">{{ field.help_text }}</div>
+						{% endif %}
+					</div>
+				{% endfor %}
+
+				<button class="btn btn-primary" type="submit" name="change_password">{% translate "Change password" %}</button>
+			</form>
+		</div>
+	</div>
+
+</div>
+
 <div>
 
 	<h2 class="h4 border-bottom">{% translate "API tokens" %}</h2>
@@ -80,7 +125,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<input name="description" type="text" required class="form-control" id="token-description" placeholder="">
 				</div>
 
-				<button type="submit" class="btn btn-primary">{% translate "Create new token" %}</button>
+				<button type="submit" class="btn btn-primary">{% translate "Create new API token" %}</button>
 			</form>
 		</div>
 	</div>

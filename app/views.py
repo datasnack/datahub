@@ -7,7 +7,9 @@ from urllib.parse import unquote
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.gis.geos import Point
 from django.db.models import Q
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
@@ -225,10 +227,32 @@ def search(request):
 
 @login_required
 def user_settings(request):
+    password_form = PasswordChangeForm(request.user)
+
+    if request.method == "POST" and "change_password" in request.POST:
+        password_form = PasswordChangeForm(request.user, request.POST)
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)  # keeps user logged in after change
+            messages.success(request, "Password changed successfully.")
+            return redirect("app:settings")
+        else:
+            messages.error(request, _("Password could not be changed!"))
+
+    # add Bootstrap classes to the form fields
+    for visible in password_form.visible_fields():
+        visible.field.widget.attrs["class"] = "form-control"
+
+    # prevent form von autofocus the password field, since we have other forms on the page
+    # as well
+    password_form.fields["old_password"].widget.attrs.pop("autofocus", None)
+
     return render(
         request,
         "app/user/settings.html",
-        {},
+        {
+            "password_form": password_form,
+        },
     )
 
 
