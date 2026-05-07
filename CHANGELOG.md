@@ -11,6 +11,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.16](https://github.com/datasnack/datahub/compare/v0.11.15..v0.11.16) - 2026-05-07
+
+### Changed
+
+- Allow html files in docs section ([b935d40](https://github.com/datasnack/datahub/commit/b935d403a24243099d0a79efeafa4da7fc92ed46))
+- Allow user to change password in frontend ([563917c](https://github.com/datasnack/datahub/commit/563917c9b13bc1abdb2fe2197195040676d8f7fe))
+- Hide docs pages with underscore (_) prefix from beeing rendered ([740df05](https://github.com/datasnack/datahub/commit/740df05ed585aa7b9480cb12437484b6e2e14cdd))
+
+### Fixed
+
+- Sort docs file numeric ([e110ae5](https://github.com/datasnack/datahub/commit/e110ae586e44ce05314615f3e8577b55bafc49d5))
+- Provide BS danger alert styling for Django error ([5c2e89e](https://github.com/datasnack/datahub/commit/5c2e89e9f2e39866cf2e3f3f0dc9c20e2891ee90))
+- Make tools section more dominant by moving them up in the nav ([2612642](https://github.com/datasnack/datahub/commit/2612642d1116ec92fa94cd4366d668e081d84ed2))
+
 ## [0.11.15](https://github.com/datasnack/datahub/compare/v0.11.14..v0.11.15) - 2026-05-04
 
 ### Added
