@@ -102,7 +102,12 @@ def get_docs_structure() -> list[DocItem]:
 
         # Get all items in current directory
         try:
-            all_items = sorted(path.iterdir())
+
+            def numeric_prefix(p: Path) -> int:
+                m = re.match(r"(\d+)", p.name)
+                return int(m.group(1)) if m else 10**18
+
+            all_items = sorted(path.iterdir(), key=numeric_prefix)
         except (OSError, PermissionError):
             return items
 
