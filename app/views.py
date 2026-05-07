@@ -128,6 +128,15 @@ def docs_view(request, path=""):
         if language_code != "en" and language_code in item.translations:
             item = item.translations[language_code]
 
+        if item.path.suffix in [".html", ".htm"]:
+            html = item.path.read_text()
+
+            return render(
+                request,
+                "app/docs_html_page.html",
+                {"html": html, "title": item.name},
+            )
+
         text, title = extract_title_from_md(item.path.read_text(), item.name)
         rendered = render_dj_md_to_html(request, text)
 

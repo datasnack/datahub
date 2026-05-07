@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% comment %}
+SPDX-FileCopyrightText: 2026 Jonathan Ströbele <mail@jonathanstroebele.de>
+
+SPDX-License-Identifier: AGPL-3.0-only
+{% endcomment %}
+
+{% load i18n %}
+{% block title %}{{ title }} {% endblock %}
+
+{% block content %}
+
+{% comment %}
+Height of the <iframe> is 100vh minus navbar (60px), footer (30px) and content margin (2rem).
+A dynamic height of the height of the <iframe> contents would break potential scroll spies inside the <iframe>.
+{% endcomment %}
+<iframe style="height: calc(100vh - 60px - 30px - 2rem)" width="100%" srcdoc="{{ html }}"></iframe>
+
+{% endblock %}

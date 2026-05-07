@@ -153,6 +153,22 @@ def get_docs_structure() -> list[DocItem]:
                         docitem.translations = _translations[clean_name]
 
                     items.append(docitem)
+
+            elif item.is_file() and item.suffix in [".html", ".htm"]:
+                language_code = "en"
+                clean_name = clean_filename(item.name)
+
+                docitem = DocItem(
+                    name=clean_name,
+                    path=item,
+                    type="file",
+                    url=f"{slugify(relative_path)}/{slugify(clean_name)}".lstrip("/"),
+                )
+
+                if clean_name in _translations:
+                    docitem.translations = _translations[clean_name]
+
+                items.append(docitem)
             elif item.is_dir():
                 clean_name = clean_filename(item.name)
 
