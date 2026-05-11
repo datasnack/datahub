@@ -15,6 +15,20 @@ SPDX-License-Identifier: AGPL-3.0-only
 Height of the <iframe> is 100vh minus navbar (60px), footer (30px) and content margin (2rem).
 A dynamic height of the height of the <iframe> contents would break potential scroll spies inside the <iframe>.
 {% endcomment %}
-<iframe style="height: calc(100vh - 60px - 30px - 2rem)" width="100%" srcdoc="{{ html }}"></iframe>
+<iframe id="iframe" style="height: calc(100vh - 60px - 30px - 2rem)" width="100%" srcdoc="{{ html }}"></iframe>
+
+
+<script>
+{% comment %}
+Links inside the frame would be opened in the context of the frame, and not on the top level page.
+We just categorically overwrite the link targets to be "_blank" and so force them to open in a new tab.
+{% endcomment %}
+const iframe = document.querySelector('iframe');
+iframe.addEventListener('load', () => {
+  iframe.contentDocument.querySelectorAll('a').forEach(a => {
+    a.target = '_blank';
+  });
+});
+</script>
 
 {% endblock %}
