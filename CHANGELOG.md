@@ -11,6 +11,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.17](https://github.com/datasnack/datahub/compare/v0.11.16..v0.11.17) - 2026-05-11
+
+### Changed
+
+- Data Layer visibility based on user rights ([ae2e031](https://github.com/datasnack/datahub/commit/ae2e03124ce11647f5941e0c83aeba16fb037888))
+
+### Fixed
+
+- For Data Layer visibility ([ab0fb96](https://github.com/datasnack/datahub/commit/ab0fb963bc8a759dd079b2540c13e783458cc6cd))
+- Open all links inside a html docs page in new tab and not inside the frame ([fb24ed1](https://github.com/datasnack/datahub/commit/fb24ed104688b7d69fcd047d84ce711a0d015698))
+
 ## [0.11.16](https://github.com/datasnack/datahub/compare/v0.11.15..v0.11.16) - 2026-05-07
 
 ### Changed
