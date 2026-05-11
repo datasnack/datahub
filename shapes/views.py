@@ -68,7 +68,7 @@ class ShapeDetailView(DetailView):
 
         context["temporal"] = prase_date_or_today(self.request.GET.get("temporal"))
 
-        all_layers = Datalayer.objects.all()
+        all_layers = Datalayer.objects.visible_to(self.request.user).all()
         context["datalayers"] = []
         for dl in all_layers:
             if dl.is_available():

@@ -19,7 +19,13 @@ class DatalayerListView(ListView):
     # TODO: get_object_or_404() hit's the database twice!
     # https://stackoverflow.com/q/73241907
     def get_queryset(self):
-        qs = super().get_queryset().select_related("category").prefetch_related("tags")
+        qs = (
+            super()
+            .get_queryset()
+            .visible_to(self.request.user)
+            .select_related("category")
+            .prefetch_related("tags")
+        )
 
         if "category_id" in self.kwargs:
             c = get_object_or_404(Category, pk=self.kwargs["category_id"])
@@ -67,6 +73,14 @@ class DatalayerDetailView(DetailView):
     slug_url_kwarg = "key"
     context_object_name = "datalayer"
 
+    def get_queryset(self):
+        return super().get_queryset().visible_to(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["related"] = self.object.visible_related(self.request.user)
+        return context
+
 
 class DatalayerLogView(ListView):
     model = DatalayerLogEntry
@@ -74,16 +88,23 @@ class DatalayerLogView(ListView):
     context_object_name = "logentries"
     paginate_by = 100
 
+    def get_datalayer(self) -> Datalayer:
+        if not hasattr(self, "_datalayer"):
+            self._datalayer = get_object_or_404(
+                Datalayer.objects.visible_to(self.request.user),
+                key=self.kwargs["key"],
+            )
+        return self._datalayer
+
     def get_queryset(self):
         key = self.kwargs.get("key")
-        return DatalayerLogEntry.objects.filter(datalayer__key=key).order_by(
-            "-datetime"
-        )
+        return DatalayerLogEntry.objects.filter(
+            datalayer=self.get_datalayer()
+        ).order_by("-datetime")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        key = self.kwargs.get("key")
-        context["datalayer"] = get_object_or_404(Datalayer, key=key)
+        context["datalayer"] = self.get_datalayer()
         return context
 
 

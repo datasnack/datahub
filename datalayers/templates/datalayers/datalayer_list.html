@@ -233,7 +233,7 @@ standard, not full view starts here.
 
 		<tbody>
 		{% for dl in datalayers %}
-			<tr>
+			<tr{% include "datalayers/partials/tr_attrs.html" with datalayer=dl %}>
 				<td class="align-middle">
 					{% with category=dl.category %}
 						{% if category %}

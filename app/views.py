@@ -214,6 +214,7 @@ def search(request):
                 | Q(category__name__icontains=search_term)
                 | Q(tags__name__icontains=search_term)
             )
+            .visible_to(request.user)
             # reset potential multi col ordering from model Meta sub-class, so distinct()
             # works as expected that needs to have the same ORDER BY than query.
             .order_by()
@@ -346,9 +347,11 @@ def tools_picker(request):
                 context["active_shape"] = shapes[0]
 
             if datalayers:
-                all_layers = Datalayer.objects.get_datalayers(datalayers)
+                all_layers = Datalayer.objects.visible_to(
+                    request["user"]
+                ).get_datalayers(datalayers)
             else:
-                all_layers = Datalayer.objects.all()
+                all_layers = Datalayer.objects.visible_to(request["user"]).all()
             context["datalayers"] = []
             for layer in all_layers:
                 if layer.is_available():

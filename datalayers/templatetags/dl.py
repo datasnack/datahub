@@ -13,12 +13,31 @@ from shapes.models import Type
 register = template.Library()
 
 
+def _dl_not_found_msg(key: str, user) -> str:
+    if user.is_superuser:
+        return f"[Data Layer not found ({key})]"
+
+    return "[Data Layer not found]"
+
+
 @register.simple_tag
-def dl_link(key: str):
+def dl_has_data_access(dl: Datalayer, user) -> bool:
+    return dl.data_visible_to(user)
+
+
+@register.simple_tag(takes_context=True)
+def dl_count(context):
+    user = context["request"].user
+    return Datalayer.objects.visible_to(user).count()
+
+
+@register.simple_tag(takes_context=True)
+def dl_link(context, key: str):
+    user = context["request"].user
     try:
-        datalayer = Datalayer.objects.get(key=key)
+        datalayer = Datalayer.objects.visible_to(user).get(key=key)
     except Datalayer.DoesNotExist:
-        return f"[{key} not found]"
+        return _dl_not_found_msg(key, user)
 
     return format_html(
         '<a class="text-reset text-decoration-none" href="{}" title="{}"><code class="text-code">{}</code></a>',
@@ -28,15 +47,16 @@ def dl_link(key: str):
     )
 
 
-@register.simple_tag
-def dl_spatial(key: str, output: str = "all"):
+@register.simple_tag(takes_context=True)
+def dl_spatial(context, key: str, output: str = "all"):
     if output not in ["all", "first", "last"]:
         return f"[Unknown output format '{output}']"
 
+    user = context["request"].user
     try:
-        datalayer = Datalayer.objects.get(key=key)
+        datalayer = Datalayer.objects.visible_to(user).get(key=key)
     except Datalayer.DoesNotExist:
-        return f"[{key} not found]"
+        return _dl_not_found_msg(key, user)
 
     shape_types = list(datalayer.get_available_shape_types)
 
@@ -68,15 +88,16 @@ def _format_shape_type(shape_type: Type) -> SafeString:
     )
 
 
-@register.simple_tag
-def dl_temporal(key: str, output: str = "text"):
+@register.simple_tag(takes_context=True)
+def dl_temporal(context, key: str, output: str = "text"):
     if output not in ["text", "key", "icon", "letter", "format"]:
         return f"[Unknown output format '{output}']"
 
+    user = context["request"].user
     try:
-        datalayer = Datalayer.objects.get(key=key)
+        datalayer = Datalayer.objects.visible_to(user).get(key=key)
     except Datalayer.DoesNotExist:
-        return f"[{key} not found]"
+        return _dl_not_found_msg(key, user)
 
     temporal = datalayer.temporal_resolution
 

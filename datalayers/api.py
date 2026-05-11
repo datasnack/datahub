@@ -9,6 +9,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 from ninja import Field, Query, Router, Schema
+from ninja.errors import AuthorizationError
 from ninja.security import SessionAuth
 from psycopg import sql
 
@@ -16,6 +17,7 @@ from django.db import connection
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
+    Http404,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseNotFound,
@@ -41,7 +43,7 @@ class DatalayerFilterSchema(Schema):
     )
 
 
-def _get_datalayer_from_request(filters) -> Datalayer:
+def _get_datalayer_from_request(request, filters) -> Datalayer:
     """
     Detect Datalayer from request by ID or key.
 
@@ -51,10 +53,17 @@ def _get_datalayer_from_request(filters) -> Datalayer:
     datalayer_id = filters.datalayer_id
     datalayer_key = filters.datalayer_key
 
+    # does data layer exist
     if datalayer_id:
-        return get_object_or_404(Datalayer, pk=datalayer_id)
+        dl = get_object_or_404(Datalayer, pk=datalayer_id)
+    else:
+        dl = get_object_or_404(Datalayer, key=datalayer_key)
 
-    return get_object_or_404(Datalayer, key=datalayer_key)
+    # does the user has permission to see
+    if not dl.visible_to(request.user):
+        raise Http404
+
+    return dl
 
 
 @router.get("datalayer/", summary="Data Layer metadata")
@@ -66,7 +75,7 @@ def datalayer(
         alias="format",
     ),
 ):
-    datalayers = Datalayer.objects.all()
+    datalayers = Datalayer.objects.visible_to(request.user)
     rows = []
     name = "datalayers"
 
@@ -194,8 +203,11 @@ def data(
     ),
 ):
     # determine filters
-    datalayer = _get_datalayer_from_request(filters)
+    datalayer = _get_datalayer_from_request(request, filters)
     name = datalayer.key
+
+    if not datalayer.data_visible_to(request.user):
+        raise AuthorizationError
 
     shape = None
     if shape_id is not None:
@@ -331,7 +343,7 @@ def vector(
     request,
     filters: DatalayerFilterSchema = Query(...),
 ):
-    datalayer = _get_datalayer_from_request(filters)
+    datalayer = _get_datalayer_from_request(request, filters)
 
     if not datalayer.has_vector_data():
         return HttpResponseNotFound("Data Layer has no raw vector data")
@@ -355,7 +367,7 @@ def plotly(
         description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
     ),
 ):
-    datalayer = _get_datalayer_from_request(filters)
+    datalayer = _get_datalayer_from_request(request, filters)
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
     # Aggregation over a shape type is not possible with categorical values
@@ -454,7 +466,7 @@ def meta(
     request,
     filters: DatalayerFilterSchema = Query(...),
 ):
-    datalayer = _get_datalayer_from_request(filters)
+    datalayer = _get_datalayer_from_request(request, filters)
 
     layout = {
         "title": {

@@ -4,6 +4,7 @@
 
 import datetime as dt
 import logging
+import os
 import string
 from pathlib import Path
 from timeit import default_timer as timer
@@ -187,7 +188,22 @@ class DatalayerValue:
         return self.value
 
 
+class DatalayerVisibilityQuerySet(models.QuerySet):
+    def visible_to(self, user):
+        if user.is_superuser:
+            return self.all()
+        if user.is_staff:
+            return self.exclude(visibility=Datalayer.Visibility.PRIVATE)
+        return self.filter(visibility=Datalayer.Visibility.LISTED)
+
+
 class DatalayerManager(models.Manager):
+    def get_queryset(self):
+        return DatalayerVisibilityQuerySet(self.model, using=self._db)
+
+    def visible_to(self, user):
+        return self.get_queryset().visible_to(user)
+
     def get_datalayers(self, keys: list[str]):
         return self.filter(key__in=keys)
 
@@ -205,6 +221,11 @@ class DatalayerManager(models.Manager):
 class Datalayer(models.Model):
     """Data Layer model."""
 
+    class Visibility(models.TextChoices):
+        LISTED = "listed", _("Listed")
+        RESTRICTED = "restricted", _("Restricted")
+        PRIVATE = "private", _("Private")
+
     DATA_TYPES = (
         ("primary", _("Primary data")),
         ("secondary", _("Secondary data")),
@@ -212,6 +233,19 @@ class Datalayer(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    visibility = models.CharField(
+        max_length=20,
+        choices=Visibility.choices,
+        default=Visibility.LISTED,
+    )
+
+    data_access = models.BooleanField(
+        default=True,
+        help_text=_(
+            "If unchecked access to visualizations, data download and API access for the data of this layer will be restricted to staff and super users."
+        ),
+    )
 
     name = models.CharField(max_length=255)
     key = models.SlugField(
@@ -318,6 +352,29 @@ class Datalayer(models.Model):
 
     def natural_key(self):
         return (self.key,)
+
+    def visible_to(self, user) -> bool:
+        if self.visibility == self.Visibility.LISTED:
+            return True
+
+        if self.visibility == self.Visibility.RESTRICTED and (
+            user.is_staff or user.is_superuser
+        ):
+            return True
+
+        if self.visibility == self.Visibility.PRIVATE and user.is_superuser:
+            return True
+
+        return False
+
+    def data_visible_to(self, user) -> bool:
+        if user.is_staff or user.is_superuser:
+            return True
+
+        return self.data_access
+
+    def visible_related(self, user):
+        return self.related_to.visible_to(user)
 
     # --
 
@@ -563,7 +620,12 @@ class Datalayer(models.Model):
     def _import_and_create_class(self) -> BaseLayer:
         # spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
 
-        mod = __import__(f"src.datalayer.{self.key}", fromlist=[camel(self.key)])
+        ns = "src"
+
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            ns = "tests"
+
+        mod = __import__(f"{ns}.datalayer.{self.key}", fromlist=[camel(self.key)])
         cls = getattr(mod, camel(self.key))()
         cls.layer = self
         return cls

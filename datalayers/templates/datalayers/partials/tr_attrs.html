@@ -1,0 +1,11 @@
+{% comment %}
+SPDX-FileCopyrightText: 2026 Jonathan Ströbele <mail@jonathanstroebele.de>
+
+SPDX-License-Identifier: AGPL-3.0-only
+{% endcomment %}
+
+{% if request.user.is_superuser %}
+	{% if datalayer.visibility != "listed" %}
+		class="table-warning"
+	{% endif %}
+{% endif %}

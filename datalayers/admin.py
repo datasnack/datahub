@@ -131,6 +131,8 @@ class DatalayerAdmin(admin.ModelAdmin):
             None,
             {
                 "fields": [
+                    "visibility",
+                    "data_access",
                     "name",
                     "key",
                     "data_type",
