@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Jonathan Ströbele <mail@jonathanstroebele.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 import pytest
 
 from django.contrib.auth import get_user_model
