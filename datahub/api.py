@@ -19,6 +19,7 @@ class ApiKey(APIKeyHeader):
         bearer_token = BearerToken.objects.filter(token=key).first()
 
         if bearer_token:
+            request.user = bearer_token.user
             return key
 
         return False
