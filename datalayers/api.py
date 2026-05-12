@@ -166,7 +166,11 @@ def data(
     filters: DatalayerFilterSchema = Query(...),
     shape_id: int | None = Query(
         None,
-        description="Filter to specific Shape",
+        description="Filter to specific Shape by it's Data Hub ID.",
+    ),
+    shape_key: str | None = Query(
+        None,
+        description="Filter to specific Shape by it's key (takes precedence over shape_id if both are present).",
     ),
     shape_type_key: str | None = Query(
         None, description="Filter to specific Shape Type", alias="shape_type"
@@ -204,6 +208,9 @@ def data(
     shape = None
     if shape_id is not None:
         shape = get_object_or_404(Shape, pk=shape_id)
+        name = f"{name}_{slugify(shape.name)}"
+    elif shape_key is not None:
+        shape = get_object_or_404(Shape, key=shape_key)
         name = f"{name}_{slugify(shape.name)}"
 
     shape_type = None

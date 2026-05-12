@@ -82,8 +82,8 @@ def dh_data(query: dict) -> pd.DataFrame:
     'datalayer_key': '{{ datalayer.key }}',
 
     # Optional filters to narrow down the returned data:
-    #'shape_id': '',
-    #'shape_type': '',
+    #'shape_key': '',
+    #'shape_type_key': '',
     #'start_date': '',
     #'end_date': '',
 })</code></pre>
@@ -146,8 +146,8 @@ dh_data <- function(query) {
 {{ datalayer.key }}_df <- dh_data(list(
   datalayer_key = "{{ datalayer.key }}"
   # Optional filters:
-  # shape_id = "",
-  # shape_type = "",
+  # shape_key = "",
+  # shape_type_key = "",
   # start_date = "",
   # end_date = ""
 ))
