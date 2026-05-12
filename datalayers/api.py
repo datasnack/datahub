@@ -17,7 +17,6 @@ from django.db import connection
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
-    Http404,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseNotFound,
@@ -50,20 +49,13 @@ def _get_datalayer_from_request(request, filters) -> Datalayer:
     We can reference a datalayer via ID (datalayer_id) or key (datalayer_key)
     in the request. This function checks for both, but ID has priority over key.
     """
-    datalayer_id = filters.datalayer_id
-    datalayer_key = filters.datalayer_key
+    lookup = (
+        {"pk": filters.datalayer_id}
+        if filters.datalayer_id
+        else {"key": filters.datalayer_key}
+    )
 
-    # does data layer exist
-    if datalayer_id:
-        dl = get_object_or_404(Datalayer, pk=datalayer_id)
-    else:
-        dl = get_object_or_404(Datalayer, key=datalayer_key)
-
-    # does the user has permission to see
-    if not dl.visible_to(request.user):
-        raise Http404
-
-    return dl
+    return get_object_or_404(Datalayer.objects.visible_to(request.user), **lookup)
 
 
 @router.get("datalayer/", summary="Data Layer metadata")
