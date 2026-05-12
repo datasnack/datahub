@@ -11,6 +11,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.18](https://github.com/datasnack/datahub/compare/v0.11.17..v0.11.18) - 2026-05-12
+
+### Changed
+
+- Allow shape_key filter in Data Layer data API calls ([8b52d81](https://github.com/datasnack/datahub/commit/8b52d81a488097d192e2f7ad5f652514a0c8f4b4))
+- Remoce duplicated query logic ([88e9df7](https://github.com/datasnack/datahub/commit/88e9df7308ddfd791f0ed1eb6724621d4e3432bd))
+
+### Fixed
+
+- Set user identified by bearer token in API requests ([dd01d76](https://github.com/datasnack/datahub/commit/dd01d769412b940759a82ba3e7f6acba2293b538))
+
 ## [0.11.17](https://github.com/datasnack/datahub/compare/v0.11.16..v0.11.17) - 2026-05-11
 
 ### Changed

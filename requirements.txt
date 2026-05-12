@@ -60,7 +60,7 @@ et-xmlfile==2.0.0
     # via openpyxl
 fiona==1.10.1
     # via datahub (pyproject.toml)
-geoalchemy2==0.19.0
+geoalchemy2==0.20.0
     # via datahub (pyproject.toml)
 geojson==3.1.0
     # via datahub (pyproject.toml)
@@ -164,7 +164,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.33.1
+requests==2.34.0
     # via
     #   cdsapi
     #   datacite
