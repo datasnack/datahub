@@ -14,6 +14,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from datetime import date
 from importlib.util import find_spec
 from pathlib import Path
 
@@ -21,7 +22,7 @@ import environ
 
 from django.utils.translation import gettext_lazy as _
 
-from . import __version__
+from . import __version__, __version_date__
 
 env = environ.Env(
     # set casting, default value
@@ -325,6 +326,7 @@ LOGIN_REQUIRED_URLS_EXCEPTIONS = (
 )
 
 DATAHUB_VERSION = __version__
+DATAHUB_RELEASE_DATE = date.fromisoformat(__version_date__)
 
 DATAHUB_LOGIN_REQUIRED = env("DATAHUB_LOGIN_REQUIRED")
 DATAHUB_NAME = env("DATAHUB_NAME")

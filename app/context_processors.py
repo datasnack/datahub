@@ -11,6 +11,7 @@ from app.utils.issue_templates import enumerate_issue_templates
 def add_datahub_login_required(request):
     return {
         "DATAHUB_VERSION": settings.DATAHUB_VERSION,
+        "DATAHUB_RELEASE_DATE": settings.DATAHUB_RELEASE_DATE,
         "INSTANCE_VERSION": settings.INSTANCE_VERSION,
         "DATAHUB_CENTER_X": settings.DATAHUB_CENTER_X,
         "DATAHUB_CENTER_Y": settings.DATAHUB_CENTER_Y,
