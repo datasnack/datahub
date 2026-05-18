@@ -501,7 +501,7 @@ class Datalayer(models.Model):
         for row in results:
             type_ids.append(row[0])
 
-        return Type.objects.filter(id__in=type_ids).order_by("position")
+        return list(Type.objects.filter(id__in=type_ids).order_by("position"))
 
     def get_available_shapes(self) -> list[Shape]:
         """Determine all shapes the datalayer has values for."""
