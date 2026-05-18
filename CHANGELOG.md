@@ -11,6 +11,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.19](https://github.com/datasnack/datahub/compare/v0.11.18..v0.11.19) - 2026-05-18
+
+### Changed
+
+- Update data layer init template to match ruff formatting ([98ab21d](https://github.com/datasnack/datahub/commit/98ab21d34b1eb872ad2ed59d185da49181fb89bd))
+- Apply html escape filter to the code snippets ([536d688](https://github.com/datasnack/datahub/commit/536d68839977ee935ccd0406153eaf8513493813))
+
+### Fixed
+
+- Use correctly formatted date on first/last value of datalayer ([0917dab](https://github.com/datasnack/datahub/commit/0917dabf866d92f37ecc6070625d269aaad718d5))
+- Formatting for weeks ([756ebb6](https://github.com/datasnack/datahub/commit/756ebb613f9bb6f8702ac6f7d3e1886d29f5293e))
+- Match citation year to release date of version ([d9ad77e](https://github.com/datasnack/datahub/commit/d9ad77e93eef1073efe4d34c12791dccfb5990f6))
+
+### Removed
+
+- Remove shape count option ([47d0a76](https://github.com/datasnack/datahub/commit/47d0a76e5906b590a6782796dee1f8288120c01d))
+
 ## [0.11.18](https://github.com/datasnack/datahub/compare/v0.11.17..v0.11.18) - 2026-05-12
 
 ### Changed
