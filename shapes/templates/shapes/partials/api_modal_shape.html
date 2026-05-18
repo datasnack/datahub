@@ -55,7 +55,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<div class="tab-content">
 							<div class="tab-pane show active" id="api_{{ shape.key }}-python-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
 
-								<pre class="mb-0"><code class="language-python">import requests
+								<pre class="mb-0"><code class="language-python">{% filter force_escape %}import requests
 from urllib.parse import urlencode
 from io import BytesIO
 import geopandas
@@ -89,16 +89,13 @@ shape_{{shape.key}}_gdf = dh_shapes({
     # for WGS84 degree: 0.001 ~> 111.3m
     # https://shapely.readthedocs.io/en/latest/manual.html#object.simplify
     # "simplify": 0.01
-})</code></pre>
+}){% endfilter %}</code></pre>
 							</div>
 
 							<div class="tab-pane" id="api_{{ shape.key }}-r-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
 
 
-
-
-
-<pre class="mb-0"><code class="language-r"># ===== LOAD LIBRARIES =====
+<pre class="mb-0"><code class="language-r">{% filter force_escape %}# ===== LOAD LIBRARIES =====
 library(httr)
 library(sf)
 
@@ -145,8 +142,7 @@ shape_{{shape.key}}_gdf <- dh_shapes(list(
   # https://shapely.readthedocs.io/en/latest/manual.html#object.simplify
   # "simplify": 0.01
   )
-)
-</code></pre>
+){% endfilter %}</code></pre>
 
 
 
