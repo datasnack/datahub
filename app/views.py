@@ -69,11 +69,7 @@ def home(request):
     return render(
         request,
         "app/home.html",
-        {
-            "shapes_count": Shape.objects.count(),
-            "shape_types": Type.objects.order_by("position").all(),
-            "datalayers_count": Datalayer.objects.count(),
-        },
+        {},
     )
 
 
