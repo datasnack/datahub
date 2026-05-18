@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.20](https://github.com/datasnack/datahub/compare/v0.11.19..v0.11.20) - 2026-05-18
+
+### Fixed
+
+- Show smalles / last spatial unit ([54eeb29](https://github.com/datasnack/datahub/commit/54eeb29f1396a35cac21fb2c5c0e2cf3b882e1b9))
+- Actually return a list ([df9b81a](https://github.com/datasnack/datahub/commit/df9b81a1035d8d4cc6a13e6382a803d9a2e86a92))
+
 ## [0.11.19](https://github.com/datasnack/datahub/compare/v0.11.18..v0.11.19) - 2026-05-18
 
 ### Changed
