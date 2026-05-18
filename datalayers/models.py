@@ -146,7 +146,7 @@ class DatalayerValue:
                     return self.result["month"].strftime("%Y-%m")
                 return None
             case LayerTimeResolution.WEEK:
-                if "date" in self.result:
+                if "week" in self.result:
                     return self.result["week"].strftime("%Y-W%V")
                 return None
             case LayerTimeResolution.DAY:
