@@ -265,8 +265,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 					{% endfor %}
 					<tr class="table-active">
 						<td>{% translate "Total" %}</td>
-						<td>{{ datalayer.first_time }}</td>
-						<td>{{ datalayer.last_time }}</td>
+						<td>{{ datalayer.first_value.date }}</td>
+						<td>{{ datalayer.last_value.date }}</td>
 						<td>{{ datalayer.value_coverage|percentageformat }}</td>
 					</tr>
 				</tbody>

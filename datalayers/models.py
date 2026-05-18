@@ -758,8 +758,8 @@ class Datalayer(models.Model):
 
     def value(
         self,
-        shape: Optional[Shape] = None,
-        when: Optional[dt.datetime] = None,
+        shape: Shape | None = None,
+        when: dt.datetime | None = None,
         fallback_parent=False,
         mode="down",
     ):
@@ -777,9 +777,12 @@ class Datalayer(models.Model):
             raise ValueError(f"Unknown mode={mode}")
 
         params = {}
-        query = "SELECT dl.* FROM {table} AS dl "
-        query += "WHERE dl.shape_id = %(shape_id)s "
-        params["shape_id"] = shape.id
+        query = "SELECT dl.* FROM {table} AS dl WHERE 1=1 "
+
+        if shape:
+            query += "AND dl.shape_id = %(shape_id)s "
+            params["shape_id"] = shape.id
+
         operator = ""
 
         if when is not None:
@@ -819,8 +822,7 @@ class Datalayer(models.Model):
             # result = c.fetchone()
             result = dictfetchone(c)
 
-        dlv = DatalayerValue(self, result)
-        return dlv
+        return DatalayerValue(self, result)
 
     def data(
         self,
@@ -958,9 +960,7 @@ class Datalayer(models.Model):
 
         return result[0]
 
-    def first_time(
-        self, shape_type: Optional[Type] = None, shape: Optional[Shape] = None
-    ):
+    def first_time(self, shape_type: Type | None = None, shape: Shape | None = None):
         """Determine the first point in time a value is available."""
         if not self.is_loaded():
             return None
@@ -1004,9 +1004,13 @@ class Datalayer(models.Model):
 
         return result[0]
 
-    def last_time(
-        self, shape_type: Optional[Type] = None, shape: Optional[Shape] = None
-    ):
+    def first_value(self) -> DatalayerValue:
+        return self.value(mode="up")
+
+    def last_value(self) -> DatalayerValue:
+        return self.value(mode="down")
+
+    def last_time(self, shape_type: Type | None = None, shape: Shape | None = None):
         """Determine the first point in time a value is available."""
         if not self.is_loaded():
             return None
