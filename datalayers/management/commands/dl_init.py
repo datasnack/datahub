@@ -54,12 +54,18 @@ class Command(BaseCommand):
         if not dl_file.exists():
             name_camel = camel(options["key"])
             # Create source file
-            tpl = f"""from datalayers.datasources.base_layer import BaseLayer, LayerTimeResolution, LayerValueType
+            tpl = f"""from datalayers.datasources.base_layer import (
+    BaseLayer,
+    LayerTimeResolution,
+    LayerValueType,
+)
 
 
 class {name_camel}(BaseLayer):
     def __init__(self) -> None:
         super().__init__()
+        self.value_type = LayerValueType.FLOAT
+        self.time_col = LayerTimeResolution.DAY
 
     def download(self):
         raise NotImplementedError
