@@ -16,18 +16,21 @@ release: update_python_deps
 
 	@# Strip the 'v' prefix for use in __version__ and CITATION.cff fields
 	$(eval VERSION_STRIPPED := $(shell echo $(VERSION) | sed 's/^v//'))
+	$(eval VERSION_DATE := $(shell date +%Y-%m-%d))
 
 	@# 1. Generate changelog using git-cliff and prepend to CHANGELOG.md
 	@git cliff -t $(VERSION) --unreleased --prepend CHANGELOG.md
 
-	@# 2. Update version in datahub/__init__.py
+	@# 2. Update version and release date in datahub/__init__.py
 	@sed -i '' 's/__version__ = .*/__version__ = "$(VERSION_STRIPPED)"/' datahub/__init__.py
+	@sed -i '' 's/__version_date__ = .*/__version_date__ = "$(VERSION_DATE)"/' datahub/__init__.py
+
 
 	@# 3. Update version in CITATION.cff
 	@sed -i '' 's/^version:.*/version: $(VERSION_STRIPPED)/' CITATION.cff
 
 	@# 4. Update release date in CITATION.cff
-	@sed -i '' "s/^date-released:.*/date-released: '$(shell date +%Y-%m-%d)'/" CITATION.cff
+	@sed -i '' "s/^date-released:.*/date-released: '$(VERSION_DATE)'/" CITATION.cff
 
 	@# Confirm release preparation
 	@echo "Release $(VERSION) prepared successfully."
