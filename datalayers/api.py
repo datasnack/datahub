@@ -266,14 +266,14 @@ def data(
             file = BytesIO()
             df.to_csv(file, index=False)
             file.seek(0)
-            response = FileResponse(file, as_attachment=False, filename=f"{name}.csv")
-            response["Content-Type"] = "text/csv"
+            response = FileResponse(file, as_attachment=True, filename=f"{name}.csv")
+            response["Content-Type"] = "text/csv; charset=utf-8"
             return response
         case "excel":
             file = BytesIO()
             df.to_excel(file, index=False)
             file.seek(0)
-            response = FileResponse(file, as_attachment=False, filename=f"{name}.xlsx")
+            response = FileResponse(file, as_attachment=True, filename=f"{name}.xlsx")
             response["Content-Type"] = "application/vnd.ms-excel"
             return response
         case "json":
