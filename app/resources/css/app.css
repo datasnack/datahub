@@ -10,8 +10,12 @@
 @import "@algolia/autocomplete-theme-classic/dist/theme.min.css";
 
 @import "maplibre-gl/dist/maplibre-gl.css";
-
 @import "highlight.js/styles/github.css";
+
+/*
+We overwrite the CSS styling, to make it match out Bootstrap frontend
+@import "@tarekraafat/autocomplete.js/dist/css/autoComplete.css"; */
+@import "components/autoComplete.css";
 
 @import "layout.css";
 
@@ -200,6 +204,12 @@ dh-chart .aa-Form {
 	--bs-table-bg-type: var(--bs-table-striped-bg);
 }
 
+.btn-xs {
+	--bs-btn-padding-y: 0.125rem;
+	--bs-btn-padding-x: 0.25rem;
+	--bs-btn-font-size: 0.75rem;
+	--bs-btn-border-radius: var(--bs-border-radius-sm);
+}
 
 .btn-outline-secondary-light,
 .btn-language-toggle {

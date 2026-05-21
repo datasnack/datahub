@@ -10,10 +10,12 @@ SPDX-License-Identifier: AGPL-3.0-only
     }}
 />
 
-<script>
+<script lang="ts">
     import { mount } from "svelte";
     import { onMount } from "svelte";
     import maplibregl from "maplibre-gl";
+    import type { Map } from "maplibre-gl";
+    import { Protocol } from "pmtiles";
 
     import MapDatalayerControl from "./MapDatalayerControl.svelte";
     import StyleControl from "../maplibre/StyleControl";
@@ -21,13 +23,15 @@ SPDX-License-Identifier: AGPL-3.0-only
     import FullScreenControl from "../maplibre/FullScreenControl";
     import SourcesControl from "../maplibre/SourcesControl";
 
+    import autoComplete from "@tarekraafat/autocomplete.js";
+
     class LegendControl {
         constructor(source, datalayer) {
             this.source = source;
             this.datalayer = datalayer;
         }
 
-        onAdd(map) {
+        onAdd(map: Map) {
             this.map = map;
 
             // Create a container for MapLibre
@@ -60,43 +64,88 @@ SPDX-License-Identifier: AGPL-3.0-only
         }
     }
 
-    export let title = "Spatial";
-    export let dl;
-    export let query = {
-        shape_type: null,
-        start_date: null,
-        end_date: null,
-        aggregate: null,
-    };
-    export let sources = [];
-    export let show_remove = false;
-
-    export let layerControlNodeId = null;
-
-    export let height = "500px";
+    let {
+        title = "Spatial",
+        dl = null,
+        query = {
+            shape_type: null,
+            start_date: null,
+            end_date: null,
+            aggregate: null,
+        },
+        show_remove = false,
+        layerControlNodeId = null,
+        height = "500px",
+        showExplore = false,
+        sources: initialSources = "[]",
+    } = $props();
 
     let container; // reference to the DOM node of the component
 
     let mapContainer;
-    let map;
+    let map: Map;
     let mapSourceControl;
 
-    let datalayer = null;
+    enum SourceType {
+        Datalayer = "datalayer",
+        Shape = "shape",
+    }
+
+    interface Source {
+        id: string;
+        type: SourceType;
+        visible: boolean;
+        alpha: number;
+        mode: "min_max";
+        cmap: string;
+        query: object;
+        datalayer: object;
+    }
+
+    /**
+     * Configurable Data Layers
+     */
+    let datalayers = $state([]);
+
+    /**
+     * Actual loaded sources. Can be Data Layers, or just shapes, or Vector, ...
+     *
+     */
+    let sources = $state<Source[]>([]);
+
+    let showExploreButton = showExplore !== false && showExplore !== "false";
+    let localExplore = $state(showExplore !== false && showExplore !== "false");
+    let isExplore = $derived(
+        showExplore !== false && showExplore !== "false" && localExplore,
+    );
+
+    let showShare: boolean = $state(false);
+
+    let shareEmbedCode = $derived(getEmbedCode(sources));
 
     onMount(async () => {
         // fetch datalayer layout information for charts
         if (dl) {
             const res = await fetch("/api/datalayers/meta?datalayer_key=" + dl);
-            const meta = await res.json();
-            datalayer = meta.datalayer;
+            const response = await res.json();
 
-            query.shape_type = datalayer.shape_types[0].key;
-            if (datalayer.temporal_resolution == "year") {
-                query.start_date = datalayer.available_years[0];
-            }
+            datalayers.push({
+                key: dl,
+                datalayer: response.datalayer,
+                query: {},
+            });
         }
 
+        const protocol = new Protocol();
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+
         const mapStyles = [
+            /*{
+                title: "Local",
+                code: "datahub",
+                url: "http://localhost:8000/static/map/style.json",
+                image: "/static/map/openfreemap-liberty.png",
+            },*/
             {
                 title: "OpenStreetMap",
                 code: "openfreemap-liberty",
@@ -148,11 +197,16 @@ SPDX-License-Identifier: AGPL-3.0-only
         map.addControl(styleControl, "bottom-right");
 
         // normalize values after meta data for datalayer are fetched, and update
-        // sources value at latest time, ther addSource needs a map object.
+        // sources value at latest time, the addSource needs a map object.
         map.on("load", () => {
-            if (typeof sources === "string") {
+            if (typeof initialSources === "string") {
                 try {
-                    sources = JSON.parse(sources);
+                    const newSources = JSON.parse(initialSources) as Source[];
+
+                    newSources.forEach((source) => {
+                        console.log(source);
+                        loadSource(source);
+                    });
                 } catch (e) {
                     console.warn("Invalid JSON in sources:", sources);
                     sources = [];
@@ -169,9 +223,9 @@ SPDX-License-Identifier: AGPL-3.0-only
         return maplibregl;
     }
 
-    export async function loadSource(source) {
-        if (source.type == "datalayer") {
-            const ctrl = new LegendControl(source, datalayer);
+    export async function loadSource(source: Source) {
+        if (source.type == SourceType.Datalayer) {
+            const ctrl = new LegendControl(source, source.datalayer);
 
             if (layerControlNodeId) {
                 // if a custom DOM node id is given to position the layer control
@@ -186,41 +240,42 @@ SPDX-License-Identifier: AGPL-3.0-only
             }
 
             return ctrl;
-        } else if (source.type == "shape") {
+        } else if (source.type == SourceType.Shape) {
             addShape(source);
         } else {
             console.log("Unknown source type:", source);
         }
     }
 
-    export async function addSource(userSource) {
+    export async function addSource(userSource: Source) {
+        console.log("wtd");
+        console.log(userSource);
+
+        const defaults: Source = {
+            type: SourceType.Datalayer,
+            visible: true,
+            alpha: 1,
+            mode: "min_max",
+            cmap: "YlGnBu",
+        };
+        const source = { ...defaults, ...userSource };
+
+        // when the map is already fully loaded
+        // isStyleLoaded() seems also to be false during a source being added
+        // in this case the style.load part get's never fired again.
         if (map.isStyleLoaded()) {
-            const defaults = {
-                type: "datalayer",
-                visible: true,
-                alpha: 1,
-                mode: "min_max",
-                cmap: "YlGnBu",
-            };
-            const source = { ...defaults, ...userSource };
-            sources = [...sources, source];
+            sources.push(source);
+            loadSource(source);
         } else {
             map.on("style.load", () => {
-                const defaults = {
-                    type: "datalayer",
-                    visible: true,
-                    alpha: 1,
-                    mode: "min_max",
-                    cmap: "YlGnBu",
-                };
-                const source = { ...defaults, ...userSource };
-                sources = [...sources, source];
+                sources.push(source);
+                loadSource(source);
             });
         }
     }
 
-    async function addLayer(traceOverwrites = {}) {
-        let actualQuery = JSON.parse(JSON.stringify(query));
+    async function addDataLayerSource(item) {
+        let actualQuery = JSON.parse(JSON.stringify(item.query));
 
         // check query
         if (!actualQuery.end_date) {
@@ -228,7 +283,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         }
 
         if (!actualQuery.datalayer_key) {
-            actualQuery.datalayer_key = datalayer.key;
+            actualQuery.datalayer_key = item.datalayer.key;
         }
 
         if (!actualQuery.hasOwnProperty("format")) {
@@ -243,16 +298,19 @@ SPDX-License-Identifier: AGPL-3.0-only
         // store query
         const sourceId = `dh-datalayer-${sources.length}-source`;
 
-        const source = {
+        const source: Source = {
             id: sourceId,
-            type: "datalayer",
+            type: SourceType.Datalayer,
             visible: true,
             alpha: 1,
             mode: "min_max",
             cmap: "YlGnBu",
             query: actualQuery,
+            datalayer: item.datalayer,
         };
-        sources = [...sources, source];
+
+        sources.push(source);
+        loadSource(source);
     }
 
     export async function addShapeBBox(source) {
@@ -609,15 +667,6 @@ SPDX-License-Identifier: AGPL-3.0-only
             });
     }
 
-    // Reactive statement — reruns when 'sources' changes
-    let prevLength = 0;
-
-    $: if (Array.isArray(sources) && sources.length > prevLength) {
-        const newItems = sources.slice(prevLength);
-        newItems.forEach((source) => loadSource(source));
-        prevLength = sources.length;
-    }
-
     function handleEndDate(event) {
         if (!query.end_date) {
             query.aggregate = null;
@@ -630,12 +679,23 @@ SPDX-License-Identifier: AGPL-3.0-only
         showPopup = !showPopup;
     }
 
-    function getEmbedCode() {
-        return `<dh-map dl='${dl.key}' sources='${JSON.stringify(sources)}'></dh-map>`;
+    function getEmbedCode(sources: Source[]) {
+        let embedSources = [];
+
+        sources.forEach((source) => {
+            embedSources.push({
+                type: source.type,
+                query: source.query,
+                mode: source.mode,
+                cmap: source.cmap,
+            });
+        });
+
+        return `<dh-map sources='${JSON.stringify(embedSources)}'></dh-map>`;
     }
 
     function hasTop() {
-        if (datalayer || title) {
+        if (title) {
             return true;
         }
 
@@ -716,6 +776,100 @@ SPDX-License-Identifier: AGPL-3.0-only
         }
         return content;
     }
+
+    let newDataLayerKey = $state("meteo_tmin");
+
+    async function addDataLayer() {
+        dl = newDataLayerKey;
+
+        const res = await fetch("/api/datalayers/meta?datalayer_key=" + dl);
+
+        if (!res.ok) {
+            alert("Data Layer could not be found.");
+            return;
+        }
+
+        const response = await res.json();
+
+        /*
+        query.shape_type = datalayer.shape_types[0].key;
+        if (datalayer.temporal_resolution == "year") {
+            query.start_date = datalayer.available_years[0];
+        }*/
+
+        console.log(newDataLayerKey);
+
+        datalayers.push({
+            key: newDataLayerKey,
+            datalayer: response.datalayer,
+            query: {},
+        });
+    }
+
+    function initAutocomplete(node) {
+        const instance = new autoComplete({
+            selector: () => node, // pass the node directly instead of a selector string
+            data: {
+                src: async (query: string) => {
+                    try {
+                        const response = await fetch(
+                            `/search?f=datalayers&q=${query}`,
+                        );
+                        const results = await response.json();
+                        // @todo: remove nesting of results
+                        console.log(results["results"][0]);
+                        return results["results"][0];
+                    } catch (error) {
+                        return error;
+                    }
+                },
+                keys: ["key"],
+            },
+            searchEngine: function (query, record) {
+                return 1;
+            },
+            debounce: 300,
+            resultsList: {
+                class: "dropdown-menu",
+                maxResults: 20,
+            },
+            resultItem: {
+                element: (item, data) => {
+                    item.innerHTML = `<span class="dropdown-item">
+            <span class="d-block">${data.value.label}</span>
+            <small class="text-muted">
+                ${data.value.key}
+            </small></span>
+        `;
+                },
+            },
+            events: {
+                input: {
+                    // open dropdown on focus and fetch items from API
+                    focus() {
+                        const inputValue = instance.input.value;
+
+                        if (inputValue.length) instance.start();
+                    },
+                },
+            },
+        });
+
+        node.addEventListener("selection", function (event) {
+            const feedback = event.detail;
+
+            // Access the matched key's value from the original object
+            const selection = feedback.selection.value[feedback.selection.key];
+            console.log(selection);
+            newDataLayerKey = selection;
+        });
+
+        return {
+            destroy() {
+                instance.unInit();
+            },
+        };
+    }
 </script>
 
 <div bind:this={container} class="card bg-light mb-3">
@@ -723,10 +877,23 @@ SPDX-License-Identifier: AGPL-3.0-only
         <div class="card-header">
             <div class="d-flex align-items-center justify-content-between">
                 <span>{title}</span>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center gap-1">
                     <!--
                 <button class="btn p-0" on:click={togglePopup}>Embed</button>
                 -->
+                    {#if showExploreButton}
+                        <button
+                            class="btn btn-outline-secondary btn-xs"
+                            class:active={isExplore}
+                            onclick={() => (localExplore = !localExplore)}
+                            >Explore</button
+                        >
+                    {/if}
+                    <button
+                        class="btn btn-outline-secondary btn-xs"
+                        class:active={showShare}
+                        onclick={() => (showShare = !showShare)}>Share</button
+                    >
                 </div>
             </div>
         </div>
@@ -744,8 +911,56 @@ SPDX-License-Identifier: AGPL-3.0-only
     {/if}
     -->
 
-    {#if datalayer}
+    {#if showShare}
         <div class="card-body">
+            <div class="row">
+                <div class="col-12">Share</div>
+                <div class="col-12">
+                    <textarea value={shareEmbedCode}></textarea>
+                </div>
+            </div>
+        </div>
+    {/if}
+
+    {#if isExplore}
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <input
+                        use:initAutocomplete
+                        bind:value={newDataLayerKey}
+                        type="text"
+                        class="form-control form-control-sm"
+                    />
+                </div>
+                <div class="col-auto">
+                    <button
+                        onclick={() => addDataLayer()}
+                        class="btn btn-outline-primary btn-sm"
+                        >Add Data Layer</button
+                    >
+                </div>
+            </div>
+        </div>
+    {/if}
+
+    {#each datalayers as item, i (item.key)}
+        <div class="card-body">
+            {#if isExplore || datalayers.length > 1}
+                <div class="row">
+                    <div class="col-12">
+                        {item.datalayer.name}
+                        (<code>{item.key}</code>)
+
+                        <button
+                            class="btn btn-outline-secondary btn-xs"
+                            onclick={() => {
+                                datalayers.splice(i, 1);
+                            }}>Remove</button
+                        >
+                    </div>
+                </div>
+            {/if}
             <div class="row">
                 <div class="col-12 col-sm-2">
                     <label for="aggregate_function" class="form-label small"
@@ -755,9 +970,9 @@ SPDX-License-Identifier: AGPL-3.0-only
                     <div class="input-group input-group-sm">
                         <select
                             class="form-select form-select-sm"
-                            bind:value={query.shape_type}
+                            bind:value={item.query.shape_type}
                         >
-                            {#each datalayer.shape_types as shape_type}
+                            {#each item.datalayer.shape_types as shape_type}
                                 <option value={shape_type.key}
                                     >{shape_type.name}</option
                                 >
@@ -777,34 +992,34 @@ SPDX-License-Identifier: AGPL-3.0-only
                     </button>
                      -->
 
-                        {#if datalayer.temporal_resolution == "year"}
+                        {#if item.datalayer.temporal_resolution == "year"}
                             <select
                                 class="form-select form-select-sm"
-                                bind:value={query.start_date}
+                                bind:value={item.query.start_date}
                             >
-                                {#each datalayer.available_years as year}
+                                {#each item.datalayer.available_years as year}
                                     <option value={year}>{year}</option>
                                 {/each}
                             </select>
-                        {:else if datalayer.temporal_resolution == "month"}
+                        {:else if item.datalayer.temporal_resolution == "month"}
                             <input
                                 class="form-control form-control-sm"
-                                bind:value={query.start_date}
+                                bind:value={item.query.start_date}
                                 placeholder="yyyy-mm"
                             />
-                        {:else if datalayer.temporal_resolution == "week"}
+                        {:else if item.datalayer.temporal_resolution == "week"}
                             <input
                                 class="form-control form-control-sm"
-                                bind:value={query.start_date}
+                                bind:value={item.query.start_date}
                                 placeholder="yyyy-Www"
                             />
-                        {:else if datalayer.temporal_resolution == "date"}
+                        {:else if item.datalayer.temporal_resolution == "date"}
                             <input
                                 type="date"
                                 class="form-control form-control-sm"
-                                bind:value={query.start_date}
-                                min={datalayer.first_time}
-                                max={datalayer.last_time}
+                                bind:value={item.query.start_date}
+                                min={item.datalayer.first_time}
+                                max={item.datalayer.last_time}
                             />
                         {/if}
 
@@ -822,47 +1037,47 @@ SPDX-License-Identifier: AGPL-3.0-only
                     </label>
 
                     <div class="input-group input-group-sm">
-                        {#if datalayer.temporal_resolution == "year"}
+                        {#if item.datalayer.temporal_resolution == "year"}
                             <select
                                 class="form-select form-select-sm"
-                                on:change={handleEndDate}
-                                bind:value={query.end_date}
+                                onchange={handleEndDate}
+                                bind:value={item.query.end_date}
                             >
                                 <option value={null}>None</option>
-                                {#each datalayer.available_years as year}
+                                {#each item.datalayer.available_years as year}
                                     <option value={year}>{year}</option>
                                 {/each}
                             </select>
-                        {:else if datalayer.temporal_resolution == "month"}
+                        {:else if item.datalayer.temporal_resolution == "month"}
                             <input
                                 type="text"
                                 class="form-control form-control-sm"
                                 placeholder="yyyy-mm"
-                                bind:value={query.end_date}
-                                on:change={handleEndDate}
+                                bind:value={item.query.end_date}
+                                onchange={handleEndDate}
                             />
-                        {:else if datalayer.temporal_resolution == "week"}
+                        {:else if item.datalayer.temporal_resolution == "week"}
                             <input
                                 type="text"
                                 class="form-control form-control-sm"
                                 placeholder="yyyy-Www"
-                                bind:value={query.end_date}
-                                on:change={handleEndDate}
+                                bind:value={item.query.end_date}
+                                onchange={handleEndDate}
                             />
-                        {:else if datalayer.temporal_resolution == "date"}
+                        {:else if item.datalayer.temporal_resolution == "date"}
                             <input
                                 type="date"
                                 class="form-control form-control-sm"
-                                bind:value={query.end_date}
-                                on:change={handleEndDate}
-                                min={datalayer.first_time}
-                                max={datalayer.last_time}
+                                bind:value={item.query.end_date}
+                                onchange={handleEndDate}
+                                min={item.datalayer.first_time}
+                                max={item.datalayer.last_time}
                             />
                         {/if}
 
                         <select
-                            bind:value={query.aggregate}
-                            disabled={!query.end_date}
+                            bind:value={item.query.aggregate}
+                            disabled={!item.query.end_date}
                             id="aggregate_function"
                             class="form-select form-select-sm"
                         >
@@ -885,23 +1100,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 
                     <div class="">
                         <button
-                            on:click={addLayer}
+                            onclick={() => {
+                                addDataLayerSource(item);
+                            }}
                             class="btn btn-outline-primary btn-sm"
                             >Add map</button
                         >
 
-                        {#if datalayer.has_vector_data}
+                        {#if item.datalayer.has_vector_data}
                             <button
-                                on:click={() => addVectorData(datalayer.key)}
+                                onclick={() =>
+                                    addVectorData(item.datalayer.key)}
                                 class="btn btn-outline-primary btn-sm"
-                                >Load Vector date</button
+                                >Load vector data</button
                             >
                         {/if}
                     </div>
                 </div>
             </div>
         </div>
-    {/if}
+    {/each}
 
     <div
         style="{getCanvasRadiusStyle()} height: {height}"
