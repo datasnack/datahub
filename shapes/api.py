@@ -50,6 +50,10 @@ def shape_geometry(
         None,
         description="ID of the shape",
     ),
+    shape_key: str | None = Query(
+        None,
+        description="Filter to specific Shape by it's key (takes precedence over shape_id if both are present).",
+    ),
     shape_type: str | None = Query(
         None,
         description="key of the shape type",
@@ -71,6 +75,7 @@ def shape_geometry(
     cache = caches["geojson"]
     query = {
         "shape_id": shape_id,
+        "shape_key": shape_key,
         "shape_type": shape_type,
         "shape_parent_id": shape_parent_id,
         "format": fmt,
@@ -97,6 +102,9 @@ def shape_geometry(
     name = ""
     if shape_id := query["shape_id"]:
         shapes = [Shape.objects.get(pk=shape_id)]
+        name = slugify(shapes[0].name)
+    elif shape_key := query["shape_key"]:
+        shapes = [Shape.objects.get(key=shape_key)]
         name = slugify(shapes[0].name)
     elif (shape_type := query["shape_type"]) and (
         shape_parent_id := query["shape_parent_id"]
