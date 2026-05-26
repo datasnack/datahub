@@ -245,6 +245,24 @@ def extract_title_from_md(text, title):
     return text, title
 
 
+BLOCK_RAW_PATTERN = r"^<!--html-->\n?([\s\S]+?)\n?<!--/html-->"
+
+
+def plugin_raw_html(md) -> None:
+    def parse_raw_block(block, m, state) -> int:
+        text = m.group(0)
+        state.append_token({"type": "raw_block", "raw": text})
+        return m.end() + 1
+
+    def render_raw_block(renderer, text: str) -> str:
+        return text  # pass through unchanged
+
+    md.block.register("raw_block", BLOCK_RAW_PATTERN, parse_raw_block, before="list")
+
+    if md.renderer:
+        md.renderer.register("raw_block", render_raw_block)
+
+
 def render_dj_md_to_html(request, text):
     # we first parse the markdown snippet through Django template.
     # i.e. a {% url "..." %} inside a href="..." would get escaped by mistune
@@ -261,6 +279,7 @@ def render_dj_md_to_html(request, text):
             "footnotes",
             "table",
             "speedup",
+            plugin_raw_html,
         ],
     )
     html = markdown(rendered)
