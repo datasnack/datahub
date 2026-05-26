@@ -147,7 +147,10 @@ class DatalayerValue:
                 return None
             case LayerTimeResolution.WEEK:
                 if "week" in self.result:
-                    return self.result["week"].strftime("%Y-W%V")
+                    # %G is the corresponding year of the calendar week.
+                    # i.e. the week 2025-W01 starts at 2024-12-30. %Y would return the
+                    # wrong year.
+                    return self.result["week"].strftime("%G-W%V")
                 return None
             case LayerTimeResolution.DAY:
                 if "date" in self.result:
