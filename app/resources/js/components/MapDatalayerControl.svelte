@@ -3,9 +3,17 @@ SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
 
 SPDX-License-Identifier: AGPL-3.0-only
 -->
-<script>
+<script lang="ts">
     import { onMount } from "svelte";
     import maplibregl from "maplibre-gl";
+
+    import {
+        DataLayer,
+        DatalayerMapSource,
+        MapSource,
+        SourceType,
+    } from "./DatahubTypes";
+    import type { Map, IControl } from "maplibre-gl";
 
     /**
      * D3
@@ -17,9 +25,9 @@ SPDX-License-Identifier: AGPL-3.0-only
     import { Legend } from "../d3/d3.legend.js";
     import { Swatches } from "../d3/d3.swatches.js";
 
-    export let map;
-    export let source;
-    export let datalayer;
+    export let map: Map;
+    export let source: DatalayerMapSource;
+    export let datalayer: DataLayer;
     export let control;
 
     let value_map;
@@ -33,13 +41,44 @@ SPDX-License-Identifier: AGPL-3.0-only
         Oranges: d3.interpolateOranges,
     };
 
-    let legendContainer;
+    let legendContainer: HTMLElement;
     let color;
+
+    let loading = true;
+
+    async function fetchGeometry(
+        query: Record<string, string>,
+    ): Promise<object> {
+        const qs = new URLSearchParams(query).toString();
+        const res = await fetch(`/api/shapes/geometry?${qs}`);
+        if (!res.ok) throw new Error(`Failed to fetch geometry: ${res.status}`);
+        return res.json();
+    }
+
+    async function fetchDatalayer(datalayer_key: string): Promise<DataLayer> {
+        const res = await fetch(
+            "/api/datalayers/meta?datalayer_key=" + datalayer_key,
+        );
+        if (!res.ok)
+            throw new Error(`Failed to fetch Data Layer: ${res.status} `);
+        const json = await res.json();
+        return json.datalayer;
+    }
 
     onMount(async () => {
         // todo: load datalayer meta if not set
 
         const query = source.query;
+
+        // fetch Data Layer metadata
+        datalayer =
+            source.datalayer ??
+            (await fetchDatalayer(source.query.datalayer_key));
+        source.datalayer = datalayer;
+
+        // Fetch required geometry
+        source.geometry =
+            source.geometry ?? (await fetchGeometry(source.query));
 
         const url = new URL("/api/datalayers/data/", window.location.origin);
         let params = {
@@ -73,110 +112,102 @@ SPDX-License-Identifier: AGPL-3.0-only
         // Geometries
         const queryString = new URLSearchParams(query).toString();
 
-        (source.geometry
-            ? Promise.resolve(source.geometry)
-            : fetch(`/api/shapes/geometry?${queryString}`).then((response) => {
-                  if (!response.ok)
-                      throw new Error("Network response was not ok");
-                  return response.json();
-              })
-        )
-            .then((geojsonData) => {
-                geojsonData.features.forEach((feature) => {
-                    const dh_shape_id = feature.properties.dh_shape_id;
+        source.geometry.features.forEach((feature) => {
+            const dh_shape_id = feature.properties.dh_shape_id;
 
-                    // the shape might not have a known value and so not be
-                    // present in in the returned result
-                    let value = value_map.has(dh_shape_id)
-                        ? value_map.get(dh_shape_id)
-                        : null;
+            // the shape might not have a known value and so not be
+            // present in in the returned result
+            let value = value_map.has(dh_shape_id)
+                ? value_map.get(dh_shape_id)
+                : null;
 
-                    feature.properties.alpha = 1;
+            feature.properties.alpha = 1;
 
-                    if (value === null) {
-                        feature.properties.value = null;
-                        feature.properties.color = "rgba(0, 0, 0, 0.1)";
-                    } else {
-                        feature.properties.value = value;
-                        feature.properties.color = color(value);
-                    }
-                });
+            if (value === null) {
+                feature.properties.value = null;
+                feature.properties.color = "rgba(0, 0, 0, 0.1)";
+            } else {
+                feature.properties.value = value;
+                feature.properties.color = color(value);
+            }
+        });
 
-                let legend;
-                if (datalayer && datalayer.is_categorical) {
-                    legend = Swatches(color, {
-                        //title: getSourceLabel(),
-                    });
-                } else if (datalayer && datalayer.value_type == "percentage") {
-                    legend = Legend(color, {
-                        //title: getSourceLabel(),
-                        tickFormat: "%",
-                    });
-                } else {
-                    legend = Legend(color, {
-                        //title: getSourceLabel(),
-                    });
-                }
-                legendContainer.appendChild(legend);
-
-                // Add as a source when the map is ready
-                map.addSource(source.id, {
-                    type: "geojson",
-                    data: geojsonData,
-                });
-
-                const layerId = `${source.id}-fill`;
-                map.addLayer({
-                    id: layerId,
-                    type: "fill",
-                    source: source.id,
-                    paint: {
-                        "fill-color": ["get", "color"],
-                        "fill-opacity": ["get", "alpha"],
-                    },
-                });
-
-                // Add outline
-                map.addLayer({
-                    id: `${source.id}-outline`,
-                    type: "line",
-                    source: source.id,
-                    paint: {
-                        "line-color": "#000",
-                        "line-width": 1,
-                        "line-opacity": 0.5,
-                    },
-                });
-
-                // Add click handler for popup
-                map.on("click", layerId, (e) => {
-                    const coordinates = e.lngLat;
-                    const feature = e.features[0];
-
-                    const popupFnc = source.getPopupContent || getPopupContent;
-
-                    new maplibregl.Popup()
-                        .setLngLat(coordinates)
-                        .setHTML(popupFnc(feature))
-                        .addTo(map);
-                });
-
-                // Change cursor on hover
-                map.on("mouseenter", layerId, () => {
-                    map.getCanvas().style.cursor = "pointer";
-                });
-
-                map.on("mouseleave", layerId, () => {
-                    map.getCanvas().style.cursor = "";
-                });
-
-                setSourceVisibility();
-            })
-            .catch((error) => {
-                console.error("Error loading GeoJSON:", error);
-                deleteLayer();
+        let legend;
+        if (datalayer && datalayer.is_categorical) {
+            legend = Swatches(color, {
+                //title: getSourceLabel(),
             });
+        } else if (datalayer && datalayer.value_type == "percentage") {
+            legend = Legend(color, {
+                //title: getSourceLabel(),
+                tickFormat: "%",
+            });
+        } else {
+            legend = Legend(color, {
+                //title: getSourceLabel(),
+            });
+        }
+        legendContainer.appendChild(legend);
+
+        // Add as a source when the map is ready
+        map.addSource(source.id, {
+            type: "geojson",
+            data: source.geometry,
+        });
+
+        const layerId = `${source.id}-fill`;
+        map.addLayer({
+            id: layerId,
+            type: "fill",
+            source: source.id,
+            paint: {
+                "fill-color": ["get", "color"],
+                "fill-opacity": ["get", "alpha"],
+            },
+        });
+
+        // Add outline
+        map.addLayer({
+            id: `${source.id}-outline`,
+            type: "line",
+            source: source.id,
+            paint: {
+                "line-color": "#000",
+                "line-width": 1,
+                "line-opacity": 0.5,
+            },
+        });
+
+        // Add click handler for popup
+        map.on("click", layerId, (e) => {
+            const coordinates = e.lngLat;
+            const feature = e.features[0];
+
+            const popupFnc = source.getPopupContent || getPopupContent;
+
+            new maplibregl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(popupFnc(feature))
+                .addTo(map);
+        });
+
+        // Change cursor on hover
+        map.on("mouseenter", layerId, () => {
+            map.getCanvas().style.cursor = "pointer";
+        });
+
+        map.on("mouseleave", layerId, () => {
+            map.getCanvas().style.cursor = "";
+        });
+
+        setSourceVisibility();
+
+        loading = false;
     });
+
+    export function setLoading() {
+        loading = true;
+    }
 
     export function setData(new_value_map) {
         value_map = new_value_map;
@@ -205,6 +236,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             }
         });
         mapSource.setData(data.geojson);
+        loading = false;
     }
 
     function buildColor() {
@@ -304,14 +336,6 @@ SPDX-License-Identifier: AGPL-3.0-only
         return `${name}, ${source.query.shape_type} (${date}${agg})`;
     }
 
-    function showControls() {
-        if (source.hasOwnProperty("showControls")) {
-            return source.showControls;
-        }
-
-        return true;
-    }
-
     function deleteLayer() {
         const style = map.getStyle();
 
@@ -389,50 +413,75 @@ SPDX-License-Identifier: AGPL-3.0-only
 </script>
 
 <div class="flex flex-col gap-1">
-    <div class="d-flex align-items-center gap-2 mb-1">
-        <input
-            type="checkbox"
-            bind:checked={source.visible}
-            on:change={setSourceVisibility}
-        />
-        <span class="fw-bold">{getSourceLabel()}</span>
-    </div>
-
-    {#if showControls()}
-        <div class="d-flex align-items-center gap-2">
-            {#if datalayer && datalayer.value_type == "percentage"}
-                <select bind:value={source.mode} on:change={buildLegend}>
-                    <option value="min_max">[min, max]</option>
-                    <option value="from0_1">[0, 100]</option>
-                </select>
-            {/if}
-
-            {#if datalayer && !datalayer.is_categorical}
-                <select bind:value={source.cmap} on:change={buildLegend}>
-                    {#each Object.keys(colorModes) as name}
-                        <option value={name}>{name}</option>
-                    {/each}
-                </select>
-            {/if}
-
-            <label class="d-flex align-items-center">
-                <abbr title="Alpha">A</abbr>:
+    {#if datalayer}
+        <div class="mb-1">
+            <div class="d-flex align-items-center gap-2 mb-2 pe-3">
                 <input
-                    class="ms-1"
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    bind:value={source.alpha}
-                    on:input={setSourceAlpha}
+                    type="checkbox"
+                    bind:checked={source.visible}
+                    on:change={setSourceVisibility}
                 />
-            </label>
+                <div>
+                    <span class="d-block fw-bold">{getSourceLabel()}</span>
+                    {#if source.showQueryLabel}
+                        <small class="d-block lh-1 text-muted">
+                            <code>{source.datalayer.key}</code>:
+                            {source.query.shape_type}, {source.query
+                                .start_date}{#if source.query.start_date != source.query.end_date}–{source
+                                    .query.end_date} | {source.query.aggregate}
+                            {/if}</small
+                        >
+                    {/if}
+                </div>
+            </div>
+        </div>
+
+        {#if source.showControls}
+            <div class="d-flex align-items-center gap-2">
+                {#if datalayer && datalayer.value_type == "percentage"}
+                    <select bind:value={source.mode} on:change={buildLegend}>
+                        <option value="min_max">[min, max]</option>
+                        <option value="from0_1">[0, 100]</option>
+                    </select>
+                {/if}
+
+                {#if datalayer && !datalayer.is_categorical}
+                    <select bind:value={source.cmap} on:change={buildLegend}>
+                        {#each Object.keys(colorModes) as name}
+                            <option value={name}>{name}</option>
+                        {/each}
+                    </select>
+                {/if}
+
+                <label class="d-flex align-items-center">
+                    <abbr title="Alpha">A</abbr>:
+                    <input
+                        class="ms-1"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        bind:value={source.alpha}
+                        on:input={setSourceAlpha}
+                    />
+                </label>
+            </div>
+        {/if}
+
+        <div bind:this={legendContainer}></div>
+    {/if}
+
+    {#if loading}
+        <div
+            class="spinner-border"
+            role="status"
+            style="position: absolute; top: 0.8em; right:2.2em; width: 1em; height: 1em; border-width: 0.125em;"
+        >
+            <span class="visually-hidden">Loading...</span>
         </div>
     {/if}
 
-    <div bind:this={legendContainer}></div>
-
-    {#if showControls()}
+    {#if source.showControls}
         <button on:click={deleteLayer} class="maplibregl-popup-close-button"
             >×</button
         >

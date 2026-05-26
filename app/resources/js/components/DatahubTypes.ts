@@ -47,73 +47,65 @@ export interface DataLayerQuery {
 export enum SourceType {
     Datalayer = "datalayer",
     Shape = "shape",
-}
-
-export interface XMapSource {
-    id: string;
-    type: SourceType;
-    visible: boolean;
-    alpha: number;
-    mode: "min_max";
-    cmap: string;
-    query: object;
-    datalayer: DataLayer | null;
+    BBox = "bbox",
+    Vector = "vector",
 }
 
 export interface MapSource {
     id: string,
     type: SourceType,
+    query: Record<string, string>,
+    visible: boolean,
     name: string,
     geometry: object,
+    alpha: number,
+    showControls: boolean,
+    fitBounds: boolean,
+    getPopupContent: Function | null,
 }
+export type UserSourceInput =
+    | {
+        type: SourceType.Shape | SourceType.BBox | SourceType.Vector;
+        query: Record<string, string>;
+        visible?: boolean,
+        id?: string;
+        name?: string;
+        color?: string;
+        geometry?: object,
+        alpha?: number;
+        showControls?: boolean,
+        fitBounds?: boolean,
+        getPopupContent?: Function | null,
+    }
+    | {
+        type: SourceType.Datalayer;
+        query: Record<string, string>;
+        visible?: boolean;
+        id?: string;
+        name?: string;
+        cmap?: string;
+        alpha?: number;
+        mode?: string;
+        geometry?: object,
+        showControls?: boolean;
+        fitBounds?: boolean;
+        datalayer?: DataLayer,
+        value_map?: object,
+        extent?: [number, number] | null,
+        showQueryLabel?: boolean,
+        getPopupContent?: Function | null,
+    };
 
 
-export interface ShapeMapSource extends MapSource {
-
-    query: Record<string, string>,
+export interface VectorMapSource extends MapSource {
+    color: string,
 }
-
-/***
- *
-
-Types:
-
-- Datalayer
-- Shapes
-- Geometry (bbox)
-- Vector?
-
-
- */
-
 
 export interface DatalayerMapSource extends MapSource {
-    id: string;
-    type: SourceType;
-    name: string,
-    visible: boolean;
-    alpha: number;
-    mode: "min_max";
-    cmap: string;
-    query: object;
-    datalayer: DataLayer | null;
-}
-
-
-
-const sourceDefaults = {
-    id: "assd",
-    type: SourceType.Datalayer,
-    visible: true,
-    alpha: 1,
-    mode: "min_max",
-    cmap: "YlGnBu",
-} satisfies Partial<MapSource>;
-
-
-function createSource(userSource: Partial<MapSource>): MapSource {
-    return {
-        ...sourceDefaults,
-        ...userSource,
-    };
+    showQueryLabel: boolean,
+    mode: string,
+    cmap: string,
+    datalayer: DataLayer,
+    value_map: object | null,
+    extent: [number, number] | null,
 }

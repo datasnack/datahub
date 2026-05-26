@@ -184,11 +184,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 			<div class="btn-group" role="group">
 				{% if shape.parent_id %}
-				<button id="map-show-parent" data-query='{"type": "shape", "query": {"shape_id": {{shape.parent.id}}}, "name": "{% translate "Parent" %}"}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Parent shape" %}</button>
+				<button id="map-show-parent" data-source='{"type": "shape", "name": "{% translate "Parent" %}", "query": {"shape_id": {{shape.parent.id}}}}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Parent shape" %}</button>
 				{% endif %}
-				<button id="map-show-siblings" data-query='{"type": "shape", "query": {"shape_type": "{{shape.type.key}}"{% if shape.parent_id %}, "shape_parent_id": {{shape.parent_id}}{% endif %}}, "name": "{% translate "Siblings" %}"}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Siblings" %}</button>
+				<button id="map-show-siblings" data-source='{"type": "shape", "name": "{% translate "Siblings" %}", "query": {"shape_type": "{{shape.type.key}}"{% if shape.parent_id %}, "shape_parent_id": {{shape.parent_id}}{% endif %}}}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Siblings" %}</button>
 				{% if shape.children.all.count > 0 %}
-				<button id="map-show-children" data-query='{"type": "shape", "query": {"shape_parent_id": {{shape.id}}}, "name": "{% translate "Children" %}"}' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Child shapes" %}</button>
+				<button id="map-show-children" data-source='{"type": "shape", "name": "{% translate "Children" %}", "query": {"shape_parent_id": {{shape.id}}} }' class="btn btn-sm btn-outline-secondary js-map-show">{% translate "Child shapes" %}</button>
 				{% endif %}
 			</div>
 		</div>
@@ -217,13 +217,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script type="module">
 
 	document.querySelectorAll('.js-map-show').forEach(el => el.addEventListener('click', function (event) {
-		document.getElementById("map").addShape(JSON.parse(this.dataset.query));
+		document.getElementById("map").getMapManager().addSource(JSON.parse(this.dataset.source));
 	}));
 
 	document.getElementById('map-show-bbox').addEventListener('click', (event) => {
-		document.getElementById("map").addShapeBBox({
-			"type": "shape",
-			"id": "dh-shape_id-{{shape.id}}-bbox",
+		document.getElementById("map").getMapManager().addSource({
+			"type": "bbox",
 			"name": "{{ shape.name}} BBox",
 			"query": {
 				"shape_id": {{shape.id}},

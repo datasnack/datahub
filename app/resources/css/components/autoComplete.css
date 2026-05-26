@@ -40,8 +40,9 @@
 	color: var(--bs-dropdown-link-active-color);
 }
 
-@media only screen and (max-width: 600px) {
-	.autoComplete_wrapper>input {
-		width: 18rem;
-	}
+.input-group>.autoComplete_wrapper {
+	position: relative;
+	flex: 1 1 auto;
+	width: 1%;
+	min-width: 0;
 }

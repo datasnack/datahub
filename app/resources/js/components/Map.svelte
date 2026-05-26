@@ -11,7 +11,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 />
 
 <script lang="ts">
-    import { mount } from "svelte";
     import { onMount } from "svelte";
     import { MapManager } from "./MapManager";
     import autoComplete from "@tarekraafat/autocomplete.js";
@@ -21,6 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         DataLayerItem,
         MapSource,
         SourceType,
+        UserSourceInput,
     } from "./DatahubTypes";
 
     interface AutocompleteOptions {
@@ -66,8 +66,6 @@ SPDX-License-Identifier: AGPL-3.0-only
     let newDataLayerKey = $state("");
     let newShapeKey = $state("");
 
-    let shareEmbedCode = $derived(getEmbedCode(sources));
-
     onMount(async () => {
         // fetch datalayer layout information for charts
         if (dl) {
@@ -96,34 +94,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 
         // normalize values after meta data for datalayer are fetched, and update
         // sources value at latest time, the addSource needs a map object.
-
         if (typeof initialSources === "string") {
             try {
-                const newSources = JSON.parse(initialSources) as MapSource[];
-                newSources.forEach((source) => {
-                    console.log(source);
-                    mapManager.addSource(source);
-                });
+                const newSources = JSON.parse(
+                    initialSources,
+                ) as UserSourceInput[];
+
+                for (const userSource of newSources) {
+                    await mapManager.addSource(userSource);
+                }
             } catch (e) {
                 console.warn("Invalid JSON in sources:", initialSources);
             }
         }
-
-        /*map.on("load", () => {
-            if (typeof initialSources === "string") {
-                try {
-                    const newSources = JSON.parse(initialSources) as Source[];
-
-                    newSources.forEach((source) => {
-                        console.log(source);
-                        loadSource(source);
-                    });
-                } catch (e) {
-                    console.warn("Invalid JSON in sources:", sources);
-                    sources = [];
-                }
-            }
-        });*/
 
         if (explore) {
             showExplore = true;
@@ -138,25 +121,10 @@ SPDX-License-Identifier: AGPL-3.0-only
         return mapManager.getMapLibre();
     }
 
-    function handleEndDate(event) {
+    function handleEndDate() {
         if (!query.end_date) {
             query.aggregate = null;
         }
-    }
-
-    function getEmbedCode(sources: MapSource[]) {
-        let embedSources = [];
-
-        sources.forEach((source) => {
-            embedSources.push({
-                type: source.type,
-                query: source.query,
-                mode: source.mode,
-                cmap: source.cmap,
-            });
-        });
-
-        return `<dh-map sources='${JSON.stringify(embedSources)}'></dh-map>`;
     }
 
     function hasTop() {
@@ -219,44 +187,36 @@ SPDX-License-Identifier: AGPL-3.0-only
             actualQuery.datalayer_key = item.datalayer.key;
         }
 
-        if (!actualQuery.hasOwnProperty("format")) {
-            actualQuery["format"] = "geojson";
-        }
-
         if (!actualQuery.start_date) {
             alert("Please select a date first.");
             return;
         }
 
-        // store query
-        const sourceId = `dh-datalayer-${mapManager.getNextSourceId()}-source`;
-
-        const source: MapSource = {
-            id: sourceId,
+        const source: UserSourceInput = {
             type: SourceType.Datalayer,
-            visible: true,
-            alpha: 1,
-            mode: "min_max",
-            cmap: "YlGnBu",
             query: actualQuery,
             datalayer: item.datalayer,
         };
-
         mapManager.loadSource(source);
     }
 
     function addShapeSource() {
-        const sourceId = `dh-datalayer-${mapManager.getNextSourceId()}-source`;
-
-        const source: MapSource = {
-            id: sourceId,
+        const source: UserSourceInput = {
             type: SourceType.Shape,
-            //name: "DE14 Tübingen"
             query: {
                 shape_key: newShapeKey,
             },
         };
+        mapManager.loadSource(source);
+    }
 
+    function addDatalayerVectorSource(datalayer_key: string) {
+        const source: UserSourceInput = {
+            type: SourceType.Vector,
+            query: {
+                datalayer_key: datalayer_key,
+            },
+        };
         mapManager.loadSource(source);
     }
 
@@ -276,7 +236,6 @@ SPDX-License-Identifier: AGPL-3.0-only
                         );
                         const results = await response.json();
                         // @todo: remove nesting of results
-                        console.log(results["results"][0]);
                         return results["results"][0];
                     } catch (error) {
                         return error;
@@ -340,9 +299,6 @@ SPDX-License-Identifier: AGPL-3.0-only
             <div class="d-flex align-items-center justify-content-between">
                 <span>{title}</span>
                 <div class="d-flex align-items-center gap-1">
-                    <!--
-                <button class="btn p-0" on:click={togglePopup}>Embed</button>
-                -->
                     {#if showExploreButton}
                         <button
                             class="btn btn-outline-secondary btn-xs"
@@ -351,11 +307,13 @@ SPDX-License-Identifier: AGPL-3.0-only
                             >Explore</button
                         >
                     {/if}
+                    <!--
                     <button
                         class="btn btn-outline-secondary btn-xs"
                         class:active={showShare}
                         onclick={() => (showShare = !showShare)}>Share</button
                     >
+                        -->
                 </div>
             </div>
         </div>
@@ -392,7 +350,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     {#if showExplore}
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-auto">
+                <div class="col-12 col-md-4">
                     <div class="input-group">
                         <input
                             use:initAutocomplete={{
@@ -409,7 +367,8 @@ SPDX-License-Identifier: AGPL-3.0-only
                         >
                     </div>
                 </div>
-                <div class="col-auto">
+                <div class="col-12 col-md-4">
+                    <!--
                     <div class="input-group">
                         <select
                             class="form-select form-select-sm"
@@ -425,8 +384,9 @@ SPDX-License-Identifier: AGPL-3.0-only
                             >Add shape type</button
                         >
                     </div>
+                -->
                 </div>
-                <div class="col-auto">
+                <div class="col-12 col-md-4">
                     <div class="input-group">
                         <input
                             use:initAutocomplete={{
@@ -613,7 +573,9 @@ SPDX-License-Identifier: AGPL-3.0-only
                         {#if item.datalayer.has_vector_data}
                             <button
                                 onclick={() =>
-                                    addVectorData(item.datalayer.key)}
+                                    addDatalayerVectorSource(
+                                        item.datalayer.key,
+                                    )}
                                 class="btn btn-outline-primary btn-sm"
                                 >Load vector data</button
                             >
