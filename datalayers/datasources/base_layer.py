@@ -134,6 +134,11 @@ class BaseLayer:
         # Optional suffix for formatting human readable values
         self.format_suffix = None
 
+        # Optional settings for pandas to_sql#dtype parameter. Useful for specifying
+        # actual types for custom columns in add_value(properties={...}) columns.
+        # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_sql.html
+        self.pandas_to_sql_dtype: dict | None = None
+
     @property
     def key(self):
         return self.layer.key
@@ -208,7 +213,15 @@ class BaseLayer:
             case _:
                 raise ValueError("Unsupported value type")
 
-    def add_value(self, shape, temporal, value, *, validate_value=True):
+    def add_value(
+        self,
+        shape,
+        temporal,
+        value,
+        *,
+        validate_value: bool = True,
+        properties: dict | None = None,
+    ):
         """Add new value to Data Layer during processing. Includes type checks for temporal and actual value."""
         if not self.is_valid_temporal(temporal):
             raise ValueError(
@@ -220,12 +233,16 @@ class BaseLayer:
                 f"Processed value ({value}) is not matching Data Layer ({self.value_type})."
             )
 
+        if properties is None:
+            properties = {}
+
         self.rows.append(
             {
                 f"{str(self.time_col)}": temporal,
                 "shape_id": shape.id,
                 "value": value,
             }
+            | properties
         )
 
     def has_value(self, shape, temporal) -> bool:
@@ -246,7 +263,11 @@ class BaseLayer:
 
         if self.output == "db":
             self.df.to_sql(
-                self.layer.key, get_engine(), index=False, if_exists=db_if_exists
+                self.layer.key,
+                get_engine(),
+                index=False,
+                if_exists=db_if_exists,
+                dtype=self.pandas_to_sql_dtype,
             )
         elif self.output == "fs":
             if fs_path is None:
