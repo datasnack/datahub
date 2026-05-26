@@ -8,7 +8,6 @@ import os
 import string
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import Optional
 
 import pandas as pd
 from psycopg import sql
@@ -830,10 +829,10 @@ class Datalayer(models.Model):
     def data(
         self,
         shape: Shape | None = None,
-        when: Optional[dt.datetime] = None,
-        start_date: Optional[dt.datetime] = None,
-        end_date: Optional[dt.datetime] = None,
-        shape_type: Optional[Type] = None,
+        when: dt.datetime | None = None,
+        start_date: dt.datetime | None = None,
+        end_date: dt.datetime | None = None,
+        shape_type: Type | None = None,
         select_shape_name=True,
         fallback_previous=False,
         latest_value_only=False,
@@ -895,7 +894,7 @@ class Datalayer(models.Model):
             query.as_string(connection), con=get_conn_string(), params=params
         )
 
-    def value_coverage(self, shape_type: Optional[Type] = None) -> float:
+    def value_coverage(self, shape_type: Type | None = None) -> float:
         if not self.is_loaded():
             return None
 
