@@ -11,6 +11,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.21](https://github.com/datasnack/datahub/compare/v0.11.20..v0.11.21) - 2026-05-28
+
+This release includes a work in progress stage of an Explore feature in the com component.
+
+### Changed
+
+- Allow optional properties with typing in add_value ([763c369](https://github.com/datasnack/datahub/commit/763c369ba4cef1c5530d415e3fe4cf0366f48c81))
+- Mistune markdown->html plugin to allow raw html sections ([5069b0c](https://github.com/datasnack/datahub/commit/5069b0c369f0ecc8c8f2efeedc661591fa8ef28d))
+
+### Fixed
+
+- Use shape key in search results instead of type key ([21a4916](https://github.com/datasnack/datahub/commit/21a49165d554263a6c10a84020620380cd966a85))
+- Allow hiding controls in Chart component ([c205290](https://github.com/datasnack/datahub/commit/c205290fa8f11f49f1a5746928d43924388404af))
+- Use correct year for iso week formatting ([dd3e368](https://github.com/datasnack/datahub/commit/dd3e3680b9678142fa855a4c4433a8285871d5ea))
+- Shape api accepts shape_key ([2eef0e0](https://github.com/datasnack/datahub/commit/2eef0e0bd106f0e0c8e069e80c1590c33529653f))
+- Download disposition header for CSV download + utf-8 encoding ([1c74386](https://github.com/datasnack/datahub/commit/1c74386d5261a129c339757a947d1d9b31547e6b))
+
 ## [0.11.20](https://github.com/datasnack/datahub/compare/v0.11.19..v0.11.20) - 2026-05-18
 
 ### Fixed
