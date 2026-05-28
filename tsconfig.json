@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "app/resources/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

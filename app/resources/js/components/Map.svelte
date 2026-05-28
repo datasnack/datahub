@@ -15,11 +15,10 @@ SPDX-License-Identifier: AGPL-3.0-only
     import { MapManager } from "./MapManager";
     import autoComplete from "@tarekraafat/autocomplete.js";
 
-    import {
+    import { SourceType } from "./DatahubTypes";
+    import type {
         DataLayer,
         DataLayerItem,
-        MapSource,
-        SourceType,
         UserSourceInput,
     } from "./DatahubTypes";
 

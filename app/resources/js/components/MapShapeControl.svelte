@@ -8,13 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     import maplibregl from "maplibre-gl";
     import type { Map, IControl } from "maplibre-gl";
 
-    import {
-        DataLayer,
-        DataLayerItem,
-        MapSource,
-        VectorMapSource,
-        SourceType,
-    } from "./DatahubTypes";
+    import type { VectorMapSource } from "./DatahubTypes";
 
     export let map: Map;
     export let source: VectorMapSource;

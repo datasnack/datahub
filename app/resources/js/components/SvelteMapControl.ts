@@ -1,7 +1,6 @@
 
 import type { Map, IControl } from "maplibre-gl";
 import { mount } from "svelte";
-import { reactive } from "svelte/reactivity";
 
 export class SvelteMapControl<T> implements IControl {
 

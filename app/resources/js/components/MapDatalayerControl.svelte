@@ -7,12 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     import { onMount } from "svelte";
     import maplibregl from "maplibre-gl";
 
-    import {
-        DataLayer,
-        DatalayerMapSource,
-        MapSource,
-        SourceType,
-    } from "./DatahubTypes";
+    import type { DataLayer, DatalayerMapSource } from "./DatahubTypes";
     import type { Map, IControl } from "maplibre-gl";
 
     /**

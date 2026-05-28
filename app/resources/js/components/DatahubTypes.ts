@@ -1,4 +1,4 @@
-export interface DataLayerItem {
+export type DataLayerItem = {
 
     /**
      * Data Layer key
@@ -10,12 +10,12 @@ export interface DataLayerItem {
     datalayer: DataLayer,
 }
 
-export interface ShapeType {
+export type ShapeType = {
     key: string,
     name: string,
 }
 
-export interface DataLayer {
+export type DataLayer = {
     key: string,
     name: string,
 
@@ -30,7 +30,7 @@ export interface DataLayer {
     last_time: string,
 }
 
-export interface DataLayerQuery {
+export type DataLayerQuery = {
     shape_type: string | null,
     start_date: string | null,
     end_date: string | null,

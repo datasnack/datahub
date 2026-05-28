@@ -13,7 +13,8 @@ import MapDatalayerControl from "./MapDatalayerControl.svelte"
 import MapVectorControl from "./MapVectorControl.svelte"
 import MapShapeControl from "./MapShapeControl.svelte"
 
-import { DataLayer, UserSourceInput, MapSource, SourceType, DatalayerMapSource, VectorMapSource } from "./DatahubTypes";
+import type { DataLayer, UserSourceInput, MapSource, DatalayerMapSource, VectorMapSource } from "./DatahubTypes";
+import { SourceType } from "./DatahubTypes";
 
 
 export class MapManager {
