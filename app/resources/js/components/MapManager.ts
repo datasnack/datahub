@@ -229,14 +229,13 @@ export class MapManager {
             //this.addShape(source);
 
             // Fetch required geometry
-            const geometry = await this.fetchDataLayerVector(input.query.datalayer_key);
-
+            //const geometry = await this.fetchDataLayerVector(input.query.datalayer_key);
             const completedSource: VectorMapSource = {
                 id: id,
                 type: SourceType.Vector,
                 query: input.query,
                 visible: input.visible ?? true,
-                geometry: geometry,
+                geometry: input.geometry ?? null,
                 name: input.name ?? "Vector data",
                 alpha: input.alpha ?? 1,
                 color: input.color ?? '#5385f8',
@@ -245,7 +244,7 @@ export class MapManager {
                 getPopupContent: input.getPopupContent ?? null,
             };
 
-            ctrl = new SvelteMapControl(MapVectorControl, { source: completedSource });
+            ctrl = new SvelteMapControl(MapVectorControl, { source: completedSource, manager: this });
         }
 
 

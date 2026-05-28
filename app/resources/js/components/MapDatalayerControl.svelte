@@ -475,13 +475,13 @@ SPDX-License-Identifier: AGPL-3.0-only
         <div
             class="spinner-border"
             role="status"
-            style="position: absolute; top: 0.8em; right:2.2em; width: 1em; height: 1em; border-width: 0.125em;"
+            style="position: absolute;top: 0.8em; right:0.8em; width: 1em; height: 1em; border-width: 0.125em;"
         >
             <span class="visually-hidden">Loading...</span>
         </div>
     {/if}
 
-    {#if source.showControls}
+    {#if source.showControls && !loading}
         <button on:click={deleteLayer} class="maplibregl-popup-close-button"
             >×</button
         >

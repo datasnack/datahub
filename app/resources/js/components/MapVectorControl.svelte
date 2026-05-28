@@ -15,12 +15,22 @@ SPDX-License-Identifier: AGPL-3.0-only
         VectorMapSource,
         SourceType,
     } from "./DatahubTypes";
+    import { MapManager } from "./MapManager";
 
     export let map: Map;
     export let source: VectorMapSource;
+    export let manager;
     export let control;
 
+    let loading = true;
+
     onMount(async () => {
+        if (!source.geometry) {
+            source.geometry = await manager.fetchDataLayerVector(
+                source.query.datalayer_key,
+            );
+        }
+
         // Geometries
         source.geometry.features.forEach((feature) => {
             // todo: why?
@@ -119,6 +129,8 @@ SPDX-License-Identifier: AGPL-3.0-only
         });
 
         setSourceVisibility();
+
+        loading = false;
     });
 
     function deleteLayer() {
@@ -286,7 +298,17 @@ SPDX-License-Identifier: AGPL-3.0-only
         </div>
     {/if}
 
-    {#if source.showControls}
+    {#if loading}
+        <div
+            class="spinner-border"
+            role="status"
+            style="position: absolute;top: 0.8em; right:0.8em; width: 1em; height: 1em; border-width: 0.125em;"
+        >
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    {/if}
+
+    {#if source.showControls && !loading}
         <button on:click={deleteLayer} class="maplibregl-popup-close-button"
             >×</button
         >
