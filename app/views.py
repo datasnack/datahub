@@ -196,8 +196,8 @@ def search(request):
                 {
                     "type": "shape",
                     "url": s.get_absolute_url(),
-                    "label": s.name,
-                    "key": s.type.name,
+                    "label": f"{s.name} ({s.type.name})",
+                    "key": s.key,
                     "objectID": s.id,
                 }
             )
