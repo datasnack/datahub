@@ -122,7 +122,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script type="module">
 	const mapContainer = document.getElementById('map_picker');
 	const maplibregl = mapContainer.getMapLibre();
-	const map = mapContainer.getMap();
+	const map = mapContainer.getMapManager().getMap();
 	let marker = null;
 
 	map.on("click", (e) => {
@@ -146,10 +146,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script type="module">
 	const mapContainer = document.getElementById('map');
 	const maplibregl = mapContainer.getMapLibre();
-	const map = mapContainer.getMap();
+	const map = mapContainer.getMapManager().getMap();
 
 	map.on("style.load", (e) => {
-		mapContainer.addShape({
+		mapContainer.getMapManager().addSource({
+			type: "shape",
 			name: '{{ active_shape.name }}',
 			fitBounds: true,
 			query: {
