@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.24](https://github.com/datasnack/datahub/compare/v0.11.23..v0.11.24) - 2026-05-29
+
+### Fixed
+
+- Location picker with new map component ([60f1b88](https://github.com/datasnack/datahub/commit/60f1b880d8e7fde76dad1956d267407ba36bf853))
+
 ## [0.11.23](https://github.com/datasnack/datahub/compare/v0.11.22..v0.11.23) - 2026-05-28
 
 ## [0.11.22](https://github.com/datasnack/datahub/compare/v0.11.21..v0.11.22) - 2026-05-28
