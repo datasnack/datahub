@@ -207,7 +207,7 @@ class DatalayerManager(models.Manager):
         return self.get_queryset().visible_to(user)
 
     def get_datalayers(self, keys: list[str]):
-        return self.filter(key__in=keys)
+        return self.get_queryset().filter(key__in=keys)
 
     def get_by_natural_key(self, key):
         return self.get(key=key)

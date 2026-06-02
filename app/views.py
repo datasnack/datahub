@@ -343,8 +343,8 @@ def tools_picker(request):
                 context["active_shape"] = shapes[0]
 
             if datalayers:
-                all_layers = Datalayer.objects.visible_to(request.user).get_datalayers(
-                    datalayers
+                all_layers = Datalayer.objects.get_datalayers(datalayers).visible_to(
+                    request.user
                 )
             else:
                 all_layers = Datalayer.objects.visible_to(request.user).all()
