@@ -21,7 +21,7 @@ class Command(BaseCommand):
         with connection.cursor() as c:
             c.execute(
                 sql.SQL(
-                    "SELECT (ST_Centroid(ST_Union(ST_Centroid(geometry)))) as centroid FROM {table}"
+                    "SELECT (ST_Centroid(ST_Union(geometry))) as centroid FROM {table}"
                 ).format(table=sql.Identifier(Shape._meta.db_table))
             )
             row = c.fetchone()
