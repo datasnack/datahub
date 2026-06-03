@@ -183,6 +183,12 @@ class DatalayerValue:
                 msg = f"Unknown time_col={self.dl.temporal_resolution}"
                 raise ValueError(msg)
 
+    def str_format(self):
+        if self.dl.has_class():
+            return self.dl.get_class().str_format(self.value)
+
+        return self.value
+
     def __str__(self) -> str:
         if self.result is None:
             return None
