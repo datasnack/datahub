@@ -11,6 +11,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.25](https://github.com/datasnack/datahub/compare/v0.11.24..v0.11.25) - 2026-06-03
+
+### Fixed
+
+- Provide formatting method for value object ([148f581](https://github.com/datasnack/datahub/commit/148f581346019e258c0c24b7602b250c41c39c1d))
+- Don't trim whitespace in Markdown ([09bc3b5](https://github.com/datasnack/datahub/commit/09bc3b5fbc83dac86c3c947e1a22ad4b357354f6))
+- Wrong chaining of visibillity check in location picker with provided datalayer list ([3d9f4fc](https://github.com/datasnack/datahub/commit/3d9f4fccc5b14e1acf401e3078303a0a22085826))
+- Centroid calculation on union of all geometries instead of indiviudal centroids ([8d9fcb5](https://github.com/datasnack/datahub/commit/8d9fcb506921a02cb5c3fae1976c961f96a772b2))
+
 ## [0.11.24](https://github.com/datasnack/datahub/compare/v0.11.23..v0.11.24) - 2026-05-29
 
 ### Fixed

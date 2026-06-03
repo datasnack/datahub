@@ -43,7 +43,7 @@ cligj==0.7.2
     #   rasterio
 datacite==1.1.3
     # via datahub (pyproject.toml)
-django==5.2.14
+django==5.2.15
     # via
     #   datahub (pyproject.toml)
     #   django-ninja
@@ -74,11 +74,11 @@ gunicorn==23.0.0
     # via datahub (pyproject.toml)
 hda==2.39
     # via datahub (pyproject.toml)
-idna==3.17
+idna==3.18
     # via requests
 idutils==1.6.1
     # via datacite
-isbnlib2==3.11.16
+isbnlib2==3.11.17
     # via idutils
 jsonschema==4.26.0
     # via datacite
