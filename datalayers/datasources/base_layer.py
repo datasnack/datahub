@@ -416,3 +416,6 @@ class BaseLayer:
         return geopandas.read_postgis(
             query.as_string(connection), con=get_conn_string(), geom_col="geometry"
         )
+
+    def get_algorithm(self):
+        return None

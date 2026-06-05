@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 from django import template
+from django.template.loader import render_to_string
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString, mark_safe
 
@@ -116,3 +117,25 @@ def dl_temporal(context, key: str, output: str = "text"):
             return temporal.letter()
         case "format":
             return temporal.format()
+
+
+@register.simple_tag(takes_context=True)
+def dl_algorithm(context, key: str):
+    user = context["request"].user
+    try:
+        datalayer = Datalayer.objects.visible_to(user).get(key=key)
+    except Datalayer.DoesNotExist:
+        return _dl_not_found_msg(key, user)
+
+    algorithm = datalayer.get_algorithm()
+
+    if algorithm:
+        html = render_to_string(
+            "algorithms/partials/spec.html",
+            {
+                "algorithm": algorithm,
+            },
+        )
+        return mark_safe(html)
+
+    return _dl_not_found_msg(key, user)

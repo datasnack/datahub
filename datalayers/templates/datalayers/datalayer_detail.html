@@ -271,13 +271,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</tbody>
 			</table>
 		{% endif %}
-
-
-
 	</div>
 </div>
-
-
 
 <div class="row">
 
@@ -313,6 +308,21 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 </div>
 
+{% if datalayer.has_algorithm %}
+<div class="row">
+	<div class="col-12">
+
+		<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between mt-5">
+			<div class="mb-2 mb-md-0">
+			</div>
+			<h2 class="mb-0">{% translate "Algorithm specification"%}</h2>
+		</div>
+
+		{% include "algorithms/partials/spec.html" with algorithm=datalayer.get_algorithm %}
+
+	</div>
+</div>
+{% endif %}
 
 <div class="row">
 	<div class="col-12">

@@ -730,6 +730,18 @@ class Datalayer(models.Model):
 
         return False
 
+    def has_algorithm(self) -> bool:
+        if self.has_class():
+            return self._get_class().get_algorithm() is not None
+
+        return False
+
+    def get_algorithm(self):
+        if self.has_class():
+            return self._get_class().get_algorithm()
+
+        return None
+
     # --
 
     def reset(self, *, data: bool = True, log: bool = False):

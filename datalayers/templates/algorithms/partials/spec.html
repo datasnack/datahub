@@ -1,0 +1,188 @@
+{% load i18n %}
+
+{% load call_method %}
+{% load datalayer_value %}
+{% load datalayerformat %}
+{% load markdown %}
+
+
+
+<div class="card mb-3">
+	<div class="card-header">
+		{{ algorithm.metadata.name }}
+	</div>
+	<div class="card-body">
+		<div class="row">
+			<div class="col-12">
+
+
+
+
+<table class="table table-sm">
+	<thead>
+		<tr>
+			<th rowspan="2">Data Layer</th>
+			<th class="text-center" colspan="3">Score</th>
+
+			{% if shape %}
+				<th colspan="4" class="text-center border-start">{{ shape.name }} ({{ when|date:"Y-m-d" }})</th>
+			{% endif %}
+		</tr>
+		<tr>
+			<th class="text-center">1</th>
+			<th class="text-center">2</th>
+			<th class="text-center">3</th>
+
+			{% if shape %}
+				<th class="text-center border-start">Value</th>
+				<th class="text-center border-start">in</th>
+				<th class="text-center">reason</th>
+				<th class="text-center">out</th>
+			{% endif %}
+		</tr>
+	</thead>
+	<tbody>
+		{% for spec in algorithm.spec %}
+			{% if spec.datalayer %}
+			<tr>
+				<td>
+					<div>
+
+						{{ spec.name }}
+
+						{% if spec.score_factor %}
+							<sup>* {{ spec.score_factor }}</sup>
+						{% endif %}
+
+					</div>
+
+					<div class="small">
+						<a class="text-reset text-decoration-none" href="{{ spec.datalayer.get_absolute_url }}">
+							<code class="text-code">{{ spec.datalayer.key}}</code>
+						</a>
+					</div>
+				</td>
+				{% for threshold in spec.thresholds %}
+				<td class="text-center align-middle">
+					{% if threshold.condition == "between" %}
+						{{ threshold.value.0 }} - {{ threshold.value.1 }}
+					{% else %}
+						{{ threshold.condition }}
+						{{ threshold.value }}
+					{% endif %}
+				</td>
+				{% endfor %}
+
+
+{% if shape %}
+
+{% datalayer_value shape spec.datalayer when as dlv %}
+<td class="align-middle text-nowrap text-end js-value dlv-derived-cell {% if dlv.has_value %}{% if dlv.is_derived_value %}bg-warning-subtle{%else%}bg-success-subtle{%endif %}{%else%}bg-danger-subtle{%endif%}" data-order="{{ dlv.value }}">
+	<div class="dlv">
+
+		{% comment %}
+		Investigate Popover API further:
+		on trigger button: button[popovertarget="popover_{{dl.key}}"]
+		on popover div: div[popover] + div[id="popover_{{dl.key}}"]
+		{% endcomment %}
+
+		<button type="button" class="btn btn-sm float-start dlv-derived-btn">
+			{% if dlv.has_value %}
+				{% if dlv.is_derived_value %}
+						{% icon "info" %}
+				{% else %}
+					{% icon "issue-closed" %}
+				{% endif %}
+			{% else %}
+					{% icon "no-entry" %}
+			{% endif %}
+		</button>
+
+		<div class="popover bs-popover-top">
+			<div class="popover-arrow"></div>
+			<h3 class="popover-header">{% translate "Data quality info" %}</h3>
+			<div class="popover-body">
+				{% if dlv.has_value %}
+					{% if dlv.is_derived_value %}
+						{% translate "Data derived from:" %}<br>
+						{% if dlv.is_derived_spatial%}
+							<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
+						{% endif %}
+						{% if dlv.is_derived_temporal %}
+							{{ dlv.date }}<br>
+						{% endif %}
+					{% else %}
+						{% translate "Matching data available" %}
+					{% endif %}
+				{% else %}
+					{% translate "No data available" %}
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<span class="js-value"
+		data-value-formatted="{{ dlv.value|datalayerformat:spec.datalayer }}"
+		data-value-raw="{{ dlv.value }}">
+		{{ dlv.value|datalayerformat:spec.datalayer }}
+	</span>
+</td>
+
+
+
+
+
+
+
+				{% call_method algorithm "get_reason" shape when spec.datalayer as reason %}
+				<td class="border-start text-end">
+					{{ reason.score_in|floatformat:2 }}&nbsp;→
+				</td>
+
+				<td class="text-muted">
+					{% markdown reason.message %}
+				</td>
+				<td class="text-end">
+					→&nbsp;{{ reason.score_out|floatformat:2 }}
+				</td>
+
+
+{% endif %}
+
+			</tr>
+			{% else %}
+				<tr>
+					<td class="small text-muted bg-light" colspan="8">
+						<i>{{ spec.name }}</i>
+					</td>
+				</tr>
+			{%endif %}
+
+		{% endfor %}
+
+
+	</tbody>
+	<tfoot>
+		<tr>
+			<td></td>
+			<td colspan="3">Score range: {{ algorithm.min_score|floatformat:2}} - {{ algorithm.max_score|floatformat:2}}</td>
+
+{% if shape %}
+
+			<td class="border-start text-end" colspan="4">
+				{% call_method algorithm "get_value" shape when as result %}
+				∑={{ result|floatformat:2 }}
+			</td>
+
+{% endif %}
+
+		</tr>
+	</tfoot>
+</table>
+
+
+
+			</div>
+		</div>
+	</div>
+</div>
