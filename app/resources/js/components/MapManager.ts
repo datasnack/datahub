@@ -195,11 +195,12 @@ export class MapManager {
 
 
             // fetch Data Layer metadata
-            const datalayer = input.datalayer ?? await this.fetchDatalayer(input.query.datalayer_key);
+            //const datalayer = input.datalayer ?? await this.fetchDatalayer(input.query.datalayer_key);
+            const datalayer = input.datalayer ?? null;
 
             // Fetch required geometry
-            const geometry = input.geometry ?? await this.fetchGeometry(input.query);
-
+            //const geometry = input.geometry ?? await this.fetchGeometry(input.query);
+            const geometry = input.geometry ?? null;
             // Fetch data
             const value_map = input.value_map ?? null;
 
@@ -222,7 +223,7 @@ export class MapManager {
                 getPopupContent: input.getPopupContent ?? null,
             };
 
-            ctrl = new SvelteMapControl(MapDatalayerControl, { source: completedSource, datalayer: datalayer });
+            ctrl = new SvelteMapControl(MapDatalayerControl, { source: completedSource, datalayer: datalayer, manager: this });
         }
 
 
@@ -333,28 +334,28 @@ export class MapManager {
         }
     }
 
-    private async fetchGeometry(query: Record<string, string>): Promise<object> {
+    async fetchGeometry(query: Record<string, string>): Promise<object> {
         const qs = new URLSearchParams(query).toString();
         const res = await fetch(`/api/shapes/geometry?${qs}`);
         if (!res.ok) throw new Error(`Failed to fetch geometry: ${res.status}`);
         return res.json();
     }
 
-    private async fetchBBox(query: Record<string, string>): Promise<object> {
+    async fetchBBox(query: Record<string, string>): Promise<object> {
         const qs = new URLSearchParams(query).toString();
         const res = await fetch(`/api/shapes/bbox?${qs}`);
         if (!res.ok) throw new Error(`Failed to fetch BBox: ${res.status}`);
         return res.json();
     }
 
-    private async fetchDatalayer(datalayer_key: string): Promise<DataLayer> {
+    async fetchDatalayer(datalayer_key: string): Promise<DataLayer> {
         const res = await fetch("/api/datalayers/meta?datalayer_key=" + datalayer_key);
         if (!res.ok) throw new Error(`Failed to fetch Data Layer: ${res.status} `);
         const json = await res.json();
         return json.datalayer;
     }
 
-    private async fetchDataLayerVector(datalayer_key: string): Promise<object> {
+    async fetchDataLayerVector(datalayer_key: string): Promise<object> {
         const res = await fetch(`/api/datalayers/vector?datalayer_key=${datalayer_key}`);
         if (!res.ok) throw new Error(`Failed to fetch Vector data for Data Layer: ${res.status}`);
         return res.json();

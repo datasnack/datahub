@@ -6,9 +6,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts">
     import { onMount } from "svelte";
     import maplibregl from "maplibre-gl";
+    import type {
+        Map as MapLibreMap,
+        GeoJSONSource,
+        IControl,
+    } from "maplibre-gl";
 
+    import { MapManager } from "./MapManager";
     import type { DataLayer, DatalayerMapSource } from "./DatahubTypes";
-    import type { Map, IControl } from "maplibre-gl";
 
     /**
      * D3
@@ -20,10 +25,23 @@ SPDX-License-Identifier: AGPL-3.0-only
     import { Legend } from "../d3/d3.legend.js";
     import { Swatches } from "../d3/d3.swatches.js";
 
-    export let map: Map;
-    export let source: DatalayerMapSource;
-    export let datalayer: DataLayer;
-    export let control;
+    interface Prop {
+        map: MapLibreMap;
+        source: DatalayerMapSource;
+        datalayer: DataLayer;
+        manager: MapManager;
+        control;
+    }
+
+    let {
+        map,
+        source: initialSource,
+        datalayer,
+        manager,
+        control,
+    }: Prop = $props();
+
+    let source = $state(initialSource);
 
     let value_map;
 
@@ -39,26 +57,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     let legendContainer: HTMLElement;
     let color;
 
-    let loading = true;
-
-    async function fetchGeometry(
-        query: Record<string, string>,
-    ): Promise<object> {
-        const qs = new URLSearchParams(query).toString();
-        const res = await fetch(`/api/shapes/geometry?${qs}`);
-        if (!res.ok) throw new Error(`Failed to fetch geometry: ${res.status}`);
-        return res.json();
-    }
-
-    async function fetchDatalayer(datalayer_key: string): Promise<DataLayer> {
-        const res = await fetch(
-            "/api/datalayers/meta?datalayer_key=" + datalayer_key,
-        );
-        if (!res.ok)
-            throw new Error(`Failed to fetch Data Layer: ${res.status} `);
-        const json = await res.json();
-        return json.datalayer;
-    }
+    let loading = $state(true);
 
     onMount(async () => {
         // todo: load datalayer meta if not set
@@ -68,12 +67,12 @@ SPDX-License-Identifier: AGPL-3.0-only
         // fetch Data Layer metadata
         datalayer =
             source.datalayer ??
-            (await fetchDatalayer(source.query.datalayer_key));
+            (await manager.fetchDatalayer(source.query.datalayer_key));
         source.datalayer = datalayer;
 
         // Fetch required geometry
         source.geometry =
-            source.geometry ?? (await fetchGeometry(source.query));
+            source.geometry ?? (await manager.fetchGeometry(source.query));
 
         const url = new URL("/api/datalayers/data/", window.location.origin);
         let params = {
@@ -145,12 +144,15 @@ SPDX-License-Identifier: AGPL-3.0-only
         legendContainer.appendChild(legend);
 
         // Add as a source when the map is ready
+        //(map.getSource(source.id) as GeoJSONSource).setData(source.geometry);
+
         map.addSource(source.id, {
             type: "geojson",
             data: source.geometry,
         });
 
         const layerId = `${source.id}-fill`;
+
         map.addLayer({
             id: layerId,
             type: "fill",
@@ -414,7 +416,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                 <input
                     type="checkbox"
                     bind:checked={source.visible}
-                    on:change={setSourceVisibility}
+                    onchange={setSourceVisibility}
                 />
                 <div>
                     <span class="d-block fw-bold">{getSourceLabel()}</span>
@@ -434,14 +436,14 @@ SPDX-License-Identifier: AGPL-3.0-only
         {#if source.showControls}
             <div class="d-flex align-items-center gap-2">
                 {#if datalayer && datalayer.value_type == "percentage"}
-                    <select bind:value={source.mode} on:change={buildLegend}>
+                    <select bind:value={source.mode} onchange={buildLegend}>
                         <option value="min_max">[min, max]</option>
                         <option value="from0_1">[0, 100]</option>
                     </select>
                 {/if}
 
                 {#if datalayer && !datalayer.is_categorical}
-                    <select bind:value={source.cmap} on:change={buildLegend}>
+                    <select bind:value={source.cmap} onchange={buildLegend}>
                         {#each Object.keys(colorModes) as name}
                             <option value={name}>{name}</option>
                         {/each}
@@ -457,7 +459,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                         max="1"
                         step="0.01"
                         bind:value={source.alpha}
-                        on:input={setSourceAlpha}
+                        oninput={setSourceAlpha}
                     />
                 </label>
             </div>
@@ -477,7 +479,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     {/if}
 
     {#if source.showControls && !loading}
-        <button on:click={deleteLayer} class="maplibregl-popup-close-button"
+        <button onclick={deleteLayer} class="maplibregl-popup-close-button"
             >×</button
         >
     {/if}
