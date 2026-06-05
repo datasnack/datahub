@@ -11,6 +11,7 @@ export {
 	scaleThreshold,
 	scaleLinear,
 	scaleOrdinal,
+	scaleQuantize,
 } from "d3-scale";
 export * from "d3-scale-chromatic";
 export * from "d3-selection";
