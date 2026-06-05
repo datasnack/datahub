@@ -2,5 +2,5 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-__version__ = "0.11.25"
-__version_date__ = "2026-06-03"
+__version__ = "0.11.26"
+__version_date__ = "2026-06-05"

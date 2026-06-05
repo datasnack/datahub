@@ -11,6 +11,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.26](https://github.com/datasnack/datahub/compare/v0.11.25..v0.11.26) - 2026-06-05
+
+### Changed
+
+- Change help text of data_access ([189389d](https://github.com/datasnack/datahub/commit/189389de6da0417fe0b49e20adcbec1c7ddd53a2))
+- Experimental support for Data Layer Algorithms ([566705d](https://github.com/datasnack/datahub/commit/566705d166c8cc957ff2f102d5d1db906d7c56ee))
+- Start svelte 5 reqrite of map datalayer control ([c5151a9](https://github.com/datasnack/datahub/commit/c5151a953b48a9b15a9ca17b9042499687b4c47b))
+
+### Fixed
+
+- Include d3. scaleQuantize ([1a16a7f](https://github.com/datasnack/datahub/commit/1a16a7fd44d4d4846f1f6dba8ff04f469895efa6))
+
 ## [0.11.25](https://github.com/datasnack/datahub/compare/v0.11.24..v0.11.25) - 2026-06-03
 
 ### Fixed
