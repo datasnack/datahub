@@ -5,11 +5,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 {% endcomment %}
 
 <p class="ps-3 text-muted" style="border-left: 3px solid #ccc; font-style: italic;">
-	Ströbele, J., &amp; Boenecke, J. ({{ DATAHUB_RELEASE_DATE|date:"Y" }}). Data Hub (Version {{ DATAHUB_VERSION }}) [Computer software]. <a href="https://github.com/datasnack/datahub">https://github.com/datasnack/datahub</a>
 </p>
 
-<details>
-<summary>BibTeX</summary>
+
+<h5>APA style</h5>
+
+<div class="alert alert-light">
+	Ströbele, J., &amp; Boenecke, J. ({{ DATAHUB_RELEASE_DATE|date:"Y" }}). Data Hub (Version {{ DATAHUB_VERSION }}) [Computer software]. <a href="https://github.com/datasnack/datahub">https://github.com/datasnack/datahub</a>
+</div>
+
+
+
+<h5>BibTeX</h5>
 
 <div class="alert alert-light">
 <pre class="mb-0">@software{Strobele_Data_Hub_{{ DATAHUB_RELEASE_DATE|date:"Y" }},
@@ -21,5 +28,4 @@ SPDX-License-Identifier: AGPL-3.0-only
 	year = {% templatetag openbrace %}{{ DATAHUB_RELEASE_DATE|date:"Y" }}{% templatetag closebrace %}
 }</pre>
 </div>
-</details>
 
