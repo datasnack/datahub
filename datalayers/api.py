@@ -365,6 +365,7 @@ def plotly(
         None,
         description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
     ),
+    error_y: bool = False,
 ):
     datalayer = _get_datalayer_from_request(request, filters)
     shape_type = get_object_or_404(Type, key=shape_type_key)
@@ -426,12 +427,15 @@ def plotly(
         return JsonResponse(json_data)
 
     # calculate deviation from mean
-    df["value_plus"] = df["max"] - df["value"]
-    df["value_minus"] = df["value"] - df["min"]
+    if error_y:
+        df["value_plus"] = df["max"] - df["value"]
+        df["value_minus"] = df["value"] - df["min"]
 
-    # if both max/min series are 0 there is no deviation and we do not need to show
-    # error bars, this reduces the visual noise in the chart.
-    show_error = not ((df["value_plus"] == 0).all() and (df["value_minus"] == 0).all())
+        # if both max/min series are 0 there is no deviation and we do not need to show
+        # error bars, this reduces the visual noise in the chart.
+        show_error = not (
+            (df["value_plus"] == 0).all() and (df["value_minus"] == 0).all()
+        )
 
     chart_type = "scatter"
     if datalayer.chart_type == "bar":
@@ -451,7 +455,7 @@ def plotly(
                     "array": df["value_plus"].tolist(),
                     "arrayminus": df["value_minus"].tolist(),
                 }
-                if show_error
+                if error_y and show_error
                 else None,
             }
         ]
