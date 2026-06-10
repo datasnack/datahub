@@ -61,6 +61,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal_api_{{ datalayer.key }}">{% translate "API" %}</button>
 		{% endif %}
 
+		{% if perms.datalayers.view_datalayerlogentry %}
+			<a class="btn btn-sm btn-outline-primary" href="{% url "datalayers:datalayer_log" datalayer.key %}">{%translate "Log" %}</a>
+		{% endif %}
+
 		{% if perms.datalayers.change_datalayer %}
 			<a class="btn btn-sm btn-outline-primary" href="{% url "admin:datalayers_datalayer_change" datalayer.id %}">{% icon "pencil" %}</a>
 		{% endif %}
@@ -159,30 +163,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 
 	<div class="col-12 col-xl-4">
-
-
-
 		<div class="card mb-3">
 			<h5 class="card-header">{% translate "Data Layer information" %}</h5>
 			<div class="card-body">
-
 				<div class="row">
-
 					<div class="col-12 col-sm-12">
-
-
 						<div class="col-12 col-sm-12">
-
-
 							<div class="mb-3">
 								{% include "datalayers/datalayer_states.html" with mode="large" datalayer=datalayer %}
 							</div>
-
-							<div class="text-muted">
-								<a class="small" href="{% url "datalayers:datalayer_log" datalayer.key %}">{%translate "Log" %}</a> |
-								<a class="small" href="#">{%translate "Files" %}</a>
-							</div>
-
 						</div>
 						<table class="table table-sm small mb-0">
 							<tbody>

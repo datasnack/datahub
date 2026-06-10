@@ -4,6 +4,7 @@
 
 from taggit.models import Tag
 
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView
@@ -82,11 +83,12 @@ class DatalayerDetailView(DetailView):
         return context
 
 
-class DatalayerLogView(ListView):
+class DatalayerLogView(PermissionRequiredMixin, ListView):
     model = DatalayerLogEntry
     template_name = "datalayers/datalayer_log.html"
     context_object_name = "logentries"
     paginate_by = 100
+    permission_required = "datalayers.view_datalayerlogentry"
 
     def get_datalayer(self) -> Datalayer:
         if not hasattr(self, "_datalayer"):
