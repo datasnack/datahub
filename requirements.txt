@@ -191,7 +191,7 @@ sqlalchemy==2.0.31
     #   geoalchemy2
 sqlparse==0.5.5
     # via django
-tqdm==4.67.3
+tqdm==4.68.2
     # via
     #   cdsapi
     #   hda

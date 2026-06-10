@@ -11,6 +11,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.27](https://github.com/datasnack/datahub/compare/v0.11.26..v0.11.27) - 2026-06-10
+
+### Changed
+
+- Enable internal datalayer, shape, etc. urls in markdown ([9922140](https://github.com/datasnack/datahub/commit/9922140f932f751573d2cbc945ebfeb7ec5550ff))
+- Template block for navbar buttons ([548f73c](https://github.com/datasnack/datahub/commit/548f73c4fc361acf10ed068460ada5bb1ebc79aa))
+
+### Fixed
+
+- More explicit wording ([e7998aa](https://github.com/datasnack/datahub/commit/e7998aa05e7df15dc21475544f1a4a315a120c91))
+- Sort only by name in admin backend ([a2a4823](https://github.com/datasnack/datahub/commit/a2a4823c8efb073aeb311ced28a81ca3d16029a7))
+- Don't include min/max bars for aggregated shape type api results by default ([a3dab42](https://github.com/datasnack/datahub/commit/a3dab42b275468bd5222ced7bdd91adb8441c13b))
+- Use logentry perm for showin log view ([f46ebc2](https://github.com/datasnack/datahub/commit/f46ebc29ac093ddb6b8d9ae5e0878964fd4fdcf8))
+- Make sure precison=0 has no decimal places ([049981a](https://github.com/datasnack/datahub/commit/049981a87cb0513c64f7045137f93dcd4e760fae))
+- Tools nav in single template so derived tempaltes can change top/bottom postion ([c628fdc](https://github.com/datasnack/datahub/commit/c628fdcaf3657fcd65e6256591c22da5c7d2d7de))
+- Explicitly mention APA sytle and no show BibTeX directly ([0e9991f](https://github.com/datasnack/datahub/commit/0e9991f079251975c1eba887ab10aa702c0f4420))
+
 ## [0.11.26](https://github.com/datasnack/datahub/compare/v0.11.25..v0.11.26) - 2026-06-05
 
 ### Changed
