@@ -426,7 +426,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             <div class="row">
                 <div class="col-12 col-sm-2">
                     <label for="aggregate_function" class="form-label small"
-                        >Shape
+                        >Select shape
                     </label>
 
                     <div class="input-group input-group-sm">
@@ -444,7 +444,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                 </div>
                 <div class="col-12 col-sm-3">
                     <label for="aggregate_function" class="form-label small"
-                        >Temporal
+                        >Select temporal
                     </label>
 
                     <div class="input-group input-group-sm">
