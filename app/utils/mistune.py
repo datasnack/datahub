@@ -17,6 +17,15 @@ logger = logging.getLogger(__name__)
 
 
 class DjangoTemplateRenderer(HTMLRenderer):
+    def __init__(
+        self,
+        escape: bool = True,
+        allow_harmful_protocols: bool | None = None,
+        user=None,
+    ) -> None:
+        super().__init__(escape=escape, allow_harmful_protocols=allow_harmful_protocols)
+        self.user = user
+
     def link(self, text: str, url: str, title: str | None = None) -> str:
         url = url.strip()
 
@@ -48,6 +57,7 @@ class DjangoTemplateRenderer(HTMLRenderer):
                     shape = Shape.objects.get(key=shape_key)
                     text = shape.name
                 except Shape.DoesNotExist:
+                    text = shape_key
                     logger.warning(
                         "[docs] tried to lookup shape that does not exists: shape_key=%s",
                         shape_key,
@@ -76,6 +86,7 @@ class DjangoTemplateRenderer(HTMLRenderer):
                     shape_type = Type.objects.get(key=type_key)
                     text = shape_type.name
                 except Shape.DoesNotExist:
+                    text = type_key
                     logger.warning(
                         "[docs] tried to lookup shape type that does not exists: type_key=%s",
                         type_key,
@@ -100,14 +111,16 @@ class DjangoTemplateRenderer(HTMLRenderer):
             )
 
             if not text:
-                try:
-                    dl = Datalayer.objects.get(key=datalayer_key)
-                    text = dl.name
-                except Datalayer.DoesNotExist:
-                    logger.warning(
-                        "[docs] tried to lookup data layer that does not exists: datalayer_key=%s",
-                        datalayer_key,
-                    )
+                if self.user:
+                    try:
+                        dl = Datalayer.objects.visible_to(self.user).get(
+                            key=datalayer_key
+                        )
+                        text = dl.name
+                    except Datalayer.DoesNotExist:
+                        text = datalayer_key
+                else:
+                    text = datalayer_key
 
             s = (
                 '<a data-datalayer-key="'
