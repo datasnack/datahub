@@ -78,6 +78,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 				<div class="d-flex align-items-center ms-auto"> {% comment %} ms-auto makes sure the div is positioned on the "end" in the flex parent {% endcomment %}
 					{% if not datahub_login_required or user.is_authenticated %}
+
+						{% include "app/navbar_buttons.html" %}
+
 						{% if DATAHUB_FORGE %}
 
 							{% if DATAHUB_FORGE_ISSUE_SHOW_ADD %}
