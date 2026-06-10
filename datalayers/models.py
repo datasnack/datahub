@@ -347,10 +347,7 @@ class Datalayer(models.Model):
     _class_instance = None
 
     class Meta:
-        ordering = (
-            "key",
-            "name",
-        )
+        ordering = ("name",)
 
     def __str__(self) -> str:
         return f"{self.name} ({self.key})"
