@@ -17,4 +17,8 @@ Create the following template in your app: templates/app/nav_tools.html:
 {% endblock %}
 
 {% endcomment %}
-{% block nav_tools %}{% endblock nav_tools %}
+{% load i18n %}
+{% block nav_tools %}
+	<li  class="nav-item"><a class="nav-link" href="{% url "app:tools_explore" %}">{% translate "Explore" %}</a></li>
+	<li  class="nav-item"><a class="nav-link" href="{% url "app:tools_picker" %}">{% translate "Location picker" %}</a></li>
+{% endblock nav_tools %}
