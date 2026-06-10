@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.28](https://github.com/datasnack/datahub/compare/v0.11.27..v0.11.28) - 2026-06-10
+
+### Fixed
+
+- Broken route ([01656d5](https://github.com/datasnack/datahub/commit/01656d5614f9d75f704f3075d40de39fb82e9645))
+
 ## [0.11.27](https://github.com/datasnack/datahub/compare/v0.11.26..v0.11.27) - 2026-06-10
 
 ### Changed
