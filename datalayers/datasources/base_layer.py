@@ -160,7 +160,9 @@ class BaseLayer:
             case LayerValueType.PERCENTAGE:
                 return f"{formats.number_format(round(value * 100, self.precision))} %"
             case LayerValueType.FLOAT | LayerValueType.VALUE:
-                fmt = formats.number_format(round(value, self.precision))
+                fmt = formats.number_format(
+                    round(value, self.precision), decimal_pos=self.precision
+                )
                 if self.format_suffix:
                     fmt += f" {self.format_suffix}"
                 return fmt
