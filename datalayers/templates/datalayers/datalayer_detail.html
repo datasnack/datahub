@@ -279,7 +279,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div class="col-12">
 		{% if has_data_access %}
 			{% if datalayer.is_available %}
-				<dh-map dl="{{ datalayer.key }}"></dh-map>
+				<dh-map sidebar explore dl="{{ datalayer.key }}"></dh-map>
 
 				<div class="mb-3">
 					<dh-chart dl="{{ datalayer.key }}" query='{"shape_type": "{{ datalayer.get_available_shape_types.0.key}}"}'></dh-chart>

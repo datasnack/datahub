@@ -224,3 +224,7 @@ dh-chart .aa-Form {
 	--bs-alert-border-color: var(--bs-danger-border-subtle);
 	--bs-alert-link-color: var(--bs-danger-text-emphasis);
 }
+
+.map-sidebar>div:not(:first-of-type) {
+	margin-top: 10px;
+}

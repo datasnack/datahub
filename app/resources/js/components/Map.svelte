@@ -7,6 +7,13 @@ SPDX-License-Identifier: AGPL-3.0-only
     customElement={{
         tag: "dh-map",
         shadow: "none",
+        props: {
+            // type: Boolean converts only presence -> true, absence -> false
+            // we can't do explore="false", to set it to false we need to remove it.
+            explore: { type: "Boolean" },
+            openExplore: { type: "Boolean" },
+            sidebar: { type: "Boolean" },
+        },
     }}
 />
 
@@ -38,14 +45,16 @@ SPDX-License-Identifier: AGPL-3.0-only
         show_remove = false,
         layerControlNodeId = null,
         height = "500px",
+        sidebar = false,
         explore = false,
-        showExploreButton = true,
+        openExplore = false,
         sources: initialSources = "[]",
     } = $props();
 
     let container; // reference to the DOM node of the component
 
     let mapContainer: HTMLElement;
+    let sidebarContainer: HTMLElement;
     let mapManager: MapManager;
 
     /**
@@ -57,15 +66,20 @@ SPDX-License-Identifier: AGPL-3.0-only
      * Actual loaded sources. Can be Data Layers, or just shapes, or Vector, ...
      *
      */
-    //let sources = $state<MapSource[]>([]);
+    let sources = $state([]);
 
-    let showExplore: boolean = $state(false);
     let showShare: boolean = $state(false);
 
     let newDataLayerKey = $state("");
     let newShapeKey = $state("");
 
     onMount(async () => {
+        // if explore is disabled, but the initial showExplore is true, set to false.
+        // if explore is disabled, we don't want to show the UI for exploring as well
+        if (!explore && openExplore) {
+            openExplore = false;
+        }
+
         // fetch datalayer layout information for charts
         if (dl) {
             const res = await fetch("/api/datalayers/meta?datalayer_key=" + dl);
@@ -88,7 +102,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         }
 
         mapManager = new MapManager(mapContainer, {
-            layerControlNodeId: layerControlNodeId,
+            layerControlNodeId: layerControlNodeId || sidebarContainer,
         });
 
         // normalize values after meta data for datalayer are fetched, and update
@@ -99,16 +113,14 @@ SPDX-License-Identifier: AGPL-3.0-only
                     initialSources,
                 ) as UserSourceInput[];
 
+                sources = newSources;
+
                 for (const userSource of newSources) {
                     await mapManager.addSource(userSource);
                 }
             } catch (e) {
                 console.warn("Invalid JSON in sources:", initialSources);
             }
-        }
-
-        if (explore) {
-            showExplore = true;
         }
     });
 
@@ -136,8 +148,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 
     function getCanvasRadiusStyle() {
         if (hasTop()) {
+            if (sidebar) {
+                return "border-bottom-right-radius: 0.25rem;";
+            }
             return "border-bottom-left-radius: 0.25rem; border-bottom-right-radius: 0.25rem;";
         }
+
+        if (sidebar) {
+            return "border-top-right-radius: 0.25rem; border-bottom-right-radius: 0.25rem;";
+        }
+
         return "border-radius: 0.25rem;";
     }
 
@@ -197,6 +217,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             datalayer: item.datalayer,
         };
         mapManager.loadSource(source);
+        sources.push(source);
     }
 
     function addShapeSource() {
@@ -207,6 +228,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             },
         };
         mapManager.loadSource(source);
+        sources.push(source);
     }
 
     function addDatalayerVectorSource(datalayer_key: string) {
@@ -298,11 +320,11 @@ SPDX-License-Identifier: AGPL-3.0-only
             <div class="d-flex align-items-center justify-content-between">
                 <span>{title}</span>
                 <div class="d-flex align-items-center gap-1">
-                    {#if showExploreButton}
+                    {#if explore}
                         <button
                             class="btn btn-outline-secondary btn-xs"
-                            class:active={showExplore}
-                            onclick={() => (showExplore = !showExplore)}
+                            class:active={openExplore}
+                            onclick={() => (openExplore = !openExplore)}
                             >Explore</button
                         >
                     {/if}
@@ -346,8 +368,8 @@ SPDX-License-Identifier: AGPL-3.0-only
         </div>
     {/if}
 
-    {#if showExplore}
-        <div class="card-body">
+    {#if openExplore}
+        <div class="card-body border-bottom">
             <div class="row g-3">
                 <div class="col-12 col-md-4">
                     <div class="input-group">
@@ -406,187 +428,231 @@ SPDX-License-Identifier: AGPL-3.0-only
         </div>
     {/if}
 
-    {#each datalayers as item, i (item.key)}
-        <div class="card-body">
-            {#if explore || datalayers.length > 1}
-                <div class="row">
-                    <div class="col-12">
-                        {item.datalayer.name}
-                        (<code>{item.key}</code>)
+    {#if datalayers.length > 0}
+        <div class="border-bottom">
+            {#each datalayers as item, i (item.key)}
+                <div class="card-body">
+                    {#if explore || datalayers.length > 1}
+                        <div class="row">
+                            <div class="col-12">
+                                {item.datalayer.name}
+                                (<code>{item.key}</code>)
 
-                        <button
-                            class="btn btn-outline-secondary btn-xs"
-                            onclick={() => {
-                                datalayers.splice(i, 1);
-                            }}>Remove</button
-                        >
-                    </div>
-                </div>
-            {/if}
-            <div class="row">
-                <div class="col-12 col-sm-2">
-                    <label for="aggregate_function" class="form-label small"
-                        >Select shape
-                    </label>
-
-                    <div class="input-group input-group-sm">
-                        <select
-                            class="form-select form-select-sm"
-                            bind:value={item.query.shape_type}
-                        >
-                            {#each item.datalayer.shape_types as shape_type}
-                                <option value={shape_type.key}
-                                    >{shape_type.name}</option
+                                <button
+                                    class="btn btn-outline-secondary btn-xs"
+                                    onclick={() => {
+                                        datalayers.splice(i, 1);
+                                    }}>Remove</button
                                 >
-                            {/each}
-                        </select>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-3">
-                    <label for="aggregate_function" class="form-label small"
-                        >Select temporal
-                    </label>
+                            </div>
+                        </div>
+                    {/if}
+                    <div class="row">
+                        <div class="col-12 col-sm-2">
+                            <label
+                                for="aggregate_function"
+                                class="form-label small"
+                                >Select shape
+                            </label>
 
-                    <div class="input-group input-group-sm">
-                        <!--
+                            <div class="input-group input-group-sm">
+                                <select
+                                    class="form-select form-select-sm"
+                                    bind:value={item.query.shape_type}
+                                >
+                                    {#each item.datalayer.shape_types as shape_type}
+                                        <option value={shape_type.key}
+                                            >{shape_type.name}</option
+                                        >
+                                    {/each}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-3">
+                            <label
+                                for="aggregate_function"
+                                class="form-label small"
+                                >Select temporal
+                            </label>
+
+                            <div class="input-group input-group-sm">
+                                <!--
                     <button class="btn btn-outline-secondary btn-sm">
                         &lt;
                     </button>
                      -->
 
-                        {#if item.datalayer.temporal_resolution == "year"}
-                            <select
-                                class="form-select form-select-sm"
-                                bind:value={item.query.start_date}
-                            >
-                                {#each item.datalayer.available_years as year}
-                                    <option value={year}>{year}</option>
-                                {/each}
-                            </select>
-                        {:else if item.datalayer.temporal_resolution == "month"}
-                            <input
-                                class="form-control form-control-sm"
-                                bind:value={item.query.start_date}
-                                placeholder="yyyy-mm"
-                            />
-                        {:else if item.datalayer.temporal_resolution == "week"}
-                            <input
-                                class="form-control form-control-sm"
-                                bind:value={item.query.start_date}
-                                placeholder="yyyy-Www"
-                            />
-                        {:else if item.datalayer.temporal_resolution == "date"}
-                            <input
-                                type="date"
-                                class="form-control form-control-sm"
-                                bind:value={item.query.start_date}
-                                min={item.datalayer.first_time}
-                                max={item.datalayer.last_time}
-                            />
-                        {/if}
+                                {#if item.datalayer.temporal_resolution == "year"}
+                                    <select
+                                        class="form-select form-select-sm"
+                                        bind:value={item.query.start_date}
+                                    >
+                                        {#each item.datalayer.available_years as year}
+                                            <option value={year}>{year}</option>
+                                        {/each}
+                                    </select>
+                                {:else if item.datalayer.temporal_resolution == "month"}
+                                    <input
+                                        class="form-control form-control-sm"
+                                        bind:value={item.query.start_date}
+                                        placeholder="yyyy-mm"
+                                    />
+                                {:else if item.datalayer.temporal_resolution == "week"}
+                                    <input
+                                        class="form-control form-control-sm"
+                                        bind:value={item.query.start_date}
+                                        placeholder="yyyy-Www"
+                                    />
+                                {:else if item.datalayer.temporal_resolution == "date"}
+                                    <input
+                                        type="date"
+                                        class="form-control form-control-sm"
+                                        bind:value={item.query.start_date}
+                                        min={item.datalayer.first_time}
+                                        max={item.datalayer.last_time}
+                                    />
+                                {/if}
 
-                        <!--
+                                <!--
                     <button disabled class="btn btn-outline-secondary btn-sm">
                         &gt;
                     </button>
                     -->
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-3">
+                            <label
+                                for="aggregate_function"
+                                class="form-label small"
+                                ><i>Optional</i>: range with aggregation
+                            </label>
+
+                            <div class="input-group input-group-sm">
+                                {#if item.datalayer.temporal_resolution == "year"}
+                                    <select
+                                        class="form-select form-select-sm"
+                                        onchange={handleEndDate}
+                                        bind:value={item.query.end_date}
+                                    >
+                                        <option value={null}>None</option>
+                                        {#each item.datalayer.available_years as year}
+                                            <option value={year}>{year}</option>
+                                        {/each}
+                                    </select>
+                                {:else if item.datalayer.temporal_resolution == "month"}
+                                    <input
+                                        type="text"
+                                        class="form-control form-control-sm"
+                                        placeholder="yyyy-mm"
+                                        bind:value={item.query.end_date}
+                                        onchange={handleEndDate}
+                                    />
+                                {:else if item.datalayer.temporal_resolution == "week"}
+                                    <input
+                                        type="text"
+                                        class="form-control form-control-sm"
+                                        placeholder="yyyy-Www"
+                                        bind:value={item.query.end_date}
+                                        onchange={handleEndDate}
+                                    />
+                                {:else if item.datalayer.temporal_resolution == "date"}
+                                    <input
+                                        type="date"
+                                        class="form-control form-control-sm"
+                                        bind:value={item.query.end_date}
+                                        onchange={handleEndDate}
+                                        min={item.datalayer.first_time}
+                                        max={item.datalayer.last_time}
+                                    />
+                                {/if}
+
+                                <select
+                                    bind:value={item.query.aggregate}
+                                    disabled={!item.query.end_date}
+                                    id="aggregate_function"
+                                    class="form-select form-select-sm"
+                                >
+                                    <option value={null}>--</option>
+                                    <option value="sum">sum</option>
+                                    <option value="min">min</option>
+                                    <option value="max">max</option>
+                                    <option value="mean">mean</option>
+                                    <option value="median">median</option>
+                                    <option value="std">std</option>
+                                    <option value="count">count</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-4">
+                            <label
+                                for="aggregate_function"
+                                class="form-label small"
+                                >&nbsp;
+                            </label>
+
+                            <div class="">
+                                <button
+                                    onclick={() => {
+                                        addDataLayerSource(item);
+                                    }}
+                                    class="btn btn-outline-primary btn-sm"
+                                    >Add map</button
+                                >
+
+                                {#if item.datalayer.has_vector_data}
+                                    <button
+                                        onclick={() =>
+                                            addDatalayerVectorSource(
+                                                item.datalayer.key,
+                                            )}
+                                        class="btn btn-outline-primary btn-sm"
+                                        >Load vector data</button
+                                    >
+                                {/if}
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="col-12 col-sm-3">
-                    <label for="aggregate_function" class="form-label small"
-                        ><i>Optional</i>: range with aggregation
-                    </label>
-
-                    <div class="input-group input-group-sm">
-                        {#if item.datalayer.temporal_resolution == "year"}
-                            <select
-                                class="form-select form-select-sm"
-                                onchange={handleEndDate}
-                                bind:value={item.query.end_date}
-                            >
-                                <option value={null}>None</option>
-                                {#each item.datalayer.available_years as year}
-                                    <option value={year}>{year}</option>
-                                {/each}
-                            </select>
-                        {:else if item.datalayer.temporal_resolution == "month"}
-                            <input
-                                type="text"
-                                class="form-control form-control-sm"
-                                placeholder="yyyy-mm"
-                                bind:value={item.query.end_date}
-                                onchange={handleEndDate}
-                            />
-                        {:else if item.datalayer.temporal_resolution == "week"}
-                            <input
-                                type="text"
-                                class="form-control form-control-sm"
-                                placeholder="yyyy-Www"
-                                bind:value={item.query.end_date}
-                                onchange={handleEndDate}
-                            />
-                        {:else if item.datalayer.temporal_resolution == "date"}
-                            <input
-                                type="date"
-                                class="form-control form-control-sm"
-                                bind:value={item.query.end_date}
-                                onchange={handleEndDate}
-                                min={item.datalayer.first_time}
-                                max={item.datalayer.last_time}
-                            />
-                        {/if}
-
-                        <select
-                            bind:value={item.query.aggregate}
-                            disabled={!item.query.end_date}
-                            id="aggregate_function"
-                            class="form-select form-select-sm"
-                        >
-                            <option value={null}>--</option>
-                            <option value="sum">sum</option>
-                            <option value="min">min</option>
-                            <option value="max">max</option>
-                            <option value="mean">mean</option>
-                            <option value="median">median</option>
-                            <option value="std">std</option>
-                            <option value="count">count</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-4">
-                    <label for="aggregate_function" class="form-label small"
-                        >&nbsp;
-                    </label>
-
-                    <div class="">
-                        <button
-                            onclick={() => {
-                                addDataLayerSource(item);
-                            }}
-                            class="btn btn-outline-primary btn-sm"
-                            >Add map</button
-                        >
-
-                        {#if item.datalayer.has_vector_data}
-                            <button
-                                onclick={() =>
-                                    addDatalayerVectorSource(
-                                        item.datalayer.key,
-                                    )}
-                                class="btn btn-outline-primary btn-sm"
-                                >Load vector data</button
-                            >
-                        {/if}
-                    </div>
-                </div>
-            </div>
+            {/each}
         </div>
-    {/each}
+    {/if}
 
-    <div
-        style="{getCanvasRadiusStyle()} height: {height}"
-        bind:this={mapContainer}
-    ></div>
+    <div class="d-md-flex">
+        {#if sidebar}
+            <div class="bg-light p-3 map-sidebar" bind:this={sidebarContainer}>
+                {#if sources.length == 0}
+                    <div
+                        class="w-100 h-100 d-flex justify-content-center align-items-center text-muted"
+                    >
+                        Add new sources to the Map.
+                    </div>
+                {/if}
+            </div>
+        {/if}
+        <div
+            class="flex-grow-1"
+            style="{getCanvasRadiusStyle()} height: {height}"
+            bind:this={mapContainer}
+        ></div>
+    </div>
 </div>
+
+<style>
+    .map-sidebar {
+        min-height: 100%;
+        overflow-y: scroll;
+
+        font-size: 12px;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .map-sidebar {
+            width: 360px;
+            border-right: var(--bs-border-width) var(--bs-border-style)
+                var(--bs-border-color);
+        }
+    }
+</style>

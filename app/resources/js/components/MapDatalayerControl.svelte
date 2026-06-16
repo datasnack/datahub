@@ -319,18 +319,7 @@ SPDX-License-Identifier: AGPL-3.0-only
             return source.name;
         }
 
-        let name = `${datalayer.name}`;
-
-        let date = `${source.query.start_date}`;
-        if (source.query.start_date != source.query.end_date) {
-            date = `${date}–${source.query.end_date}`;
-        }
-        let agg = "";
-        if (source.query.aggregate) {
-            agg = `, ${source.query.aggregate}`;
-        }
-
-        return `${name}, ${source.query.shape_type} (${date}${agg})`;
+        return `${datalayer.name}`;
     }
 
     function deleteLayer() {
@@ -453,7 +442,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                 <label class="d-flex align-items-center">
                     <abbr title="Alpha">A</abbr>:
                     <input
-                        class="ms-1"
+                        class="ms-1 w-100"
                         type="range"
                         min="0"
                         max="1"

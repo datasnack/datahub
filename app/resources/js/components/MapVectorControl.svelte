@@ -278,7 +278,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                 <label class="d-flex align-items-center">
                     <abbr title="Alpha">A</abbr>:
                     <input
-                        class="ms-1"
+                        class="ms-1 w-100"
                         type="range"
                         min="0"
                         max="1"

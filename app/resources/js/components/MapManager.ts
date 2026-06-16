@@ -26,6 +26,7 @@ export class MapManager {
     private sourceIdCounter: number = 0;
 
     private layerControlNodeId: string | null = null;
+    private layerControlNode: HTMLElement | null = null;
 
     constructor(container: HTMLElement, options) {
         const protocol = new Protocol();
@@ -54,7 +55,14 @@ export class MapManager {
 
         if (options) {
             if (options.layerControlNodeId) {
-                this.layerControlNodeId = options.layerControlNodeId;
+                if (options.layerControlNodeId instanceof HTMLElement) {
+                    this.layerControlNode = options.layerControlNodeId
+                } else {
+                    this.layerControlNode = this.layerControlNodeId
+                        ? document.getElementById(this.layerControlNodeId)
+                        : null;
+
+                }
             }
         }
 
@@ -210,7 +218,7 @@ export class MapManager {
                 query: input.query,
                 visible: input.visible ?? true,
                 geometry: geometry,
-                name: input.name ?? datalayer.name,
+                name: input.name ?? datalayer?.name,
                 showQueryLabel: input.showQueryLabel ?? true,
                 alpha: input.alpha ?? 1,
                 showControls: input.showControls ?? true,
@@ -299,16 +307,12 @@ export class MapManager {
 
 
         if (ctrl) {
-            const node = this.layerControlNodeId
-                ? document.getElementById(this.layerControlNodeId)
-                : null;
-
-            if (node) {
+            if (this.layerControlNode) {
                 // if a custom DOM node id is given to position the layer control
                 // components, we need to manually add the control to the map
                 // and then insert the html node to the target.
                 ctrl.onAdd(this.map);
-                node.appendChild(ctrl.container);
+                this.layerControlNode.appendChild(ctrl.container);
             } else {
                 this.map.addControl(ctrl, "top-left");
             }
