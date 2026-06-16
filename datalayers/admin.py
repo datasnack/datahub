@@ -6,13 +6,13 @@ from typing import ClassVar
 
 from django import forms
 from django.contrib import admin, messages
-from django.core import serializers
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path
 
 from app.utils import datahub_key
 from app.widgets import (
+    DatalistTextInput,
     FormatWidget,
     LanguageWidget,
     LicenseWidget,
@@ -103,6 +103,17 @@ class SourceMetadataAdminInline(admin.StackedInline):
     classes = ["collapse"]
 
 
+class DatalayerForm(forms.ModelForm):
+    class Meta:
+        model = Datalayer
+        fields = "__all__"  # noqa: DJ007, its the admin form so we want all fields?
+        widgets = {
+            "operation": DatalistTextInput(
+                datalist_options=["sum", "count", "mean", "intersect"]
+            ),
+        }
+
+
 class DatalayerAdmin(admin.ModelAdmin):
     actions = [
         action_dumpdata,
@@ -111,6 +122,8 @@ class DatalayerAdmin(admin.ModelAdmin):
     ]
 
     list_display = ["name", "key", "has_class", "is_loaded"]
+
+    form = DatalayerForm
 
     def has_class(self, obj):
         return obj.has_class()

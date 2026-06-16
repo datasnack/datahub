@@ -6,42 +6,44 @@ import json
 from pathlib import Path
 
 from django import forms
-from django.utils.translation import gettext_lazy as _
 
 
 class DatalistTextInput(forms.TextInput):
     template_name = "app/forms/widgets/text_with_datalist.html"
 
-    def __init__(self, attrs=None, datalist_options=None):
+    def __init__(
+        self,
+        datalist_options: list[dict[str, str]] | dict[str, str] | list[str],
+        attrs=None,
+    ) -> None:
         super().__init__(attrs)
-        self.datalist_options = datalist_options or []
 
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        context["datalist_options"] = self.datalist_options
-        return context
+        options = []
 
-
-class LicenseWidget(forms.TextInput):
-    template_name = "app/forms/widgets/text_with_datalist.html"
-
-    def get_context(self, name, value, attrs):
-        license_options = []
-
-        with open("app/resources/spdx/licenses.json") as f:
-            spdx = json.load(f)
-
-            for l in spdx["licenses"]:
-                license_options.append(
+        # Firefox datalist search is complicated, we need to set key AND value in the
+        # label for the search to catch it.
+        if isinstance(datalist_options, list) and isinstance(datalist_options[0], dict):
+            options = datalist_options  # already in correct format
+        elif isinstance(datalist_options, list):
+            for key in datalist_options:
+                options.append({"value": key, "label": key})
+        else:
+            for key, label in datalist_options.items():
+                options.append(
                     {
-                        "value": l["licenseId"],
-                        "label": f"{l['name']} ({l['licenseId']})",  # append id to label b/c Firefox does not search/show the value if label is given
+                        "value": key,
+                        "label": f"{key}: {label}",
                     }
                 )
 
+        self.datalist_options = options
+
+    def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
-        context["widget"]["datalist_options"] = license_options
-        context["widget"]["attrs"]["class"] = "vTextField"
+        context["widget"]["datalist_options"] = self.datalist_options
+        # firefox clips datalist dropdown width to input field, we use the largest
+        # text input class, to give the potential labels enough space to be readable.
+        context["widget"]["attrs"]["class"] = "vLargeTextField"
         context["widget"]["attrs"]["list"] = (
             f"{context['widget']['attrs']['id']}_datalist"
         )
@@ -49,10 +51,21 @@ class LicenseWidget(forms.TextInput):
         return context
 
 
-class FormatWidget(forms.TextInput):
-    template_name = "app/forms/widgets/text_with_datalist.html"
+class LicenseWidget(DatalistTextInput):
+    def __init__(self, attrs=None) -> None:
+        license_options = {}
 
-    def get_context(self, name, value, attrs):
+        with Path("app/resources/spdx/licenses.json").open() as fp:
+            spdx = json.load(fp)
+
+            for el in spdx["licenses"]:
+                license_options[el["licenseId"]] = el["name"]
+
+        super().__init__(license_options, attrs)
+
+
+class FormatWidget(DatalistTextInput):
+    def __init__(self, attrs=None) -> None:
         # see: https://www.iana.org/assignments/media-types/media-types.xhtml
         format_options_kv = {
             "application/json": "JSON",
@@ -64,29 +77,20 @@ class FormatWidget(forms.TextInput):
             "text/csv": "CSV",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "MS Excel (.xlsx)",
         }
-        format_options = []
-        for mime, mime_name in format_options_kv.items():
-            format_options.append(
+        options = []
+        for key, label in format_options_kv.items():
+            options.append(
                 {
-                    "value": mime,
-                    "label": f"{mime_name} ({mime})",  # append id to label b/c Firefox does not search/show the value if label is given
+                    "value": key,
+                    "label": f"{label} ({key})",
                 }
             )
 
-        context = super().get_context(name, value, attrs)
-        context["widget"]["datalist_options"] = format_options
-        context["widget"]["attrs"]["class"] = "vTextField"
-        context["widget"]["attrs"]["list"] = (
-            f"{context['widget']['attrs']['id']}_datalist"
-        )
-
-        return context
+        super().__init__(options, attrs)
 
 
-class TemporalResolutionWidget(forms.TextInput):
-    template_name = "app/forms/widgets/text_with_datalist.html"
-
-    def get_context(self, name, value, attrs):
+class TemporalResolutionWidget(DatalistTextInput):
+    def __init__(self, attrs=None) -> None:
         # Derived from ISO 19115
         format_options_kv = {
             "daily": "Daily",
@@ -95,88 +99,39 @@ class TemporalResolutionWidget(forms.TextInput):
             "annually": "Annually",
             "irregular": "Irregular / cross sectional",
         }
-        format_options = []
-        for mime, mime_name in format_options_kv.items():
-            format_options.append(
-                {
-                    "value": mime,
-                    "label": f"{mime_name} ({mime})",  # append id to label b/c Firefox does not search/show the value if label is given
-                }
-            )
 
-        context = super().get_context(name, value, attrs)
-        context["widget"]["datalist_options"] = format_options
-        context["widget"]["attrs"]["class"] = "vTextField"
-        context["widget"]["attrs"]["list"] = (
-            f"{context['widget']['attrs']['id']}_datalist"
-        )
-
-        return context
+        super().__init__(format_options_kv, attrs)
 
 
-class SpatialCoverageWidget(forms.TextInput):
-    template_name = "app/forms/widgets/text_with_datalist.html"
-
-    def get_context(self, name, value, attrs):
-        # Derived from ISO 19115
+class SpatialCoverageWidget(DatalistTextInput):
+    def __init__(self, attrs=None) -> None:
+        # Derived from ISO 19115, custom codes
         format_options_kv = {
             "global": "Global",
         }
-        format_options = []
-
-        # Append custom codes
-        for key, val in format_options_kv.items():
-            format_options.append(
-                {
-                    "value": key,
-                    "label": f"{val} ({key})",  # append id to label b/c Firefox does not search/show the value if label is given
-                }
-            )
 
         # Append country codes
-        with Path.open("app/resources/iso3166/iso-3166-1-alpha3.json") as fp:
-            iso6311a4 = json.load(fp)
+        with Path("app/resources/iso3166/iso-3166-1-alpha3.json").open() as fp:
+            iso6311a3 = json.load(fp)
 
-            for el in iso6311a4:
-                format_options.append(
-                    {
-                        "value": el["alpha3"],
-                        "label": f"{el['name']} ({el['alpha3']})",  # append id to label b/c Firefox does not search/show the value if label is given
-                    }
-                )
+            for el in iso6311a3:
+                format_options_kv[el["alpha3"]] = el["name"]
 
-        context = super().get_context(name, value, attrs)
-        context["widget"]["datalist_options"] = format_options
-        context["widget"]["attrs"]["class"] = "vTextField"
-        context["widget"]["attrs"]["list"] = (
-            f"{context['widget']['attrs']['id']}_datalist"
-        )
-
-        return context
+        super().__init__(format_options_kv, attrs)
 
 
-class LanguageWidget(forms.TextInput):
-    template_name = "app/forms/widgets/text_with_datalist.html"
+class LanguageWidget(DatalistTextInput):
+    def __init__(self, attrs=None) -> None:
+        # Derived from ISO 19115, custom codes
+        format_options_kv = {
+            "global": "Global",
+        }
 
-    def get_context(self, name, value, attrs):
-        format_options = []
-
-        with Path.open("app/resources/iso639/iso-639-3.json") as fp:
+        # Append country codes
+        with Path("app/resources/iso639/iso-639-3.json").open() as fp:
             iso639a2 = json.load(fp)
 
             for el in iso639a2:
-                format_options.append(
-                    {
-                        "value": el["Id"],
-                        "label": f"{el['Ref_Name']} ({el['Id']})",  # append id to label b/c Firefox does not search/show the value if label is given
-                    }
-                )
+                format_options_kv[el["Id"]] = el["Ref_Name"]
 
-        context = super().get_context(name, value, attrs)
-        context["widget"]["datalist_options"] = format_options
-        context["widget"]["attrs"]["class"] = "vTextField"
-        context["widget"]["attrs"]["list"] = (
-            f"{context['widget']['attrs']['id']}_datalist"
-        )
-
-        return context
+        super().__init__(format_options_kv, attrs)
