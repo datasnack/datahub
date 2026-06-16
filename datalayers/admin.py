@@ -350,6 +350,18 @@ class DatalayerAdmin(admin.ModelAdmin):
             context,
         )
 
+    def response_change(self, request, obj):
+        if "_save_and_view" in request.POST:
+            return redirect(obj.get_absolute_url())
+
+        return super().response_change(request, obj)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        if "_save_and_view" in request.POST:
+            return redirect(obj.get_absolute_url())
+
+        return super().response_add(request, obj, post_url_continue)
+
 
 class ImportForm(forms.Form):
     """Custom form for the Import page."""
