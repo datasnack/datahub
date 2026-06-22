@@ -11,7 +11,6 @@ import shapely
 import shapely.geometry
 from geojson import Feature, FeatureCollection, Point, Polygon
 from ninja import File, Query, Router, Schema
-from pydantic import Field
 
 from django.conf import settings
 from django.core.cache import caches
@@ -101,10 +100,10 @@ def shape_geometry(
     shapes = []
     name = ""
     if shape_id := query["shape_id"]:
-        shapes = [Shape.objects.get(pk=shape_id)]
+        shapes = [get_object_or_404(Shape, pk=shape_id)]
         name = slugify(shapes[0].name)
     elif shape_key := query["shape_key"]:
-        shapes = [Shape.objects.get(key=shape_key)]
+        shapes = [get_object_or_404(Shape, key=shape_key)]
         name = slugify(shapes[0].name)
     elif (shape_type := query["shape_type"]) and (
         shape_parent_id := query["shape_parent_id"]
@@ -119,7 +118,7 @@ def shape_geometry(
         shapes = t.shapes.all()
         name = slugify(t.name)
     elif shape_parent_id := query["shape_parent_id"]:
-        shape = Shape.objects.get(pk=shape_parent_id)
+        shape = get_object_or_404(Shape, pk=shape_parent_id)
         shapes = shape.children.all()
         name = slugify(f"{shape.name} children")
     else:
