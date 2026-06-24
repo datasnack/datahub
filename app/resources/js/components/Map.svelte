@@ -18,16 +18,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 />
 
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { MapManager } from "./MapManager";
     import autoComplete from "@tarekraafat/autocomplete.js";
+    import { extent } from "d3-array";
+    import type { Map as MapLibreMap } from "maplibre-gl";
 
-    import { SourceType } from "./DatahubTypes";
+    import { onMount } from "svelte";
+
+    import { MapManager } from "./MapManager";
+    import { mapControl } from "./MapControl";
+    import MapSource from "./MapSource.svelte";
+    import { SourceType, MapSourceSchema } from "./DatahubTypes";
     import type {
+        MapSource as TMapSource,
         DataLayer,
         DataLayerItem,
-        UserSourceInput,
     } from "./DatahubTypes";
+    import { buildScale } from "./legend";
 
     interface AutocompleteOptions {
         scope: string;
@@ -42,7 +48,6 @@ SPDX-License-Identifier: AGPL-3.0-only
             end_date: null,
             aggregate: null,
         },
-        show_remove = false,
         layerControlNodeId = null,
         height = "500px",
         sidebar = false,
@@ -57,6 +62,8 @@ SPDX-License-Identifier: AGPL-3.0-only
     let sidebarContainer: HTMLElement;
     let mapManager: MapManager;
 
+    let map = $state<MapLibreMap | undefined>();
+
     /**
      * Configurable Data Layers
      */
@@ -66,12 +73,15 @@ SPDX-License-Identifier: AGPL-3.0-only
      * Actual loaded sources. Can be Data Layers, or just shapes, or Vector, ...
      *
      */
-    let sources = $state([]);
+    let sources = $state<TMapSource[]>([]);
 
     let showShare: boolean = $state(false);
 
     let newDataLayerKey = $state("");
     let newShapeKey = $state("");
+
+    const geometry = new Map<string, GeoJSON.FeatureCollection>();
+    const controllers = new Map<string, AbortController>();
 
     onMount(async () => {
         // if explore is disabled, but the initial showExplore is true, set to false.
@@ -104,22 +114,33 @@ SPDX-License-Identifier: AGPL-3.0-only
         mapManager = new MapManager(mapContainer, {
             layerControlNodeId: layerControlNodeId || sidebarContainer,
         });
+        //map = mapManager.getMap();
+        mapManager.ready.then((m) => {
+            map = m;
+        });
 
         // normalize values after meta data for datalayer are fetched, and update
         // sources value at latest time, the addSource needs a map object.
         if (typeof initialSources === "string") {
             try {
-                const newSources = JSON.parse(
-                    initialSources,
-                ) as UserSourceInput[];
-
-                sources = newSources;
+                const newSources = JSON.parse(initialSources);
 
                 for (const userSource of newSources) {
-                    await mapManager.addSource(userSource);
+                    userSource.id = mapManager.getNextSourceIdString();
+
+                    if (!userSource.hasOwnProperty("alpha")) {
+                        userSource.alpha = userSource.type == "shape" ? 0.3 : 1;
+                    }
+
+                    let source = MapSourceSchema.parse(userSource);
+
+                    sources.push(source);
+                    fetchSource(source.id);
+
+                    //await mapManager.addSource(userSource);
                 }
             } catch (e) {
-                console.warn("Invalid JSON in sources:", initialSources);
+                console.warn(e, "Invalid JSON in sources:", initialSources);
             }
         }
     });
@@ -131,6 +152,123 @@ SPDX-License-Identifier: AGPL-3.0-only
     export function getMapLibre() {
         return mapManager.getMapLibre();
     }
+
+    async function fetchSource(id: string) {
+        const ac = new AbortController();
+        controllers.set(id, ac);
+        try {
+            const source = sources.find((i) => i.id === id);
+            if (source) {
+                // load geometry
+                /*const geom =
+                    source.type == "bbox"
+                        ? await mapManager.fetchBBox(source.query)
+                        : await mapManager.fetchGeometry(source.query); // your one-or-more ajax calls*/
+
+                const geom = await (async () => {
+                    switch (source.type) {
+                        case "bbox":
+                            return mapManager.fetchBBox(source.query);
+
+                        case "vector":
+                            return mapManager.fetchDataLayerVector(
+                                source.query,
+                            );
+
+                        default:
+                            return mapManager.fetchGeometry(source.query);
+                    }
+                })();
+
+                // if data layer, load data
+                if (source.type == "datalayer") {
+                    const data = await mapManager.fetchDatalayerData(
+                        source.query,
+                    );
+
+                    source.isCategorical = data.is_categorical;
+                    source.categoricalValues = data.categorical_values;
+                    source.categoricalLabels = data.categorical_labels;
+                    source.isPercentage = data.value_type == "percentage";
+
+                    const value_map = new Map(
+                        data.data.map((d) => [d.dh_shape_id, d.value]),
+                    );
+                    const formatted_map = new Map(
+                        data.data.map((d) => [d.dh_shape_id, d.formatted]),
+                    );
+
+                    source.actualExtent = extent(value_map.values());
+                    source.extent = source.extent ?? source.actualExtent;
+
+                    const color = buildScale(
+                        source.isCategorical,
+                        source.cmap,
+                        source.extent,
+                        source.categoricalValues,
+                    );
+
+                    if (!source.name) {
+                        source.name = data.name;
+                    }
+
+                    geom.features.forEach((feature) => {
+                        const dh_shape_id = feature.properties.dh_shape_id;
+
+                        // the shape might not have a known value and so not be
+                        // present in in the returned result
+                        let value = value_map.has(dh_shape_id)
+                            ? value_map.get(dh_shape_id)
+                            : null;
+
+                        let formatted = formatted_map.has(dh_shape_id)
+                            ? formatted_map.get(dh_shape_id)
+                            : null;
+
+                        feature.properties.alpha = 1;
+
+                        if (value === null) {
+                            feature.properties.value = null;
+                            feature.properties.formatted = null;
+                            feature.properties.color = "rgba(0, 0, 0, 0.1)";
+                        } else {
+                            feature.properties.value = value;
+                            feature.properties.formatted = formatted;
+                            feature.properties.color = color(value);
+                        }
+                    });
+                }
+
+                geometry.set(id, geom);
+                source.status = "ready"; // reactive flip → reconcile effect re-runs
+            }
+        } catch (e) {
+            const item = sources.find((i) => i.id === id);
+            if (item) item.status = "error";
+        } finally {
+            controllers.delete(id);
+        }
+    }
+
+    $effect(() => {
+        if (!map) return; // wait for the map; re-runs when set
+        const desired = sources.map((i) => ({
+            // reading these tracks them
+            id: i.id,
+            visible: i.visible,
+            type: i.type,
+            ready: i.status === "ready",
+            alpha: i.alpha,
+            color: i.color,
+            fitBounds: i.fitBounds,
+        }));
+
+        //const desired = sources.find((i) => i.status === "ready");
+
+        mapManager.reconcile(desired, geometry); // imperative map work lives in the manager
+
+        // color scale
+    });
 
     function handleEndDate() {
         if (!query.end_date) {
@@ -194,7 +332,7 @@ SPDX-License-Identifier: AGPL-3.0-only
      *
      * @param item
      */
-    function addDataLayerSource(item: DataLayerItem) {
+    function addDataLayerSourceFromExplore(item: DataLayerItem) {
         let actualQuery = JSON.parse(JSON.stringify(item.query)); // deep copy of query
 
         // check query
@@ -211,34 +349,96 @@ SPDX-License-Identifier: AGPL-3.0-only
             return;
         }
 
-        const source: UserSourceInput = {
-            type: SourceType.Datalayer,
-            query: actualQuery,
-            datalayer: item.datalayer,
-        };
-        mapManager.loadSource(source);
-        sources.push(source);
+        const id = mapManager.getNextSourceIdString();
+
+        sources.unshift(
+            MapSourceSchema.parse({
+                id: id,
+                type: "datalayer",
+                alpha: 1,
+                query: actualQuery,
+                datalayer: item.datalayer,
+            }),
+        );
+        fetchSource(id);
+    }
+
+    export function addSource(source: any) {
+        //const id = ;
+        source.id = source.id ?? mapManager.getNextSourceIdString();
+        sources.unshift(MapSourceSchema.parse(source));
+        fetchSource(source.id);
+    }
+
+    export async function changeSourceData(id: string, query: any) {
+        const source = sources.find((i) => i.id === id);
+
+        if (!source) {
+            console.warn(`Source not found: ${id}`);
+            return;
+        }
+
+        console.log(id);
+
+        source.status = "loading";
+
+        const data = await mapManager.fetchDatalayerData(query);
+
+        let geom = geometry.get(id);
+        // bla
+
+        /*if (geom) {
+            geom.features.forEach((feature) => {
+                const dh_shape_id = feature.properties.dh_shape_id;
+
+                // the shape might not have a known value and so not be
+                // present in in the returned result
+                let value = value_map.has(dh_shape_id)
+                    ? value_map.get(dh_shape_id)
+                    : null;
+
+                let formatted = formatted_map.has(dh_shape_id)
+                    ? formatted_map.get(dh_shape_id)
+                    : null;
+
+                feature.properties.alpha = 1;
+
+                if (value === null) {
+                    feature.properties.value = null;
+                    feature.properties.formatted = null;
+                    feature.properties.color = "rgba(0, 0, 0, 0.1)";
+                } else {
+                    feature.properties.value = value;
+                    feature.properties.formatted = formatted;
+                    feature.properties.color = color(value);
+                }
+            });
+        }*/
+        source.status = "ready";
     }
 
     function addShapeSource() {
-        const source: UserSourceInput = {
-            type: SourceType.Shape,
-            query: {
-                shape_key: newShapeKey,
-            },
-        };
-        mapManager.loadSource(source);
-        sources.push(source);
+        const id = mapManager.getNextSourceIdString();
+        sources.unshift(
+            MapSourceSchema.parse({
+                id: id,
+                type: "shape",
+                alpha: 0.3,
+                query: {
+                    shape_key: newShapeKey,
+                },
+            }),
+        );
+        fetchSource(id);
     }
 
     function addDatalayerVectorSource(datalayer_key: string) {
-        const source: UserSourceInput = {
+        addSource({
             type: SourceType.Vector,
             query: {
                 datalayer_key: datalayer_key,
             },
-        };
-        mapManager.loadSource(source);
+        });
     }
 
     function initAutocomplete(
@@ -312,6 +512,17 @@ SPDX-License-Identifier: AGPL-3.0-only
             },
         };
     }
+
+    function moveSource(id: string, dir: number) {
+        const i = sources.findIndex((x) => x.id === id);
+        const j = i + dir;
+        if (j < 0 || j >= sources.length) return;
+        [sources[i], sources[j]] = [sources[j], sources[i]];
+    }
+
+    function deleteSource(id: string) {
+        sources = sources.filter((i) => i.id !== id);
+    }
 </script>
 
 <div bind:this={container} class="card bg-light mb-3">
@@ -328,6 +539,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                             >Explore</button
                         >
                     {/if}
+
                     <!--
                     <button
                         class="btn btn-outline-secondary btn-xs"
@@ -595,7 +807,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                             <div class="">
                                 <button
                                     onclick={() => {
-                                        addDataLayerSource(item);
+                                        addDataLayerSourceFromExplore(item);
                                     }}
                                     class="btn btn-outline-primary btn-sm"
                                     >Add map</button
@@ -619,18 +831,52 @@ SPDX-License-Identifier: AGPL-3.0-only
         </div>
     {/if}
 
+    <!--
+        {#if map} meeds to duplicated, so that if sidebar is requested, the map-sidebar
+        container is drawn, and the map container gets the correct width.
+        otherwise the centering of the map would be moved by the width of the sidebar.
+    -->
     <div class="d-md-flex">
         {#if sidebar}
-            <div class="bg-light p-3 map-sidebar" bind:this={sidebarContainer}>
-                {#if sources.length == 0}
-                    <div
-                        class="w-100 h-100 d-flex justify-content-center align-items-center text-muted"
-                    >
-                        Add new sources to the Map.
-                    </div>
+            <div class="bg-light p-3 map-sidebar">
+                <!-- is this if map required? -->
+                {#if true}
+                    {#each sources as source, i (source.id)}
+                        <MapSource
+                            bind:source={sources[i]}
+                            manager={mapManager}
+                            onmove={(dir: number) => moveSource(source.id, dir)}
+                            ondelete={() => deleteSource(source.id)}
+                            first={i === 0}
+                            last={i === sources.length - 1}
+                        />
+                    {:else}
+                        <div
+                            class="w-100 h-100 d-flex justify-content-center align-items-center text-muted"
+                        >
+                            Add new sources to the Map.
+                        </div>
+                    {/each}
                 {/if}
             </div>
+        {:else if map}
+            <div
+                class="source-list"
+                {@attach mapControl(mapManager.getMap(), "top-left")}
+            >
+                {#each sources as source, i (source.id)}
+                    <MapSource
+                        bind:source={sources[i]}
+                        manager={mapManager}
+                        onmove={(dir: number) => moveSource(source.id, dir)}
+                        ondelete={() => deleteSource(source.id)}
+                        first={i === 0}
+                        last={i === sources.length - 1}
+                    />
+                {/each}
+            </div>
         {/if}
+
         <div
             class="flex-grow-1"
             style="{getCanvasRadiusStyle()} height: {height}"

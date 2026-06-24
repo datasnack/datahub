@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2026 Jonathan Ströbele <mail@jonathanstroebele.de>
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+
+
+import { z } from "zod";
+
 export type DataLayerItem = {
 
     /**
@@ -51,61 +58,54 @@ export enum SourceType {
     Vector = "vector",
 }
 
-export interface MapSource {
-    id: string,
-    type: SourceType,
-    query: Record<string, string>,
-    visible: boolean,
-    name: string,
-    geometry: object,
-    alpha: number,
-    showControls: boolean,
-    fitBounds: boolean,
-    getPopupContent: Function | null,
-}
-export type UserSourceInput =
-    | {
-        type: SourceType.Shape | SourceType.BBox | SourceType.Vector;
-        query: Record<string, string>;
-        visible?: boolean,
-        id?: string;
-        name?: string;
-        color?: string;
-        geometry?: object,
-        alpha?: number;
-        showControls?: boolean,
-        fitBounds?: boolean,
-        getPopupContent?: Function | null,
-    }
-    | {
-        type: SourceType.Datalayer;
-        query: Record<string, string>;
-        visible?: boolean;
-        id?: string;
-        name?: string;
-        cmap?: string;
-        alpha?: number;
-        mode?: string;
-        geometry?: object,
-        showControls?: boolean;
-        fitBounds?: boolean;
-        datalayer?: DataLayer,
-        value_map?: object,
-        extent?: [number, number] | null,
-        showQueryLabel?: boolean,
-        getPopupContent?: Function | null,
-    };
-
-
-export interface VectorMapSource extends MapSource {
-    color: string,
+export enum LegendMode {
+    MinMax = "min_max",
+    From0_1 = "from0_1",
+    Fixed = "fixed",
 }
 
-export interface DatalayerMapSource extends MapSource {
-    showQueryLabel: boolean,
-    mode: string,
-    cmap: string,
-    datalayer: DataLayer,
-    value_map: object | null,
-    extent: [number, number] | null,
-}
+export const MapSourceSchema = z.object({
+    /**
+     * Source Id for MapLibre
+     */
+    id: z.string(),
+    status: z.enum(["loading", "ready", "error"]).default("loading"),
+    type: z.enum(SourceType),
+
+    visible: z.boolean().default(true),
+    alpha: z.number().min(0).max(1).optional(),
+    loading: z.boolean().default(true),
+
+    showControls: z.boolean().default(true),
+    fitBounds: z.boolean().default(false),
+
+    name: z.string().nullable().default(null),
+    query: z.record(z.string(), z.union([z.string(), z.number(), z.null()])),
+
+    showQueryLabel: z.boolean().default(true),
+
+    /**
+     * Color for shapes or vectors
+     */
+    color: z.string().default('#5385f8'),
+
+
+    /**
+     * Color map for datalayers
+     */
+    cmap: z.string().default("YlGnBu"),
+    mode: z.enum(LegendMode).default(LegendMode.MinMax),
+    isCategorical: z.boolean().default(false),
+    categoricalValues: z.array(z.string()).default([]),
+    categoricalLabels: z.array(z.string()).default([]),
+    isPercentage: z.boolean().default(false),
+    extent: z.tuple([z.number(), z.number()]).nullable().default(null),
+    actualExtent: z.tuple([z.number(), z.number()]).nullable().default(null)
+
+
+}).transform((data) => ({
+    ...data,
+    alpha: data.alpha ?? (data.type === SourceType.Shape ? 0.3 : 1),
+}));;
+
+export type MapSource = z.infer<typeof MapSourceSchema>;

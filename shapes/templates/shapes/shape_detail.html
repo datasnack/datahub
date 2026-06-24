@@ -217,11 +217,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script type="module">
 
 	document.querySelectorAll('.js-map-show').forEach(el => el.addEventListener('click', function (event) {
-		document.getElementById("map").getMapManager().addSource(JSON.parse(this.dataset.source));
+		document.getElementById("map").addSource(JSON.parse(this.dataset.source));
 	}));
 
 	document.getElementById('map-show-bbox').addEventListener('click', (event) => {
-		document.getElementById("map").getMapManager().addSource({
+		document.getElementById("map").addSource({
 			"type": "bbox",
 			"name": "{{ shape.name}} BBox",
 			"query": {
