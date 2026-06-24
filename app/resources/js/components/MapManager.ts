@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
+
 import type { Map as MapLibreMap, IControl } from "maplibre-gl";
 
 import maplibregl, {
@@ -14,7 +15,9 @@ import ScreenshotControl from "../maplibre/ScreenshotControl";
 import FullScreenControl from "../maplibre/FullScreenControl";
 
 import { Protocol } from "pmtiles";
+import { extent } from "d3-array";
 import type { DataLayer, MapSource } from "./DatahubTypes";
+import { buildScale } from "./legend";
 
 
 export class MapManager {
@@ -25,6 +28,18 @@ export class MapManager {
 
     // bookkeeping: source id -> its layer ids, in top-to-bottom order
     #added = new Map<string, string[]>();
+
+    // geometry payloads, owned by the manager (NOT reactive on purpose:
+    // FeatureCollections are large and we don't want Svelte deep-proxying them).
+    // A source is "present on the map" iff we hold geometry for it here.
+    #geometry = new Map<string, GeoJSON.FeatureCollection>();
+
+    // in-flight fetches, so a newer load can supersede an older one
+    #controllers = new Map<string, AbortController>();
+
+    // per-source teardown for popup/cursor event handlers, so we can remove
+    // exactly the listeners we added (map.removeLayer does NOT remove them).
+    #popupCleanups = new Map<string, () => void>();
 
     private sources: MapSource[] = [];
 
@@ -221,39 +236,39 @@ export class MapManager {
 
 
 
-    async fetchGeometry(query: Record<string, string>): Promise<GeoJSON> {
+    async fetchGeometry(query: Record<string, string>, signal?: AbortSignal): Promise<GeoJSON> {
         const qs = new URLSearchParams(query).toString();
-        const res = await fetch(`/api/shapes/geometry?${qs}`);
+        const res = await fetch(`/api/shapes/geometry?${qs}`, { signal });
         if (!res.ok) throw new Error(`Failed to fetch geometry: ${res.status}`);
         return res.json();
     }
 
-    async fetchBBox(query: Record<string, string>): Promise<object> {
+    async fetchBBox(query: Record<string, string>, signal?: AbortSignal): Promise<object> {
         const qs = new URLSearchParams(query).toString();
-        const res = await fetch(`/api/shapes/bbox?${qs}`);
+        const res = await fetch(`/api/shapes/bbox/?${qs}`, { signal });
         if (!res.ok) throw new Error(`Failed to fetch BBox: ${res.status}`);
         return res.json();
     }
 
     async fetchDatalayer(datalayer_key: string): Promise<DataLayer> {
-        const res = await fetch("/api/datalayers/meta?datalayer_key=" + datalayer_key);
+        const res = await fetch("/api/datalayers/meta/?datalayer_key=" + datalayer_key);
         if (!res.ok) throw new Error(`Failed to fetch Data Layer: ${res.status} `);
         const json = await res.json();
         return json.datalayer;
     }
 
-    async fetchDatalayerData(query: Record<string, string>): Promise<any> {
+    async fetchDatalayerData(query: Record<string, string>, signal?: AbortSignal): Promise<any> {
         const qs = new URLSearchParams(Object.entries(query).filter(([_, value]) => value != null)).toString();
 
-        const res = await fetch(`/api/datalayers/data?${qs}`);
+        const res = await fetch(`/api/datalayers/data/?${qs}`, { signal });
         if (!res.ok) throw new Error(`Failed to fetch Data Layer data: ${res.status} `);
         const json = await res.json();
         return json;
     }
 
-    async fetchDataLayerVector(query: Record<string, string>): Promise<object> {
+    async fetchDataLayerVector(query: Record<string, string>, signal?: AbortSignal): Promise<object> {
         const qs = new URLSearchParams(Object.entries(query).filter(([_, value]) => value != null)).toString();
-        const res = await fetch(`/api/datalayers/vector?${qs}`);
+        const res = await fetch(`/api/datalayers/vector/?${qs}`, { signal });
         if (!res.ok) throw new Error(`Failed to fetch Vector data for Data Layer: ${res.status} `);
         return res.json();
     }
@@ -263,65 +278,210 @@ export class MapManager {
         src?.setData(data);
     }
 
+    // ---- geometry store ---------------------------------------------------
 
-    setColor(id: string, color) {
-        const mapSource = this.#map.getSource(id) as maplibregl.GeoJSONSource | undefined
+    hasGeometry(id: string): boolean {
+        return this.#geometry.has(id);
+    }
 
-        if (mapSource) {
-            const data = mapSource._data; // Private MapLibre API, not update save!
+    getGeometry(id: string): GeoJSON.FeatureCollection | undefined {
+        return this.#geometry.get(id);
+    }
 
-            data.geojson.features.forEach((feature) => {
-                const value = feature.properties.value;
-                if (value !== null) {
-                    feature.properties.color = color(value);
-                }
-            });
-            mapSource.setData(data.geojson);
+    /**
+     * Fetch geometry (+ datalayer data) for a source and store it.
+     *
+     * Pure imperative IO: it does NOT touch reactive state. It returns a patch
+     * of derived fields for the caller to merge back onto the reactive source
+     * (status, extent, categorical info, ...). Never throws – on failure it
+     * returns a patch describing the failure, on supersede it returns {}.
+     */
+    async loadSource(source: MapSource): Promise<Partial<MapSource>> {
+        // a newer load for the same id wins
+        this.#controllers.get(source.id)?.abort();
+        const ac = new AbortController();
+        this.#controllers.set(source.id, ac);
+
+        try {
+            const geom = await this.#fetchGeometryFor(source, ac.signal);
+
+            let patch: Partial<MapSource> = {};
+            if (source.type === "datalayer") {
+                const data = await this.fetchDatalayerData(source.query, ac.signal);
+                patch = this.#applyDatalayerData(source, geom, data);
+            }
+
+            this.#geometry.set(source.id, geom);
+            return { ...patch, status: "ready" };
+        } catch (e: any) {
+            if (e?.name === "AbortError") return {}; // superseded – leave state untouched
+            console.error("Failed to load source", source.id, e);
+            return { status: "error" };
+        } finally {
+            if (this.#controllers.get(source.id) === ac) {
+                this.#controllers.delete(source.id);
+            }
+        }
+    }
+
+    /**
+     * Apply a datalayer data payload to a source's already-loaded geometry and
+     * push it live to the map. Used by external/power-user updates where the
+     * caller supplies the data instead of it being fetched.
+     *
+     * Returns a patch of derived fields to merge onto the reactive source.
+     */
+    applyDatalayerData(source: MapSource, data: any): Partial<MapSource> {
+        const geom = this.#geometry.get(source.id);
+        if (!geom) {
+            throw new Error(`No geometry loaded for source ${source.id}`);
+        }
+        const patch = this.#applyDatalayerData(source, geom, data);
+        this.setData(source.id, geom); // live update if the source is on the map
+        return patch;
+    }
+
+    /** Forget a source entirely: abort its fetch and drop its geometry. */
+    dropSource(id: string): void {
+        this.#controllers.get(id)?.abort();
+        this.#controllers.delete(id);
+        this.#geometry.delete(id);
+    }
+
+    #fetchGeometryFor(source: MapSource, signal: AbortSignal): Promise<any> {
+        switch (source.type) {
+            case "bbox":
+                return this.fetchBBox(source.query, signal);
+            case "vector":
+                return this.fetchDataLayerVector(source.query, signal);
+            default:
+                return this.fetchGeometry(source.query, signal);
+        }
+    }
+
+    /**
+     * Mutates `geom`'s feature properties (value/formatted/color/alpha) from a
+     * datalayer data payload and returns the derived reactive fields.
+     */
+    #applyDatalayerData(
+        source: MapSource,
+        geom: GeoJSON.FeatureCollection,
+        data: any,
+    ): Partial<MapSource> {
+        const isCategorical: boolean = data.is_categorical;
+        const categoricalValues: string[] = data.categorical_values;
+        const categoricalLabels: string[] = data.categorical_labels;
+        const isPercentage = data.value_type === "percentage";
+
+        const value_map = new Map(data.data.map((d: any) => [d.dh_shape_id, d.value]));
+        const formatted_map = new Map(data.data.map((d: any) => [d.dh_shape_id, d.formatted]));
+
+        const actualExtent = extent(value_map.values() as Iterable<number>) as [number, number];
+        const nextExtent = source.extent ?? actualExtent;
+
+        const color = buildScale(
+            isCategorical,
+            source.cmap as any,
+            nextExtent,
+            categoricalValues as any,
+        );
+
+        for (const feature of geom.features) {
+            const dh_shape_id = feature.properties!.dh_shape_id;
+            const value = value_map.has(dh_shape_id) ? value_map.get(dh_shape_id) : null;
+            const formatted = formatted_map.has(dh_shape_id) ? formatted_map.get(dh_shape_id) : null;
+
+            feature.properties!.alpha = 1;
+            if (value === null || value === undefined) {
+                feature.properties!.value = null;
+                feature.properties!.formatted = null;
+                feature.properties!.color = "rgba(0, 0, 0, 0.1)";
+            } else {
+                feature.properties!.value = value;
+                feature.properties!.formatted = formatted;
+                feature.properties!.color = color(value as any);
+            }
         }
 
+        return {
+            isCategorical,
+            categoricalValues,
+            categoricalLabels,
+            isPercentage,
+            actualExtent,
+            extent: nextExtent,
+            name: source.name ?? data.name,
+        };
+    }
+
+    /** Recolor a datalayer source from a d3 scale and push it live. */
+    setColor(id: string, color: (v: number) => string) {
+        const fc = this.#geometry.get(id);
+        if (!fc) return;
+        for (const feature of fc.features) {
+            const value = feature.properties?.value;
+            if (value !== null && value !== undefined) {
+                feature.properties!.color = color(value);
+            }
+        }
+        this.setData(id, fc);
     }
 
 
 
-    reconcile(desired: MapSource[], geometry: Map<string, GeoJSON.FeatureCollection>): void {
+    reconcile(desired: MapSource[]): void {
         const map = this.#map;
-        const wanted = new Map(desired.filter((d) => d.ready).map((d) => [d.id, d] as const));
+        const desiredIds = new Set(desired.map((d) => d.id));
 
-        // 1. remove sources that are gone (layers first, then the source)
+        // 0. forget geometry/fetches for sources that no longer exist at all
+        for (const id of [...this.#geometry.keys()]) {
+            if (!desiredIds.has(id)) this.dropSource(id);
+        }
+
+        // a source is shown on the map iff we hold geometry for it.
+        // NOTE: this is deliberately decoupled from `status`. A source that is
+        // re-loading ("loading") but already has geometry stays on the map, so
+        // we never tear down + rebuild its layers/popups on a refresh.
+        const present = new Map(
+            desired
+                .filter((d) => this.#geometry.has(d.id))
+                .map((d) => [d.id, d] as const),
+        );
+
+        // 1. remove sources that should no longer be displayed
         for (const [id, layerIds] of this.#added) {
-            if (!wanted.has(id)) {
+            if (!present.has(id)) {
+                this.#popupCleanups.get(id)?.(); // remove click/hover listeners
+                this.#popupCleanups.delete(id);
                 for (const l of layerIds) if (map.getLayer(l)) map.removeLayer(l);
                 if (map.getSource(id)) map.removeSource(id);
                 this.#added.delete(id);
             }
         }
 
-        // 2. add newly-ready sources + their layers
-        for (const d of wanted.values()) {
+        // 2. add newly-present sources + their layers (+ popups, once)
+        for (const d of present.values()) {
             if (this.#added.has(d.id)) continue;
-            const data = geometry.get(d.id);
-            if (!data) continue; // ready but payload not in the store yet — skip defensively
-            map.addSource(d.id, { type: 'geojson', data });
+            const data = this.#geometry.get(d.id);
+            if (!data) continue;
+            map.addSource(d.id, { type: "geojson", data });
             const layers = this.#buildLayers(d); // top-to-bottom
             for (const layer of layers) map.addLayer(layer);
             this.#added.set(d.id, layers.map((l) => l.id));
 
-            // attach popup
             this.#attachPopup(d);
 
-            // fit to bounds?
             if (d.fitBounds) {
                 this.fitToSourceBounds(d.id);
             }
-
         }
 
         // 3. visibility
         for (const d of desired) {
             const ids = this.#added.get(d.id);
             if (!ids) continue;
-            const v = d.visible ? 'visible' : 'none';
-            for (const l of ids) map.setLayoutProperty(l, 'visibility', v);
+            const v = d.visible ? "visible" : "none";
+            for (const l of ids) map.setLayoutProperty(l, "visibility", v);
         }
 
         // update color/opacity
@@ -336,47 +496,55 @@ export class MapManager {
             map.moveLayer(layerId, beforeId); // places layerId just below beforeId
             beforeId = layerId;               // first call (undefined) = top
         }
-
-
-
     }
 
     #attachPopup(d: MapSource): void {
+        // guard: never attach twice for the same source
+        if (this.#popupCleanups.has(d.id)) return;
 
         const popupLayerMapping: Record<string, string[]> = {
             "shape": ["-fill"],
             "datalayer": ["-fill"],
             "bbox": ["-markers"],
             "vector": ["-point", "-linestring", "-polygon"],
-        }
+        };
 
-        if (popupLayerMapping.hasOwnProperty(d.type)) {
+        if (!popupLayerMapping.hasOwnProperty(d.type)) return;
 
-            popupLayerMapping[d.type].forEach((suffix) => {
-                const layerId = `${d.id}${suffix}`;
+        const offs: Array<() => void> = [];
 
-                this.#map.on("click", layerId, (e) => {
-                    const coordinates = e.lngLat;
-                    const feature = e.features[0];
+        popupLayerMapping[d.type].forEach((suffix) => {
+            const layerId = `${d.id}${suffix}`;
 
-                    const popupFnc = this.getPopupContent;
+            const onClick = (e: any) => {
+                const coordinates = e.lngLat;
+                const feature = e.features[0];
+                const popupFnc = this.getPopupContent;
 
-                    new maplibregl.Popup()
-                        .setLngLat(coordinates)
-                        .setHTML(popupFnc(feature, (d.type == "vector")))
-                        .addTo(this.#map);
-                });
+                new maplibregl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(popupFnc(feature, (d.type === "vector")))
+                    .addTo(this.#map);
+            };
+            const onEnter = () => {
+                this.#map.getCanvas().style.cursor = "pointer";
+            };
+            const onLeave = () => {
+                this.#map.getCanvas().style.cursor = "";
+            };
 
-                // Change cursor on hover
-                this.#map.on("mouseenter", layerId, () => {
-                    this.#map.getCanvas().style.cursor = "pointer";
-                });
+            this.#map.on("click", layerId, onClick);
+            this.#map.on("mouseenter", layerId, onEnter);
+            this.#map.on("mouseleave", layerId, onLeave);
 
-                this.#map.on("mouseleave", layerId, () => {
-                    this.#map.getCanvas().style.cursor = "";
-                });
+            offs.push(() => {
+                this.#map.off("click", layerId, onClick);
+                this.#map.off("mouseenter", layerId, onEnter);
+                this.#map.off("mouseleave", layerId, onLeave);
             });
-        }
+        });
+
+        this.#popupCleanups.set(d.id, () => offs.forEach((off) => off()));
     }
 
 

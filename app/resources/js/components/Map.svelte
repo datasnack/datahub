@@ -19,7 +19,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts">
     import autoComplete from "@tarekraafat/autocomplete.js";
-    import { extent } from "d3-array";
     import type { Map as MapLibreMap } from "maplibre-gl";
 
     import { onMount } from "svelte";
@@ -33,7 +32,6 @@ SPDX-License-Identifier: AGPL-3.0-only
         DataLayer,
         DataLayerItem,
     } from "./DatahubTypes";
-    import { buildScale } from "./legend";
 
     interface AutocompleteOptions {
         scope: string;
@@ -79,9 +77,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
     let newDataLayerKey = $state("");
     let newShapeKey = $state("");
-
-    const geometry = new Map<string, GeoJSON.FeatureCollection>();
-    const controllers = new Map<string, AbortController>();
 
     onMount(async () => {
         // if explore is disabled, but the initial showExplore is true, set to false.
@@ -153,121 +148,45 @@ SPDX-License-Identifier: AGPL-3.0-only
         return mapManager.getMapLibre();
     }
 
+    /**
+     * Load (or reload) geometry + data for a source via the manager, then merge
+     * the derived fields back onto the reactive source. The manager owns the
+     * geometry payload and all the heavy transformation; here we only manage the
+     * reactive `status` and apply the returned patch.
+     */
     async function fetchSource(id: string) {
-        const ac = new AbortController();
-        controllers.set(id, ac);
-        try {
-            const source = sources.find((i) => i.id === id);
-            if (source) {
-                // load geometry
-                /*const geom =
-                    source.type == "bbox"
-                        ? await mapManager.fetchBBox(source.query)
-                        : await mapManager.fetchGeometry(source.query); // your one-or-more ajax calls*/
+        const source = sources.find((i) => i.id === id);
+        if (!source) return;
 
-                const geom = await (async () => {
-                    switch (source.type) {
-                        case "bbox":
-                            return mapManager.fetchBBox(source.query);
+        source.status = "loading";
 
-                        case "vector":
-                            return mapManager.fetchDataLayerVector(
-                                source.query,
-                            );
+        // pass a plain snapshot across the imperative boundary
+        const patch = await mapManager.loadSource($state.snapshot(source));
 
-                        default:
-                            return mapManager.fetchGeometry(source.query);
-                    }
-                })();
+        // the source may have been deleted while we were loading
+        const current = sources.find((i) => i.id === id);
+        if (!current) return;
 
-                // if data layer, load data
-                if (source.type == "datalayer") {
-                    const data = await mapManager.fetchDatalayerData(
-                        source.query,
-                    );
-
-                    source.isCategorical = data.is_categorical;
-                    source.categoricalValues = data.categorical_values;
-                    source.categoricalLabels = data.categorical_labels;
-                    source.isPercentage = data.value_type == "percentage";
-
-                    const value_map = new Map(
-                        data.data.map((d) => [d.dh_shape_id, d.value]),
-                    );
-                    const formatted_map = new Map(
-                        data.data.map((d) => [d.dh_shape_id, d.formatted]),
-                    );
-
-                    source.actualExtent = extent(value_map.values());
-                    source.extent = source.extent ?? source.actualExtent;
-
-                    const color = buildScale(
-                        source.isCategorical,
-                        source.cmap,
-                        source.extent,
-                        source.categoricalValues,
-                    );
-
-                    if (!source.name) {
-                        source.name = data.name;
-                    }
-
-                    geom.features.forEach((feature) => {
-                        const dh_shape_id = feature.properties.dh_shape_id;
-
-                        // the shape might not have a known value and so not be
-                        // present in in the returned result
-                        let value = value_map.has(dh_shape_id)
-                            ? value_map.get(dh_shape_id)
-                            : null;
-
-                        let formatted = formatted_map.has(dh_shape_id)
-                            ? formatted_map.get(dh_shape_id)
-                            : null;
-
-                        feature.properties.alpha = 1;
-
-                        if (value === null) {
-                            feature.properties.value = null;
-                            feature.properties.formatted = null;
-                            feature.properties.color = "rgba(0, 0, 0, 0.1)";
-                        } else {
-                            feature.properties.value = value;
-                            feature.properties.formatted = formatted;
-                            feature.properties.color = color(value);
-                        }
-                    });
-                }
-
-                geometry.set(id, geom);
-                source.status = "ready"; // reactive flip → reconcile effect re-runs
-            }
-        } catch (e) {
-            const item = sources.find((i) => i.id === id);
-            if (item) item.status = "error";
-        } finally {
-            controllers.delete(id);
-        }
+        // patch carries derived fields + the new status ("ready"/"error"),
+        // or {} if the load was superseded by a newer one.
+        Object.assign(current, patch);
     }
 
     $effect(() => {
         if (!map) return; // wait for the map; re-runs when set
         const desired = sources.map((i) => ({
-            // reading these tracks them
+            // reading these tracks them; `status` is what re-runs this effect
+            // once geometry has been loaded into the manager.
             id: i.id,
             visible: i.visible,
             type: i.type,
-            ready: i.status === "ready",
+            status: i.status,
             alpha: i.alpha,
             color: i.color,
             fitBounds: i.fitBounds,
         }));
 
-        //const desired = sources.find((i) => i.status === "ready");
-
-        mapManager.reconcile(desired, geometry); // imperative map work lives in the manager
-
-        // color scale
+        mapManager.reconcile(desired); // imperative map work + geometry live in the manager
     });
 
     function handleEndDate() {
@@ -364,57 +283,110 @@ SPDX-License-Identifier: AGPL-3.0-only
     }
 
     export function addSource(source: any) {
-        //const id = ;
         source.id = source.id ?? mapManager.getNextSourceIdString();
         sources.unshift(MapSourceSchema.parse(source));
         fetchSource(source.id);
     }
 
-    export async function changeSourceData(id: string, query: any) {
+    /**
+     * Public API for power users: apply an externally-supplied datalayer data
+     * payload to an existing source.
+     *
+     *   1. flips the source into the "loading" state
+     *   2. resolves `data` (awaits it if it's a promise / thunk)
+     *   3. applies the data to the source's geometry and pushes it live to the map
+     *   4. flips the source back to "ready"
+     *
+     * `data` may be the payload itself, a Promise of it, or a function returning
+     * a Promise of it. Pass a promise/thunk if you want the loading spinner to
+     * cover your fetch — the source stays in "loading" for the whole await:
+     *
+     *   await el.updateSourceData(id, fetch(url).then((r) => r.json()));
+     *   await el.updateSourceData(id, () => myApi.getData(id));
+     *   await el.updateSourceData(id, alreadyFetchedData); // no visible spinner
+     *
+     * Because a source stays on the map as long as the manager holds its
+     * geometry, the loading -> ready flip here does NOT tear down + rebuild the
+     * source, so popups/handlers are left untouched (no duplication).
+     *
+     * The resolved payload must match the /api/datalayers/data response shape:
+     *   { name, is_categorical, categorical_values, categorical_labels,
+     *     value_type, data: [{ dh_shape_id, value, formatted }, ...] }
+     */
+    export async function updateSourceData(
+        id: string,
+        data: any | Promise<any> | (() => any | Promise<any>),
+    ) {
         const source = sources.find((i) => i.id === id);
-
         if (!source) {
             console.warn(`Source not found: ${id}`);
             return;
         }
-
-        console.log(id);
+        if (source.type !== "datalayer") {
+            console.warn(`updateSourceData only supports datalayer sources (got "${source.type}")`);
+            return;
+        }
+        if (!mapManager.hasGeometry(id)) {
+            console.warn(`Source ${id} has no loaded geometry yet`);
+            return;
+        }
 
         source.status = "loading";
+        try {
+            // await covers both plain values and promises; a function is a
+            // lazy producer so the fetch only starts once we're in "loading".
+            const resolved = typeof data === "function" ? await data() : await data;
 
-        const data = await mapManager.fetchDatalayerData(query);
+            // the source may have been deleted while we were awaiting
+            const current = sources.find((i) => i.id === id);
+            if (!current) return;
 
-        let geom = geometry.get(id);
-        // bla
+            const patch = mapManager.applyDatalayerData($state.snapshot(current), resolved);
+            Object.assign(current, patch);
+            current.status = "ready";
+        } catch (e) {
+            console.error("updateSourceData failed", id, e);
+            const current = sources.find((i) => i.id === id);
+            if (current) current.status = "error";
+        }
+    }
 
-        /*if (geom) {
-            geom.features.forEach((feature) => {
-                const dh_shape_id = feature.properties.dh_shape_id;
+    /**
+     * Public API: manually toggle a source's loading spinner. Useful when you
+     * want to drive the loading state around your own arbitrary async work
+     * instead of handing it to {@link updateSourceData}:
+     *
+     *   el.setSourceLoading(id, true);
+     *   const data = await myFetch();
+     *   el.updateSourceData(id, data); // flips back to ready
+     */
+    export function setSourceLoading(id: string, loading: boolean) {
+        const source = sources.find((i) => i.id === id);
+        if (!source) {
+            console.warn(`Source not found: ${id}`);
+            return;
+        }
+        source.status = loading ? "loading" : "ready";
+    }
 
-                // the shape might not have a known value and so not be
-                // present in in the returned result
-                let value = value_map.has(dh_shape_id)
-                    ? value_map.get(dh_shape_id)
-                    : null;
-
-                let formatted = formatted_map.has(dh_shape_id)
-                    ? formatted_map.get(dh_shape_id)
-                    : null;
-
-                feature.properties.alpha = 1;
-
-                if (value === null) {
-                    feature.properties.value = null;
-                    feature.properties.formatted = null;
-                    feature.properties.color = "rgba(0, 0, 0, 0.1)";
-                } else {
-                    feature.properties.value = value;
-                    feature.properties.formatted = formatted;
-                    feature.properties.color = color(value);
-                }
-            });
-        }*/
-        source.status = "ready";
+    /**
+     * Public API: re-fetch a source's geometry (+ data) from the server,
+     * optionally with a new query. Use this when you want the component to do
+     * the loading itself; use {@link updateSourceData} when you already hold the
+     * data payload. Query is shallow-merged onto the existing one.
+     *
+     *   await el.reloadSource("dh-0-source", { start_date: "2020" });
+     */
+    export async function reloadSource(id: string, query?: Record<string, unknown>) {
+        const source = sources.find((i) => i.id === id);
+        if (!source) {
+            console.warn(`Source not found: ${id}`);
+            return;
+        }
+        if (query) {
+            source.query = { ...source.query, ...query };
+        }
+        await fetchSource(id);
     }
 
     function addShapeSource() {
@@ -521,6 +493,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     }
 
     function deleteSource(id: string) {
+        mapManager.dropSource(id); // abort in-flight fetch + drop geometry
         sources = sources.filter((i) => i.id !== id);
     }
 </script>
