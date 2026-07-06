@@ -22,7 +22,6 @@ SPDX-License-Identifier: AGPL-3.0-only
     import type { Map as MapLibreMap } from "maplibre-gl";
 
     import { onMount } from "svelte";
-
     import { MapManager } from "./MapManager";
     import { mapControl } from "./MapControl";
     import MapSource from "./MapSource.svelte";
@@ -75,8 +74,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
     let showShare: boolean = $state(false);
 
-    let newDataLayerKey = $state("");
-    let newShapeKey = $state("");
+    const instanceId = $props.id();
 
     onMount(async () => {
         // if explore is disabled, but the initial showExplore is true, set to false.
@@ -221,10 +219,8 @@ SPDX-License-Identifier: AGPL-3.0-only
     /**
      * Add Data Layer to the selection UI.
      */
-    async function addDataLayer() {
-        dl = newDataLayerKey;
-
-        const res = await fetch("/api/datalayers/meta?datalayer_key=" + dl);
+    async function addDataLayer(key: string) {
+        const res = await fetch("/api/datalayers/meta?datalayer_key=" + key);
 
         if (!res.ok) {
             alert("Data Layer could not be found.");
@@ -235,7 +231,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         const datalayer: DataLayer = response.datalayer;
 
         datalayers.push({
-            key: newDataLayerKey,
+            key: key,
             datalayer: datalayer,
             query: {
                 shape_type: datalayer.shape_types[0].key,
@@ -283,9 +279,16 @@ SPDX-License-Identifier: AGPL-3.0-only
     }
 
     export function addSource(source: any) {
-        source.id = source.id ?? mapManager.getNextSourceIdString();
-        sources.unshift(MapSourceSchema.parse(source));
-        fetchSource(source.id);
+        // pull the (non-serializable) color scale out before Zod parsing; it's
+        // only available via this JS call, not the serialized `sources` attribute.
+        const { colorScale, ...rest } = source;
+
+        rest.id = rest.id ?? mapManager.getNextSourceIdString();
+        const parsed = MapSourceSchema.parse(rest);
+        sources.unshift(parsed);
+
+        mapManager.setColorScale(parsed.id, colorScale);
+        fetchSource(parsed.id);
     }
 
     /**
@@ -323,7 +326,9 @@ SPDX-License-Identifier: AGPL-3.0-only
             return;
         }
         if (source.type !== "datalayer") {
-            console.warn(`updateSourceData only supports datalayer sources (got "${source.type}")`);
+            console.warn(
+                `updateSourceData only supports datalayer sources (got "${source.type}")`,
+            );
             return;
         }
         if (!mapManager.hasGeometry(id)) {
@@ -335,13 +340,17 @@ SPDX-License-Identifier: AGPL-3.0-only
         try {
             // await covers both plain values and promises; a function is a
             // lazy producer so the fetch only starts once we're in "loading".
-            const resolved = typeof data === "function" ? await data() : await data;
+            const resolved =
+                typeof data === "function" ? await data() : await data;
 
             // the source may have been deleted while we were awaiting
             const current = sources.find((i) => i.id === id);
             if (!current) return;
 
-            const patch = mapManager.applyDatalayerData($state.snapshot(current), resolved);
+            const patch = mapManager.applyDatalayerData(
+                $state.snapshot(current),
+                resolved,
+            );
             Object.assign(current, patch);
             current.status = "ready";
         } catch (e) {
@@ -377,7 +386,10 @@ SPDX-License-Identifier: AGPL-3.0-only
      *
      *   await el.reloadSource("dh-0-source", { start_date: "2020" });
      */
-    export async function reloadSource(id: string, query?: Record<string, unknown>) {
+    export async function reloadSource(
+        id: string,
+        query?: Record<string, unknown>,
+    ) {
         const source = sources.find((i) => i.id === id);
         if (!source) {
             console.warn(`Source not found: ${id}`);
@@ -387,21 +399,6 @@ SPDX-License-Identifier: AGPL-3.0-only
             source.query = { ...source.query, ...query };
         }
         await fetchSource(id);
-    }
-
-    function addShapeSource() {
-        const id = mapManager.getNextSourceIdString();
-        sources.unshift(
-            MapSourceSchema.parse({
-                id: id,
-                type: "shape",
-                alpha: 0.3,
-                query: {
-                    shape_key: newShapeKey,
-                },
-            }),
-        );
-        fetchSource(id);
     }
 
     function addDatalayerVectorSource(datalayer_key: string) {
@@ -471,11 +468,38 @@ SPDX-License-Identifier: AGPL-3.0-only
         node.addEventListener("selection", function (event) {
             const feedback = event.detail;
 
+            const type = feedback.selection.value.type;
+
+            if (type == "datalayer") {
+                // datalayer for query definition
+                addDataLayer(feedback.selection.value.key);
+            } else if (type == "shape") {
+                // shape is added directly as source
+                addSource({
+                    type: "shape",
+                    name: feedback.selection.value.label,
+                    query: {
+                        shape_key: feedback.selection.value.key,
+                    },
+                });
+            } else if (type == "shape_type") {
+                // shape is added directly as source
+                addSource({
+                    type: "shape",
+                    name: feedback.selection.value.label,
+                    query: {
+                        shape_type: feedback.selection.value.key,
+                    },
+                });
+            }
+
+            /*callback(feedback.selection.value);
+
             // Access the matched key's value from the original object
             const selection = feedback.selection.value[feedback.selection.key];
 
             node.value = selection;
-            node.dispatchEvent(new Event("input")); // needed so svelte catches the change for the binding
+            node.dispatchEvent(new Event("input")); // needed so svelte catches the change for the binding*/
         });
 
         return {
@@ -556,58 +580,55 @@ SPDX-License-Identifier: AGPL-3.0-only
     {#if openExplore}
         <div class="card-body border-bottom">
             <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <div class="input-group">
-                        <input
-                            use:initAutocomplete={{
-                                scope: "datalayers",
-                            }}
-                            bind:value={newDataLayerKey}
-                            type="text"
-                            class="form-control form-control-sm"
-                        />
-                        <button
-                            onclick={() => addDataLayer()}
-                            class="btn btn-outline-primary btn-sm"
-                            >Add Data Layer</button
-                        >
-                    </div>
-                </div>
-                <div class="col-12 col-md-4">
-                    <!--
-                    <div class="input-group">
-                        <select
-                            class="form-select form-select-sm"
-                            name=""
-                            id=""
-                        >
-                            <option>Country</option>
-                            <option>Region</option>
-                        </select>
-                        <button
-                            onclick={() => addDataLayer()}
-                            class="btn btn-outline-primary btn-sm"
-                            >Add shape type</button
-                        >
-                    </div>
+                <!--
+                    The <div> around the labels is needed for wrapping label/input.
+                    The autocomplete would be shown alongside otherwise.
                 -->
+                <div class="col-12">
+                    Search for Data Layers, Shapes or Shape types by name or
+                    key, to add them to the map.
                 </div>
                 <div class="col-12 col-md-4">
-                    <div class="input-group">
-                        <input
-                            use:initAutocomplete={{
-                                scope: "shapes",
-                            }}
-                            bind:value={newShapeKey}
-                            type="text"
-                            class="form-control form-control-sm"
-                        />
-                        <button
-                            onclick={() => addShapeSource()}
-                            class="btn btn-outline-primary btn-sm"
-                            >Add shape</button
-                        >
-                    </div>
+                    <label for={`${instanceId}-datalayer`} class="form-label"
+                        >Datalayers</label
+                    >
+                    <input
+                        id={`${instanceId}-datalayer`}
+                        use:initAutocomplete={{
+                            scope: "datalayers",
+                        }}
+                        placeholder="Search…"
+                        type="text"
+                        class="form-control form-control-sm"
+                    />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for={`${instanceId}-shapes`} class="form-label"
+                        >Shapes</label
+                    >
+                    <input
+                        id={`${instanceId}-shapes`}
+                        use:initAutocomplete={{
+                            scope: "shapes",
+                        }}
+                        placeholder="Search…"
+                        type="text"
+                        class="form-control form-control-sm"
+                    />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for={`${instanceId}-shape_types`} class="form-label">
+                        Shape Types</label
+                    >
+                    <input
+                        id={`${instanceId}-shape_types`}
+                        use:initAutocomplete={{
+                            scope: "shape_types",
+                        }}
+                        placeholder="Search…"
+                        type="text"
+                        class="form-control form-control-sm"
+                    />
                 </div>
             </div>
         </div>
@@ -856,6 +877,15 @@ SPDX-License-Identifier: AGPL-3.0-only
             bind:this={mapContainer}
         ></div>
     </div>
+
+    {#if import.meta.env.DEV}
+        <div>
+            <details>
+                <summary>Debug sources</summary>
+                <pre><code>{JSON.stringify(sources, null, 4)}</code></pre>
+            </details>
+        </div>
+    {/if}
 </div>
 
 <style>

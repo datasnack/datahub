@@ -71,18 +71,18 @@ export const MapSourceSchema = z.object({
     id: z.string(),
     status: z.enum(["loading", "ready", "error"]).default("loading"),
     type: z.enum(SourceType),
-
-    visible: z.boolean().default(true),
-    alpha: z.number().min(0).max(1).optional(),
     loading: z.boolean().default(true),
+    visible: z.boolean().default(true),
+    fitBounds: z.boolean().default(false),
+    name: z.string().nullable().default(null),
 
     showControls: z.boolean().default(true),
-    fitBounds: z.boolean().default(false),
 
-    name: z.string().nullable().default(null),
     query: z.record(z.string(), z.union([z.string(), z.number(), z.null()])),
-
     showQueryLabel: z.boolean().default(true),
+
+    alpha: z.number().min(0).max(1).optional(),
+
 
     /**
      * Color for shapes or vectors
@@ -98,6 +98,7 @@ export const MapSourceSchema = z.object({
     isCategorical: z.boolean().default(false),
     categoricalValues: z.array(z.string()).default([]),
     categoricalLabels: z.array(z.string()).default([]),
+    categoricalColors: z.array(z.string()).default([]),
     isPercentage: z.boolean().default(false),
     extent: z.tuple([z.number(), z.number()]).nullable().default(null),
     actualExtent: z.tuple([z.number(), z.number()]).nullable().default(null)

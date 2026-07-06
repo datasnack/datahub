@@ -25,15 +25,22 @@ SPDX-License-Identifier: AGPL-3.0-only
     onMount(async () => {});
 
     const color = $derived(
-        buildScale(
-            source.isCategorical,
-            source.cmap,
-            source.extent,
-            source.categoricalValues,
-        ),
+        manager.getColorScale(source.id) ??
+            buildScale(
+                source.isCategorical,
+                source.cmap,
+                source.extent,
+                source.categoricalValues,
+                source.categoricalColors,
+            ),
     );
 
+    // an external scale defines its own grading, so the cmap/mode controls and
+    // the extent-from-mode effect below don't apply to it.
+    const hasCustomScale = $derived(!!manager.getColorScale(source.id));
+
     $effect(() => {
+        if (hasCustomScale) return; // external scale owns its own domain
         if (source.mode == "from0_1") {
             source.extent = [0, 1];
         } else if (source.mode == "min_max") {
@@ -90,18 +97,20 @@ SPDX-License-Identifier: AGPL-3.0-only
 
     <div bind:this={legendContainer}></div>
 
-    {#if !source.isCategorical}
-        {#if source.isPercentage}
-            <select bind:value={source.mode}>
-                <option value="min_max">[min, max]</option>
-                <option value="from0_1">[0, 100]</option>
+    {#if source.showControls}
+        {#if !source.isCategorical && !hasCustomScale}
+            {#if source.isPercentage}
+                <select bind:value={source.mode}>
+                    <option value="min_max">[min, max]</option>
+                    <option value="from0_1">[0, 100]</option>
+                </select>
+            {/if}
+
+            <select bind:value={source.cmap}>
+                {#each Object.keys(COLOR_SCALES) as name}
+                    <option value={name}>{name}</option>
+                {/each}
             </select>
         {/if}
-
-        <select bind:value={source.cmap}>
-            {#each Object.keys(COLOR_SCALES) as name}
-                <option value={name}>{name}</option>
-            {/each}
-        </select>
     {/if}
 </div>

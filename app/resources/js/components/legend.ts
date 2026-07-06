@@ -18,13 +18,11 @@ export const COLOR_SCALES = {
 } as const;
 export type ColorScaleKey = keyof typeof COLOR_SCALES;
 
-export function buildScale(isCategorical: boolean, cmap: ColorScaleKey, extent: [number, number], values: []) {
-
+export function buildScale(isCategorical: boolean, cmap: ColorScaleKey, extent: [number, number], values: [], colors: string[]) {
     if (isCategorical) {
         return scaleOrdinal(
             values,
-            d3.schemeCategory10,
-        );
+            colors && colors.length > 0 ? colors : d3.schemeCategory10);
     }
 
     const interpolator = COLOR_SCALES[cmap];

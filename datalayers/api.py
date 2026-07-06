@@ -260,6 +260,8 @@ def data(
     if aggregate:
         df = df.groupby("dh_shape_id", as_index=False)["value"].agg(aggregate)
 
+    df["formatted"] = df["value"].apply(datalayer.get_class().str_format)
+
     # return data according to format
     match fmt:
         case "csv":
@@ -279,6 +281,13 @@ def data(
         case "json":
             return JsonResponse(
                 {
+                    "value_type": datalayer.value_type_str,
+                    "is_categorical": datalayer.is_categorical,
+                    "name": datalayer.name,
+                    "format_suffix": datalayer.format_suffix(),
+                    "categorical_values": datalayer.get_categorical_values(),
+                    "categorical_labels": datalayer.get_categorical_labels(),
+                    "categorical_colors": datalayer.get_categorical_colors(),
                     "temporal_column": str(datalayer.temporal_resolution),
                     "temporal_format": datalayer.temporal_resolution.format_db(),
                     "data": df.fillna(np.nan)

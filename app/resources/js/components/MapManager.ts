@@ -41,6 +41,13 @@ export class MapManager {
     // exactly the listeners we added (map.removeLayer does NOT remove them).
     #popupCleanups = new Map<string, () => void>();
 
+    // optional externally-supplied color scales (d3 scales), keyed by source id.
+    // A scale is just a `(value) => color` function that also carries .domain()/
+    // .ticks() for the legend. When present it overrides the built-in cmap path.
+    #colorScales = new Map<string, (value: any) => string>();
+
+    #popupCallbacks = new Map<string, (value: any) => string>();
+
     private sources: MapSource[] = [];
 
     private sourceIdCounter: number = 0;
@@ -171,16 +178,25 @@ export class MapManager {
         }
 
         // if datalayer choropleth
-        if (Object.hasOwn(props, 'value')) {
+        if (Object.hasOwn(props, 'dh_datalayer')) {
 
             content += '<hr class="my-1" />';
 
-            let color = "";
-            if (props.color) {
-                color = `<span class="d-inline-block" style="border: 1px solid #000; width: 1em; height: 1em; border-radius: 50%; background-color: ${props.color}"></span>`;
+            content += `<div class="small">${props.dh_source_name}</div>`;
+
+
+            if (Object.hasOwn(props, 'value')) {
+                let color = "";
+                if (props.color) {
+                    color = `<span class="d-inline-block" style="border: 1px solid #000; width: 1em; height: 1em; border-radius: 50%; background-color: ${props.color}"></span>`;
+                }
+                content += `<div class="">Value: ${props.formatted} ${color}</div>`;
+                content += `<div class="text-muted small">Raw: ${props.value}</div>`;
+
+            } else {
+                content += `<div class="">Value: N/A</div>`;
+
             }
-            content += `<div class="">Value: ${props.formatted} ${color}</div>`;
-            content += `<div class="text-muted small">Raw: ${props.value}</div>`;
         }
 
         // Add other properties
@@ -245,13 +261,13 @@ export class MapManager {
 
     async fetchBBox(query: Record<string, string>, signal?: AbortSignal): Promise<object> {
         const qs = new URLSearchParams(query).toString();
-        const res = await fetch(`/api/shapes/bbox/?${qs}`, { signal });
+        const res = await fetch(`/api/shapes/bbox?${qs}`, { signal });
         if (!res.ok) throw new Error(`Failed to fetch BBox: ${res.status}`);
         return res.json();
     }
 
     async fetchDatalayer(datalayer_key: string): Promise<DataLayer> {
-        const res = await fetch("/api/datalayers/meta/?datalayer_key=" + datalayer_key);
+        const res = await fetch("/api/datalayers/meta?datalayer_key=" + datalayer_key);
         if (!res.ok) throw new Error(`Failed to fetch Data Layer: ${res.status} `);
         const json = await res.json();
         return json.datalayer;
@@ -260,7 +276,7 @@ export class MapManager {
     async fetchDatalayerData(query: Record<string, string>, signal?: AbortSignal): Promise<any> {
         const qs = new URLSearchParams(Object.entries(query).filter(([_, value]) => value != null)).toString();
 
-        const res = await fetch(`/api/datalayers/data/?${qs}`, { signal });
+        const res = await fetch(`/api/datalayers/data?${qs}`, { signal });
         if (!res.ok) throw new Error(`Failed to fetch Data Layer data: ${res.status} `);
         const json = await res.json();
         return json;
@@ -268,7 +284,7 @@ export class MapManager {
 
     async fetchDataLayerVector(query: Record<string, string>, signal?: AbortSignal): Promise<object> {
         const qs = new URLSearchParams(Object.entries(query).filter(([_, value]) => value != null)).toString();
-        const res = await fetch(`/api/datalayers/vector/?${qs}`, { signal });
+        const res = await fetch(`/api/datalayers/vector?${qs}`, { signal });
         if (!res.ok) throw new Error(`Failed to fetch Vector data for Data Layer: ${res.status} `);
         return res.json();
     }
@@ -287,6 +303,26 @@ export class MapManager {
     getGeometry(id: string): GeoJSON.FeatureCollection | undefined {
         return this.#geometry.get(id);
     }
+
+    /** Register an externally-supplied d3 color scale for a source (overrides cmap). */
+    setColorScale(id: string, scale?: (value: any) => string): void {
+        if (scale) this.#colorScales.set(id, scale);
+        else this.#colorScales.delete(id);
+    }
+
+    getColorScale(id: string): ((value: any) => string) | undefined {
+        return this.#colorScales.get(id);
+    }
+
+    setPopupCallback(id: string, callback?: (value: any) => string): void {
+        if (callback) this.#popupCallbacks.set(id, callback);
+        else this.#colorScales.delete(id);
+    }
+
+    getPopupCallback(id: string): ((value: any) => string) | undefined {
+        return this.#popupCallbacks.get(id);
+    }
+
 
     /**
      * Fetch geometry (+ datalayer data) for a source and store it.
@@ -346,6 +382,7 @@ export class MapManager {
         this.#controllers.get(id)?.abort();
         this.#controllers.delete(id);
         this.#geometry.delete(id);
+        this.#colorScales.delete(id);
     }
 
     #fetchGeometryFor(source: MapSource, signal: AbortSignal): Promise<any> {
@@ -371,6 +408,9 @@ export class MapManager {
         const isCategorical: boolean = data.is_categorical;
         const categoricalValues: string[] = data.categorical_values;
         const categoricalLabels: string[] = data.categorical_labels;
+        const categoricalColors: string[] = data.categorical_colors;
+
+
         const isPercentage = data.value_type === "percentage";
 
         const value_map = new Map(data.data.map((d: any) => [d.dh_shape_id, d.value]));
@@ -379,12 +419,10 @@ export class MapManager {
         const actualExtent = extent(value_map.values() as Iterable<number>) as [number, number];
         const nextExtent = source.extent ?? actualExtent;
 
-        const color = buildScale(
-            isCategorical,
-            source.cmap as any,
-            nextExtent,
-            categoricalValues as any,
-        );
+        // an externally-supplied scale wins; otherwise build from cmap + extent
+        const color =
+            this.#colorScales.get(source.id) ??
+            buildScale(isCategorical, source.cmap as any, nextExtent, categoricalValues as any, categoricalColors);
 
         for (const feature of geom.features) {
             const dh_shape_id = feature.properties!.dh_shape_id;
@@ -392,9 +430,12 @@ export class MapManager {
             const formatted = formatted_map.has(dh_shape_id) ? formatted_map.get(dh_shape_id) : null;
 
             feature.properties!.alpha = 1;
+
+            // give the popup renderer the info, that this is a datalayer and it might
+            // have a value.
+            feature.properties!.dh_datalayer = true;
+
             if (value === null || value === undefined) {
-                feature.properties!.value = null;
-                feature.properties!.formatted = null;
                 feature.properties!.color = "rgba(0, 0, 0, 0.1)";
             } else {
                 feature.properties!.value = value;
@@ -407,6 +448,7 @@ export class MapManager {
             isCategorical,
             categoricalValues,
             categoricalLabels,
+            categoricalColors,
             isPercentage,
             actualExtent,
             extent: nextExtent,
@@ -519,7 +561,7 @@ export class MapManager {
             const onClick = (e: any) => {
                 const coordinates = e.lngLat;
                 const feature = e.features[0];
-                const popupFnc = this.getPopupContent;
+                const popupFnc = this.getPopupCallback(d.id) || this.getPopupContent;
 
                 new maplibregl.Popup()
                     .setLngLat(coordinates)
