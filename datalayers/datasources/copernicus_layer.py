@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from datalayers.datasources.base_layer import LayerValueType
+from datalayers.datasources.base_layer import CategoricalItem, LayerValueType
 from datalayers.datasources.tiff_layer import TiffLayer
 
 
@@ -49,6 +49,32 @@ class CopernicusLayer(TiffLayer):
             {"meaning": "sea", "value": 200, "color": "#00037a"},
         ]
 
+        self.value_mapping = [
+            CategoricalItem(value=0, label="unknown", color="#282828"),
+            CategoricalItem(value=111, label="ENF_closed", color="#564925"),
+            CategoricalItem(value=112, label="EBF_closed", color="#43972a"),
+            CategoricalItem(value=113, label="DNF_closed", color="#6f6743"),
+            CategoricalItem(value=114, label="DBF_closed", color="#5cc93b"),
+            CategoricalItem(value=115, label="mixed_closed", color="#56742e"),
+            CategoricalItem(value=116, label="unknown_closed", color="#33761f"),
+            CategoricalItem(value=121, label="ENF_open", color="#65601b"),
+            CategoricalItem(value=122, label="EBF_open", color="#95b336"),
+            CategoricalItem(value=123, label="DNF_open", color="#897523"),
+            CategoricalItem(value=124, label="DBF_open", color="#addb44"),
+            CategoricalItem(value=125, label="mixed_open", color="#93992f"),
+            CategoricalItem(value=126, label="unknown_open", color="#6c8b28"),
+            CategoricalItem(value=20, label="shrubland", color="#f4be4a"),
+            CategoricalItem(value=30, label="herbaceous_vegetation", color="#ffff6e"),
+            CategoricalItem(value=40, label="cropland", color="#e49af9"),
+            CategoricalItem(value=50, label="built-up", color="#e63222"),
+            CategoricalItem(value=60, label="bare_sparse_vegetation", color="#f0f0f0"),
+            CategoricalItem(value=70, label="snow_ice", color="#f0f0f0"),
+            CategoricalItem(value=80, label="permanent_inland_water", color="#1131c0"),
+            CategoricalItem(value=90, label="herbaceous_wetland", color="#41939f"),
+            CategoricalItem(value=100, label="moss_lichen", color="#f7e7a8"),
+            CategoricalItem(value=200, label="sea", color="#00037a"),
+        ]
+
     def get_data_path(self) -> Path:
         """Overwrite input directory, b/c we have multiple derived layers from this source."""
         return Path("./data/datalayers/copernicus_landcover/")
@@ -69,9 +95,9 @@ class CopernicusLayer(TiffLayer):
 
     def get_value_for_key(self, key) -> int:
         """Return the value used for a land usage key."""
-        for item in self.mapping:
-            if item["meaning"] == key:
-                return item["value"]
+        for item in self.value_mapping:
+            if item.label == key:
+                return item.value
 
         raise ValueError(f"Unknown Copernicus mapping key: {key}.")
 
@@ -81,8 +107,22 @@ class CopernicusLayer(TiffLayer):
 
         total_cells = np.count_nonzero(~np.isnan(band))
         values, count = np.unique(band, return_counts=True)
-        stats = dict(zip(values, count))
+        stats = dict(zip(values, count, strict=True))
 
+        # if configuration is categorical, we want to the
+        # dominant calls per shape
+        if self.is_categorical():
+            most_frequent_count = 0
+            most_frequent_key = 0
+
+            for key, value in stats.items():
+                if not np.isnan(key) and value > most_frequent_count:
+                    most_frequent_count = value
+                    most_frequent_key = int(key)
+            self.add_value(shape, year, most_frequent_key)
+            return
+
+        # if the value type is percentage we want the prop of the requested typed
         aoi_cells = 0
         for key in self.area_of_interest:
             val = self.get_value_for_key(key)
@@ -90,10 +130,4 @@ class CopernicusLayer(TiffLayer):
             if val in stats:
                 aoi_cells += stats[val]
 
-        self.rows.append(
-            {
-                "year": year,
-                "shape_id": shape.id,
-                "value": aoi_cells / total_cells,
-            }
-        )
+        self.add_value(shape, year, aoi_cells / total_cells)

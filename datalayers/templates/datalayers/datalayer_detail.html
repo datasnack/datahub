@@ -18,10 +18,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 {% load apiurl %}
 {% load dl %}
 
-
-
-
-
 {% block title %}{{ datalayer.name }}{% endblock %}
 
 {% block content %}
@@ -181,14 +177,43 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</tr>
 
 								<tr>
-									<td>{% translate "Database unit" %}</td>
-									<td>{{ datalayer.database_unit }}</td>
+									<th class="fw-normal">{% translate "Value type" %}</th>
+									<td>
+										{% if datalayer.is_categorical %}
+											{{ datalayer.categorical.value }}<code>&lt;{{ datalayer.value_type|default_if_none:"-" }}&gt;</code>
+										{% else %}
+											<code>{{ datalayer.value_type|default_if_none:"-" }}</code>
+										{% endif %}
+									</td>
 								</tr>
 
-								<tr>
-									<th class="fw-normal">{% translate "Value type" %}</th>
-									<td><code>{{ datalayer.value_type|default_if_none:"-" }}</code></td>
-								</tr>
+								{% if datalayer.is_categorical %}
+									<tr>
+										<td>{% translate "Values" %}</td>
+										<td>
+											<ul class="m-0 p-0">
+											{% for item in datalayer.get_categorical_items %}
+												<li>
+													<code>{{ item.value }}</code>{% if item.label %}:{%endif%}
+
+													{% if item.label %}
+														{{item.label}}
+													{% endif %}
+
+													{% if item.color %}
+														<span title="{{item.color}}" style="width: 1em; height: 1em; background-color: {{item.color}}" class="d-inline-block border border-dark rounded-circle"></span>
+													{% endif %}
+												</li>
+											{% endfor %}
+											</ul>
+										</td>
+									</tr>
+								{% else %}
+									<tr>
+										<td>{% translate "Database unit" %}</td>
+										<td>{{ datalayer.database_unit }}</td>
+									</tr>
+								{% endif %}
 								<tr>
 									<th class="fw-normal">{% translate "Smallest spatial resolution" %}</th>
 									<td>

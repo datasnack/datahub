@@ -5,6 +5,7 @@
 import datetime as dt
 import os
 import subprocess
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from urllib.parse import urlparse
@@ -97,12 +98,26 @@ class LayerValueType(Enum):
     FLOAT = "float"
     INTEGER = "integer"
     PERCENTAGE = "percentage"
+    BOOL = "bool"
+    STRING = "string"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+class LayerCategoricalType(Enum):
     BINARY = "binary"
     NOMINAL = "nominal"  # categorical without natural order
     ORDINAL = "ordinal"  # categorical with natural order (i.e., low < medium < high)
 
-    def __str__(self) -> str:
-        return str(self.value)
+
+@dataclass
+class CategoricalItem:
+    """Class for keeping track of valid categorical values."""
+
+    value: str | int | float | bool
+    label: str | None = None
+    color: str | None = None
 
 
 class BaseLayer:
@@ -115,8 +130,8 @@ class BaseLayer:
         self.time_col: LayerTimeResolution = LayerTimeResolution.YEAR
         self.value_type: LayerValueType = LayerValueType.VALUE
 
-        self.nominal_values = []
-        self.ordinal_values = []
+        self.categorical: LayerCategoricalType | None = None
+        self.value_mapping: list[CategoricalItem] = []
 
         # line or bar chart
         self.chart_type = "line"
@@ -156,6 +171,11 @@ class BaseLayer:
         return Path(f"./data/datalayers/{self.layer.key}/")
 
     def str_format(self, value) -> str:
+        if self.is_categorical():
+            for item in self.get_categorical_items():
+                if value == item.value:
+                    return item.label or str(value)
+
         match self.value_type:
             case LayerValueType.PERCENTAGE:
                 return f"{formats.number_format(round(value * 100, self.precision))} %"
@@ -192,7 +212,44 @@ class BaseLayer:
             case _:
                 raise ValueError("Unsupported time resolution")
 
-    def is_valid_value(self, value) -> bool:
+    def is_categorical(self) -> bool:
+        return self.categorical is not None
+
+    def get_categorical_items(self) -> list[CategoricalItem]:
+        return self.value_mapping
+
+    def get_categorical_values(self) -> list:
+        items = []
+
+        for item in self.value_mapping:
+            items.append(item.value)
+
+        return items
+
+    def get_categorical_labels(self) -> list:
+        items = []
+
+        for item in self.value_mapping:
+            items.append(item.label)
+
+        return items
+
+    def get_categorical_colors(self) -> list:
+        items = []
+
+        for item in self.value_mapping:
+            if item.color:
+                items.append(item.color)
+
+        # If the available colors do not match the amount of mappings,
+        # we return an empty list, this leads the MapLibre map to fallback
+        # on a default D3 color scheme.
+        if len(items) == len(self.value_mapping):
+            return items
+
+        return []
+
+    def is_valid_value_type(self, value) -> bool:
         match self.value_type:
             case LayerValueType.PERCENTAGE:
                 return (
@@ -200,20 +257,27 @@ class BaseLayer:
                     and value >= 0.0
                     and value <= 1.0
                 )
-            case LayerValueType.BINARY:
+            case LayerValueType.BOOL:
                 return isinstance(value, bool)
-            case LayerValueType.NOMINAL:
-                return value in self.nominal_values
-            case LayerValueType.ORDINAL:
-                return value in self.ordinal_values
             case LayerValueType.INTEGER:
                 return isinstance(value, int)
             case LayerValueType.FLOAT:
                 return isinstance(value, (float, np.floating))
+            case LayerValueType.STRING:
+                return isinstance(value, str)
             case LayerValueType.VALUE:
                 return True  # no validation of VALUE type
             case _:
                 raise ValueError("Unsupported value type")
+
+    def is_valid_value(self, value) -> bool:
+        if not self.is_valid_value_type(value):
+            return False
+
+        if self.is_categorical() and value not in self.get_categorical_values():  # noqa: SIM103
+            return False
+
+        return True
 
     def add_value(
         self,
@@ -230,9 +294,18 @@ class BaseLayer:
                 f"Temporal value ({temporal}) is not matching Data Layer ({self.time_col})."
             )
 
-        if validate_value and not self.is_valid_value(value):
+        if validate_value and not self.is_valid_value_type(value):
             raise ValueError(
                 f"Processed value ({value}) is not matching Data Layer ({self.value_type})."
+            )
+
+        if (
+            validate_value
+            and self.is_categorical()
+            and value not in self.get_categorical_values()
+        ):
+            raise ValueError(
+                f"Processed value ({value}) is matching Data Layer type ({self.value_type}) but is not an allowed value ({self.get_categorical_values()})."
             )
 
         if properties is None:

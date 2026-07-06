@@ -371,11 +371,7 @@ def plotly(
     shape_type = get_object_or_404(Type, key=shape_type_key)
 
     # Aggregation over a shape type is not possible with categorical values
-    if datalayer.value_type in [
-        LayerValueType.NOMINAL,
-        LayerValueType.ORDINAL,
-        LayerValueType.BINARY,
-    ]:
+    if datalayer.is_categorical:
         return JsonResponse({"traces": []})
 
     query = sql.SQL(

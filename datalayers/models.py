@@ -22,7 +22,13 @@ from django.utils.translation import gettext_lazy as _
 from datalayers.utils import dictfetchone, get_conn_string
 from shapes.models import Shape, Type
 
-from .datasources.base_layer import BaseLayer, LayerTimeResolution, LayerValueType
+from .datasources.base_layer import (
+    BaseLayer,
+    LayerTimeResolution,
+    LayerValueType,
+    LayerCategoricalType,
+    CategoricalItem,
+)
 
 # Create your models here.
 logger = logging.getLogger(__name__)
@@ -420,12 +426,16 @@ class Datalayer(models.Model):
     @property
     def is_categorical(self) -> bool:
         if self.has_class():
-            return self.get_class().value_type in [
-                LayerValueType.NOMINAL,
-                LayerValueType.ORDINAL,
-            ]
+            return self.get_class().is_categorical()
 
         return False
+
+    @property
+    def categorical(self) -> LayerCategoricalType | None:
+        if self.has_class():
+            return self.get_class().categorical
+
+        return None
 
     @property
     def value_type_str(self) -> str | None:
@@ -434,25 +444,29 @@ class Datalayer(models.Model):
 
         return None
 
+    def get_categorical_items(self) -> list[CategoricalItem]:
+        if self.has_class() and self.is_categorical:
+            return self.get_class().get_categorical_items()
+        return []
+
     def get_categorical_values(self) -> list[str]:
-        if self.has_class():
-            if self.value_type == LayerValueType.NOMINAL:
-                return list(self.get_class().nominal_values)
-            if self.value_type == LayerValueType.ORDINAL:
-                return list(self.get_class().ordinal_values)
+        if self.has_class() and self.is_categorical:
+            return list(self.get_class().get_categorical_values())
+        return []
+
+    def get_categorical_labels(self) -> list[str]:
+        if self.has_class() and self.is_categorical:
+            return list(self.get_class().get_categorical_labels())
         return []
 
     def get_categorical_colors(self) -> list[str]:
         if not self.has_class():
             return []
 
-        if self.value_type not in [LayerValueType.NOMINAL, LayerValueType.ORDINAL]:
+        if not self.is_categorical:
             return []
 
-        if hasattr(self.get_class(), "categorical_colors"):
-            return self.get_class().categorical_colors
-
-        return []
+        return list(self.get_class().get_categorical_colors())
 
     def format_precision(self) -> int | None:
         if self.has_class():

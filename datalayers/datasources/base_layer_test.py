@@ -6,7 +6,13 @@ import datetime as dt
 
 import pytest
 
-from .base_layer import BaseLayer, LayerTimeResolution, LayerValueType
+from .base_layer import (
+    BaseLayer,
+    LayerTimeResolution,
+    LayerValueType,
+    LayerCategoricalType,
+    CategoricalItem,
+)
 
 
 def test_layer_is_valid_temporal():
@@ -46,23 +52,28 @@ def test_layer_is_valid_value():
     assert layer.is_valid_value(42.34) is False
 
     layer = BaseLayer()
-    layer.value_type = LayerValueType.BINARY
+    layer.value_type = LayerValueType.BOOL
+    layer.categorical = LayerCategoricalType.BINARY
+    layer.value_mapping = [CategoricalItem(value=True), CategoricalItem(value=False)]
     assert layer.is_valid_value(True) is True  # noqa: FBT003 (boolean-positional-value-in-call)
     assert layer.is_valid_value(False) is True  # noqa: FBT003 (boolean-positional-value-in-call)
+    assert layer.is_valid_value("False") is False
     assert layer.is_valid_value(0) is False
     assert layer.is_valid_value("null") is False
     assert layer.is_valid_value("None") is False
     assert layer.is_valid_value(None) is False
 
     layer = BaseLayer()
-    layer.value_type = LayerValueType.NOMINAL
-    layer.nominal_values = ["foo", "bar"]
+    layer.value_type = LayerValueType.STRING
+    layer.categorical = LayerCategoricalType.NOMINAL
+    layer.value_mapping = [CategoricalItem(value="foo"), CategoricalItem(value="bar")]
     assert layer.is_valid_value("foo") is True
     assert layer.is_valid_value(100) is False
     assert layer.is_valid_value("baz") is False
 
     layer = BaseLayer()
-    layer.value_type = LayerValueType.ORDINAL
-    layer.ordinal_values = ["low", "high"]
+    layer.value_type = LayerValueType.STRING
+    layer.categorical = LayerCategoricalType.ORDINAL
+    layer.value_mapping = [CategoricalItem(value="low"), CategoricalItem(value="high")]
     assert layer.is_valid_value("high") is True
     assert layer.is_valid_value("extreme") is False
