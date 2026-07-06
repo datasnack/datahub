@@ -149,7 +149,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	const map = mapContainer.getMapManager().getMap();
 
 	map.on("style.load", (e) => {
-		mapContainer.getMapManager().addSource({
+		mapContainer.addSource({
 			type: "shape",
 			name: '{{ active_shape.name }}',
 			fitBounds: true,
