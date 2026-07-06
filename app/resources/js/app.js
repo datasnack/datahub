@@ -20,11 +20,10 @@ import * as bootstrap from "bootstrap";
 
 
 /**
- * D3
+ * Full D3 for downstream usage.
  *
  */
-import * as d3 from "./d3/d3.js"; // custom d3 with only needed parts
-//import * as d3 from 'd3';
+import * as d3 from 'd3';
 window.d3 = d3;
 
 import { Legend } from "./d3/d3.legend.js";

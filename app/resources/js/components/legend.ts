@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { scaleSequential, scaleOrdinal, type ScaleSequential } from 'd3-scale';
-import * as d3 from "../d3/d3.js"; // custom d3 with only needed parts
+import * as d3 from "d3";
 
 
 import { LegendMode, type LegendMode as TLegendMode } from './DatahubTypes.js';
