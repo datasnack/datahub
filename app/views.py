@@ -202,6 +202,22 @@ def search(request):
                 }
             )
 
+    if "shape_types" in search_filter:
+        shape_types = Type.objects.filter(
+            Q(name__icontains=search_term) | Q(key__icontains=search_term)
+        )
+
+        for st in shape_types:
+            results.append(
+                {
+                    "type": "shape_type",
+                    "url": st.get_absolute_url(),
+                    "label": f"{st.name}",
+                    "key": st.key,
+                    "objectID": st.id,
+                }
+            )
+
     if "datalayers" in search_filter:
         datalayers = (
             Datalayer.objects.filter(
