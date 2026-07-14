@@ -59,6 +59,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
             <div class="btn-group me-1">
                 <button
+                    title="Fit source to viewport"
                     onclick={() => fitToBounds(source.id)}
                     class="btn btn-outline-secondary btn-xs"
                 >
