@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 import datetime as dt
+import uuid
 from io import BytesIO
 from typing import Literal
 
@@ -61,7 +62,7 @@ def _get_datalayer_from_request(request, filters) -> Datalayer:
 @router.get("datalayer/", summary="Data Layer metadata")
 def datalayer(
     request,
-    fmt: Literal["json", "csv", "excel"] = Query(  # noqa: B008
+    fmt: Literal["json", "csv", "excel"] = Query(
         "json",
         description="File format of response.",
         alias="format",
@@ -192,6 +193,10 @@ def data(
         None,
         description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
     ),
+    color: str | None = Query(
+        "#3498db",
+        description="Color used in returned plotly traces.",
+    ),
     fmt: Literal["json", "csv", "excel", "plotly"] = Query(
         "json",
         description="File format of response.",
@@ -296,8 +301,10 @@ def data(
                 }
             )
         case "plotly":
+            name = f"{datalayer.name}: "
+
             if shape:
-                name = f"{shape.name} ({shape.type.name})"
+                name += f"{shape.name} ({shape.type.name}) ({shape.key})"
 
             if aggregate:
                 if start_date is None:
@@ -309,12 +316,13 @@ def data(
                 if isinstance(x, np.integer):
                     x = int(x)
 
+                name += f" ({aggregate}, {start_date}-{end_date})"
                 json_data = {
-                    "name": f"{name} ({aggregate}, {start_date}-{end_date})",
+                    "name": name,
                     "mode": "lines",
                     "x": [start_date, end_date],
                     "y": [x, x],
-                    "line": {"width": 2, "dash": "dash"},
+                    "line": {"width": 2, "dash": "dash", "color": color},
                 }
                 return JsonResponse(json_data)
 
@@ -336,6 +344,7 @@ def data(
                 "type": chart_type,
                 "x": df[str(datalayer.temporal_resolution)].tolist(),
                 "y": df["value"].tolist(),
+                "line": {"color": color},
             }
             return JsonResponse(json_data)
         case _:
@@ -360,11 +369,40 @@ def vector(
     return JsonResponse(geojson)
 
 
+def hex_to_rgba(hex_color, alpha=1.0):
+    hex_color = hex_color.lstrip("#")
+
+    if len(hex_color) == 3:  # e.g. #f0a
+        hex_color = "".join(c * 2 for c in hex_color)
+
+    if len(hex_color) != 6:
+        raise ValueError("Hex color must be 3 or 6 characters long.")
+
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+
+    return (r, g, b, alpha)
+
+
+def hex_to_rgba_string(hex_color, alpha=1.0):
+    r, g, b, _ = hex_to_rgba(hex_color, alpha)
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
 @router.get("plotly/", summary="Plotly min/max/mean traces")
 def plotly(
     request,
     filters: DatalayerFilterSchema = Query(...),
     shape_type_key: str | None = Query(..., alias="shape_type"),
+    start_date: str | None = Query(
+        None,
+        description="Include only data at/after the given date. Format according to Data Layer time type.",
+    ),
+    end_date: str | None = Query(
+        None,
+        description="Include only data before/at the given date. Format according to Data Layer time type.",
+    ),
     aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
     | None = Query(
         None,
@@ -373,6 +411,10 @@ def plotly(
     resample: str | None = Query(
         None,
         description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
+    ),
+    color: str | None = Query(
+        "#3498db",
+        description="Color used in returned plotly traces.",
     ),
     error_y: bool = False,
 ):
@@ -432,6 +474,7 @@ def plotly(
         return JsonResponse(json_data)
 
     # calculate deviation from mean
+    error_y = True
     if error_y:
         df["value_plus"] = df["max"] - df["value"]
         df["value_minus"] = df["value"] - df["min"]
@@ -446,25 +489,80 @@ def plotly(
     if datalayer.chart_type == "bar":
         chart_type = "bar"
 
-    json_data = {
-        "traces": [
+    x = df[str(datalayer.temporal_resolution)].tolist()
+    legendgroup_id = uuid.uuid4()
+
+    json_data = {"traces": []}
+
+    add_range = True
+
+    if chart_type == "bar":
+        add_range = False
+
+    if add_range:
+        color_limits = hex_to_rgba_string(color, alpha=0.8)
+        color_fill = hex_to_rgba_string(color, alpha=0.2)
+
+        json_data["traces"].append(
             {
-                #'x': df.index.values.tolist(),
-                "name": f"{shape_type.name} (mean)",
-                "x": df[str(datalayer.temporal_resolution)].tolist(),
-                "y": df["value"].tolist(),
-                "type": chart_type,
-                "error_y": {
-                    "type": "data",
-                    "symmetric": False,
-                    "array": df["value_plus"].tolist(),
-                    "arrayminus": df["value_minus"].tolist(),
-                }
-                if error_y and show_error
-                else None,
+                "name": f"{datalayer.name}: {shape_type.name} (max) ",
+                "x": x,
+                "y": df["max"].tolist(),
+                "type": "scatter",
+                "mode": "lines",
+                "line": {
+                    "color": color_limits,
+                    "dash": "longdash",
+                    "width": 1,
+                },
+                "legendgroup": legendgroup_id,
+                "showlegend": False,
+                # "hoverinfo": "skip",
             }
-        ]
-    }
+        )
+
+        json_data["traces"].append(
+            {
+                "name": f"{datalayer.name}: {shape_type.name} (min)",
+                "x": x,
+                "y": df["min"].tolist(),
+                "type": "scatter",
+                "mode": "lines",
+                "fill": "tonexty",
+                "fillcolor": color_fill,
+                "line": {
+                    "color": color_limits,
+                    "dash": "longdash",
+                    "width": 1,
+                },
+                "legendgroup": legendgroup_id,
+                "showlegend": False,
+                # "hoverinfo": "skip",
+            }
+        )
+
+    # Normal line
+    json_data["traces"].append(
+        {
+            #'x': df.index.values.tolist(),
+            "name": f"{datalayer.name}: {shape_type.name} (avg/min/max)",
+            "x": x,
+            "y": df["value"].tolist(),
+            "type": chart_type,
+            "line": {
+                "color": color,
+            },
+            "legendgroup": legendgroup_id,
+            # "error_y": {
+            #    "type": "data",
+            #    "symmetric": False,
+            #    "array": df["value_plus"].tolist(),
+            #    "arrayminus": df["value_minus"].tolist(),
+            # }
+            # if error_y and show_error
+            # else None,
+        }
+    )
 
     return JsonResponse(json_data)
 
@@ -477,38 +575,51 @@ def meta(
     datalayer = _get_datalayer_from_request(request, filters)
 
     layout = {
-        "title": {
-            "text": datalayer.name,
-            "subtitle": {
-                "text": datalayer.key,
-            },
+        "xaxis": {
+            "autorange": True,
+            "rangeslider": {},
         },
-        "xaxis": {},
-        "yaxis": {"automargin": True},
+        "yaxis": {
+            "automargin": True,
+        },
         "showlegend": True,
         "legend": {
-            "orientation": "h",
-            "x": 0,
-            "y": -0.2,
+            "orientation": "v",
+            "x": 0.0,
+            "xanchor": "left",
+            "y": -0.65,  # push below the rangeslider
+            "yanchor": "top",
+        },
+        "margin": {
+            "t": 12,
+            "r": 12,
+            "b": 12,
+            "l": 12,
+            "pad": 0,
         },
         "height": 450,
-        "margin": {"l": 50, "r": 10, "b": 100, "t": 50, "pad": 4},
     }
 
-    if datalayer.temporal_resolution == LayerTimeResolution.YEAR:
-        layout["xaxis"] = {"title": "Year", "type": "date", "hoverformat": "%Y"}
-    elif datalayer.temporal_resolution == LayerTimeResolution.DAY:
-        layout["xaxis"] = {"title": "Date", "type": "date", "hoverformat": "%Y-%m-%d"}
+    # x-axis
+    layout["xaxis"].update(
+        {
+            "title": {"text": datalayer.temporal_resolution.text()},
+            "type": "date",
+            "hoverformat": datalayer.temporal_resolution.format(),
+        }
+    )
 
+    # y-axis
     if datalayer.format_suffix():
-        layout["yaxis"]["title"] = f"Value [{datalayer.format_suffix()}]"
-    else:
-        layout["yaxis"]["title"] = "Value"
+        layout["yaxis"]["title"] = {"text": f"Value [{datalayer.format_suffix()}]"}
+        layout["yaxis"]["ticksuffix"] = datalayer.format_suffix()
 
     if datalayer.value_type == LayerValueType.PERCENTAGE:
         layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision()}%"
         layout["yaxis"]["range"] = [0, 1]
-    elif datalayer.value_type == LayerValueType.VALUE:
+    elif datalayer.value_type == LayerValueType.INTEGER:
+        layout["yaxis"]["tickformat"] = f",d"
+    else:
         layout["yaxis"]["tickformat"] = f",.{datalayer.format_precision()}f"
 
     shape_types = [
@@ -516,10 +627,10 @@ def meta(
     ]
     shapes = []
 
-    datalayer_shapes = datalayer.get_available_shapes()
-    datalayer_shapes_ids = []
-    for s in datalayer_shapes:
-        datalayer_shapes_ids.append(s.id)
+    # datalayer_shapes = datalayer.get_available_shapes()
+    # datalayer_shapes_ids = []
+    # for s in datalayer_shapes:
+    #    datalayer_shapes_ids.append(s.id)
 
     # todo: access to the shape hierarchy via the ORM is slow, for now we fetch the hierarchy manually.
 
@@ -589,19 +700,28 @@ def meta(
 
         return collected_entries
 
-    all_shapes = load_shapes()
-    tree = build_tree(all_shapes)
-    shapes = collect_shapes(tree, 0)
+    # all_shapes = load_shapes()
+    # tree = build_tree(all_shapes)
+    # shapes = collect_shapes(tree, 0)
+
+    shapes = []
 
     res = {
-        "plotly": {"layout": layout, "config": {"responsive": True}},
+        "plotly": {
+            "layout": layout,
+            "config": {
+                "responsive": True,
+                "displayModeBar": True,
+                "modeBarButtonsToRemove": ["select2d", "lasso2d"],
+            },
+        },
         "datalayer": {
             "key": datalayer.key,
             "has_vector_data": datalayer.has_vector_data(),
             "temporal_resolution": str(datalayer.temporal_resolution),
             "available_years": datalayer.get_available_years,
-            "first_time": datalayer.first_time(),
-            "last_time": datalayer.last_time(),
+            "first_time": datalayer.first_value().date(),
+            "last_time": datalayer.last_value().date(),
             "shape_types": shape_types,
             "shapes": shapes,
             "value_type": datalayer.value_type_str,
@@ -623,8 +743,9 @@ def meta(
     summary="Fetch DOI metadata from DataCite API",
 )
 def datacite(request, pid: str):
-    from datacite import DataCiteRESTClient
-    from datacite.errors import DataCiteNotFoundError
+    # rarely used, inlined import for performance reasons
+    from datacite import DataCiteRESTClient  # noqa: PLC0415
+    from datacite.errors import DataCiteNotFoundError  # noqa: PLC0415
 
     dc = DataCiteRESTClient(None, None, None)
     res = {}

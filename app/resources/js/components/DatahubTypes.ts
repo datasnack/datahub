@@ -13,7 +13,7 @@ export type DataLayerItem = {
     key: string,
 
     query: DataLayerQuery,
-
+    yaxis?: string,
     datalayer: DataLayer,
 }
 
@@ -38,10 +38,12 @@ export type DataLayer = {
 }
 
 export type DataLayerQuery = {
+    shape_key: string | null,
     shape_type: string | null,
     start_date: string | null,
     end_date: string | null,
     aggregate: string | null,
+    resample: string | null,
 }
 
 
@@ -110,3 +112,11 @@ export const MapSourceSchema = z.object({
 }));;
 
 export type MapSource = z.infer<typeof MapSourceSchema>;
+
+
+export const ChartSourceSchema = z.object({
+    yaxis: z.enum(["y1", "y2"]).default("y1"),
+    query: z.record(z.string(), z.union([z.string(), z.number(), z.null()])),
+});
+
+export type ChartSource = z.infer<typeof ChartSourceSchema>;

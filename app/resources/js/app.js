@@ -49,7 +49,7 @@ import "./search";
 
 window.loadPlotly = async function () {
 	if (!window.Plotly) {
-		window.Plotly = await import("plotly.js-dist");
+		window.Plotly = await import("plotly.js-cartesian-dist-min");
 	}
 	return Plotly;
 };

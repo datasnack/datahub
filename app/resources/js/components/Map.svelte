@@ -100,6 +100,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                             : null,
                     end_date: null,
                     aggregate: null,
+                    resample: null,
                 },
             });
         }
@@ -238,6 +239,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                 start_date: null,
                 end_date: null,
                 aggregate: null,
+                resample: null,
             },
         });
     }
