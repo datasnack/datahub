@@ -806,7 +806,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         addDataLayerSourceFromExplore(item);
                                     }}
                                     class="btn btn-outline-primary btn-sm"
-                                    >Add map</button
+                                    >Add</button
                                 >
 
                                 {#if item.datalayer.has_vector_data}

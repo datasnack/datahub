@@ -677,7 +677,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                 <label
                                     for="aggregate_function"
                                     class="form-label small"
-                                    >&nbsp;
+                                    >Selext y-axis
                                 </label>
 
                                 <div class="input-group">
@@ -694,7 +694,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                             addDataLayerSourceFromExplore(item);
                                         }}
                                         class="btn btn-outline-primary btn-sm"
-                                        >Add to chart</button
+                                        >Add</button
                                     >
                                 </div>
                             </div>
