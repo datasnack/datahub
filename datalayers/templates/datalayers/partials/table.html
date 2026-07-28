@@ -161,6 +161,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div class="d-flex justify-content-end">
 					<button
 					data-datalayer-key="{{ dl.key }}"
+					data-shape-key="{{shape.key}}"
 					data-shape-id="{{shape.id}}"
 					title="{% translate "Show temporal trend" %}" class="btn btn-sm btn-outline-primary js-add-datalayer-chart">{% icon "graph" %}</button>
 
@@ -225,17 +226,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 	let charts = document.getElementById('charts-{{ id }}');
 	table.querySelectorAll('.js-add-datalayer-chart').forEach(el => el.addEventListener('click', (event) => {
 		let chart = document.createElement("dh-chart");
+		const datalayer_key = event.currentTarget.dataset.datalayerKey;
+		const shape_key = event.currentTarget.dataset.shapeKey;
 
-		chart.setAttribute("show_remove", true);
-		chart.setAttribute("dl", event.currentTarget.dataset.datalayerKey);
-		chart.setAttribute("query", JSON.stringify({shape_id: event.currentTarget.dataset.shapeId}));
+		chart.setAttribute("explore", true);
+		chart.setAttribute("remove", true);
+		chart.setAttribute("dl", datalayer_key);
+		chart.setAttribute("sources", JSON.stringify([{query: {datalayer_key: datalayer_key, shape_key: shape_key}}]));
 
 		charts.insertBefore(chart, charts.firstChild);
 
 		chart.scrollIntoView({
 			block: 'end'
 		});
-
 	}));
 </script>
 {% endblock %}
