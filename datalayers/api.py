@@ -105,7 +105,6 @@ def datalayer(
                 r["sources"].append(rs)
             data["data"].append(r)
 
-        # print(data)
         return JsonResponse(data)
 
     for d in datalayers:
@@ -184,14 +183,18 @@ def data(
         None,
         description="Include only data before/at the given date. Format according to Data Layer time type.",
     ),
+    resample: str | None = Query(
+        None,
+        description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
+    ),
     aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
     | None = Query(
         None,
         description="[Pandas aggregate function](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.aggregate.html) for `agg()` function to be applied before returning data.",
     ),
-    resample: str | None = Query(
-        None,
-        description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
+    aggregate_group_by: Literal["spatial", "temporal"] = Query(
+        "spatial",
+        description="Should the aggregation be performed on the spatial or temporal axis?",
     ),
     color: str | None = Query(
         "#3498db",
@@ -259,11 +262,10 @@ def data(
         end_date=end_date_obj,
         shape=shape,
         shape_type=shape_type,
+        resample=resample,
+        aggregate=aggregate,
+        aggregate_group_by=aggregate_group_by,
     )
-
-    # if a aggregate function is presents
-    if aggregate:
-        df = df.groupby("dh_shape_id", as_index=False)["value"].agg(aggregate)
 
     df["formatted"] = df["value"].apply(datalayer.get_class().str_format)
 
@@ -301,51 +303,172 @@ def data(
                 }
             )
         case "plotly":
+            # In case no data could be selected, we return with 204 No content
+            if len(df) == 0:
+                return HttpResponse(status=204)
+
             name = f"{datalayer.name}: "
 
             if shape:
-                name += f"{shape.name} ({shape.type.name}) ({shape.key})"
+                name += f"{shape.name} ({shape.key},{shape.type.name})"
+            elif shape_type:
+                name += f"{shape_type.name}"
+
+            if resample:
+                name += f" resample({aggregate})"
 
             if aggregate:
-                if start_date is None:
-                    start_date = datalayer.first_time()
-                if end_date is None:
-                    end_date = datalayer.last_time()
+                name += f" agg({aggregate})"
 
-                x = df.loc[0, "value"]
-                if isinstance(x, np.integer):
-                    x = int(x)
-
-                name += f" ({aggregate}, {start_date}-{end_date})"
-                json_data = {
-                    "name": name,
-                    "mode": "lines",
-                    "x": [start_date, end_date],
-                    "y": [x, x],
-                    "line": {"width": 2, "dash": "dash", "color": color},
-                }
-                return JsonResponse(json_data)
-
-            if resample and len(resample) > 0:
-                df[str(datalayer.temporal_resolution)] = pd.to_datetime(
-                    df[str(datalayer.temporal_resolution)]
-                )
-                df = df.set_index(str(datalayer.temporal_resolution))
-                df = df.resample(resample).mean()
-                df[str(datalayer.temporal_resolution)] = df.index
-                df = df.dropna()
-
-            chart_type = "scatter"
+            chart_type: Literal["scatter", "bar"] = "scatter"
             if datalayer.chart_type == "bar":
                 chart_type = "bar"
 
-            json_data = {
-                "name": name,
-                "type": chart_type,
-                "x": df[str(datalayer.temporal_resolution)].tolist(),
-                "y": df["value"].tolist(),
-                "line": {"color": color},
-            }
+            # depending on the trace type (scatter -> line, bar -> marker) a different
+            # key is used in plotly.js to set the trace color
+            trace_color_key = {"scatter": "line", "bar": "marker"}
+
+            json_data = {"traces": []}
+
+            if aggregate:
+                # for single shapes -> get first/last date and put in dashed line
+                # for shape type
+                # -> if min/max is available put in
+                if shape_type:
+                    if "min" in df.columns and "max" in df.columns:
+                        legendgroup_id = uuid.uuid4()
+                        color_limits = hex_to_rgba_string(color, alpha=0.8)
+                        color_fill = hex_to_rgba_string(color, alpha=0.2)
+                        x = df[str(datalayer.temporal_resolution)].tolist()
+
+                        json_data["traces"].append(
+                            {
+                                "name": f"{name} (max) ",
+                                "x": x,
+                                "y": df["max"].tolist(),
+                                "type": "scatter",
+                                "mode": "lines",
+                                "line": {
+                                    "color": color_limits,
+                                    "dash": "longdash",
+                                    "width": 1,
+                                },
+                                "legendgroup": legendgroup_id,
+                                "showlegend": False,
+                            }
+                        )
+
+                        json_data["traces"].append(
+                            {
+                                "name": f"{name} (min)",
+                                "x": x,
+                                "y": df["min"].tolist(),
+                                "type": "scatter",
+                                "mode": "lines",
+                                "fill": "tonexty",
+                                "fillcolor": color_fill,
+                                "line": {
+                                    "color": color_limits,
+                                    "dash": "longdash",
+                                    "width": 1,
+                                },
+                                "legendgroup": legendgroup_id,
+                                "showlegend": False,
+                            }
+                        )
+                        json_data["traces"].append(
+                            {
+                                "name": f"{name} (avg/min/max)",
+                                "type": chart_type,
+                                "x": df[str(datalayer.temporal_resolution)].tolist(),
+                                "y": df["value"].tolist(),
+                                f"{trace_color_key[chart_type]}": {"color": color},
+                                "legendgroup": legendgroup_id,
+                            }
+                        )
+                    else:
+                        # shape type aggregation that has no min/max
+                        json_data["traces"].append(
+                            {
+                                "name": name,
+                                "type": chart_type,
+                                "x": df[str(datalayer.temporal_resolution)].tolist(),
+                                "y": df["value"].tolist(),
+                                f"{trace_color_key[chart_type]}": {"color": color},
+                            }
+                        )
+
+                else:
+                    # single shape with aggregation
+                    plotly_start_date = (
+                        start_date_obj.strftime("%Y-%m-%d")
+                        if start_date_obj
+                        else datalayer.first_time()
+                    )
+                    plotly_end_date = (
+                        end_date_obj.strftime("%Y-%m-%d")
+                        if end_date_obj
+                        else datalayer.last_time()
+                    )
+
+                    x = df.loc[0, "value"]
+                    if isinstance(x, np.integer):
+                        x = int(x)
+
+                    json_data = {
+                        "traces": [
+                            {
+                                "name": name,
+                                "mode": "lines",
+                                "x": [plotly_start_date, plotly_end_date],
+                                "y": [x, x],
+                                "line": {"width": 2, "dash": "dash", "color": color},
+                            }
+                        ]
+                    }
+
+                return JsonResponse(json_data)
+
+            # No aggregation multiple shapes from a shape type
+            # or single shape
+            if shape_type:
+                legendgroup_id = uuid.uuid4()
+                # differentiate multiple shape in one response
+                # -> each shape one trace
+                # and single shape -> one trace
+                shape_ids = df["dh_shape_id"].unique()
+                color = hex_to_rgba_string(color, alpha=0.2)
+
+                for idx, trace_shape_id in enumerate(shape_ids):
+                    dfx = df[df["dh_shape_id"] == trace_shape_id]
+                    dfx_shape = Shape.objects.get(pk=trace_shape_id)
+                    json_data["traces"].append(
+                        {
+                            "name": f"{name} ({len(shape_ids)} shapes)",
+                            "type": chart_type,
+                            "x": dfx[str(datalayer.temporal_resolution)].tolist(),
+                            "y": dfx["value"].tolist(),
+                            f"{trace_color_key[chart_type]}": {"color": color},
+                            "legendgroup": legendgroup_id,
+                            "showlegend": (idx == 0),
+                            "hovertemplate": (
+                                f"<b>{dfx_shape.name}</b><br>"
+                                "Temporal: %{x}<br>"
+                                "Value: %{y}<extra></extra>"
+                            ),
+                        }
+                    )
+            else:
+                json_data["traces"].append(
+                    {
+                        "name": f"{name}",
+                        "type": chart_type,
+                        "x": df[str(datalayer.temporal_resolution)].tolist(),
+                        "y": df["value"].tolist(),
+                        f"{trace_color_key[chart_type]}": {"color": color},
+                    }
+                )
+
             return JsonResponse(json_data)
         case _:
             return HttpResponseBadRequest("Invalid format")
@@ -365,7 +488,7 @@ def vector(
     if not datalayer.has_vector_data():
         return HttpResponseNotFound("Data Layer has no raw vector data")
 
-    geojson = datalayer._get_class().vector_data_map()
+    geojson = datalayer.get_class().vector_data_map()
     return JsonResponse(geojson)
 
 
@@ -388,183 +511,6 @@ def hex_to_rgba(hex_color, alpha=1.0):
 def hex_to_rgba_string(hex_color, alpha=1.0):
     r, g, b, _ = hex_to_rgba(hex_color, alpha)
     return f"rgba({r}, {g}, {b}, {alpha})"
-
-
-@router.get("plotly/", summary="Plotly min/max/mean traces")
-def plotly(
-    request,
-    filters: DatalayerFilterSchema = Query(...),
-    shape_type_key: str | None = Query(..., alias="shape_type"),
-    start_date: str | None = Query(
-        None,
-        description="Include only data at/after the given date. Format according to Data Layer time type.",
-    ),
-    end_date: str | None = Query(
-        None,
-        description="Include only data before/at the given date. Format according to Data Layer time type.",
-    ),
-    aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
-    | None = Query(
-        None,
-        description="[Pandas aggregate function](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.aggregate.html) for `agg()` function to be applied before returning data.",
-    ),
-    resample: str | None = Query(
-        None,
-        description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
-    ),
-    color: str | None = Query(
-        "#3498db",
-        description="Color used in returned plotly traces.",
-    ),
-    error_y: bool = False,
-):
-    datalayer = _get_datalayer_from_request(request, filters)
-    shape_type = get_object_or_404(Type, key=shape_type_key)
-
-    # Aggregation over a shape type is not possible with categorical values
-    if datalayer.is_categorical:
-        return JsonResponse({"traces": []})
-
-    query = sql.SQL(
-        "SELECT {temporal_column}, AVG(value) AS value, MIN(value) AS min, MAX(value) AS max \
-        FROM {table} \
-        JOIN shapes_shape s ON s.id = {table}.shape_id \
-        WHERE s.type_id = %(type)s \
-        GROUP BY {table}.{temporal_column} \
-        ORDER BY {temporal_column}"
-    ).format(
-        table=sql.Identifier(datalayer.key),
-        temporal_column=sql.Identifier(str(datalayer.temporal_resolution)),
-    )
-
-    df = pd.read_sql(
-        query.as_string(connection),
-        con=get_conn_string(),
-        params={"type": shape_type.id},
-    )
-
-    if resample and len(resample) > 0:
-        df[str(datalayer.temporal_resolution)] = pd.to_datetime(
-            df[str(datalayer.temporal_resolution)]
-        )
-        df = df.set_index(str(datalayer.temporal_resolution))
-        df = df.resample(resample).mean()
-        df[str(datalayer.temporal_resolution)] = df.index
-        df = df.dropna()
-
-    if aggregate:
-        start_date = datalayer.first_time()
-        end_date = datalayer.last_time()
-
-        x = df["value"].agg(aggregate)
-        if isinstance(x, np.integer):
-            x = int(x)
-
-        json_data = {
-            "traces": [
-                {
-                    "name": f"{shape_type.name} ({aggregate}, {start_date}-{end_date})",
-                    "mode": "lines",
-                    "x": [start_date, end_date],
-                    "y": [x, x],
-                    "line": {"width": 2, "dash": "dash"},
-                }
-            ]
-        }
-        return JsonResponse(json_data)
-
-    # calculate deviation from mean
-    error_y = True
-    if error_y:
-        df["value_plus"] = df["max"] - df["value"]
-        df["value_minus"] = df["value"] - df["min"]
-
-        # if both max/min series are 0 there is no deviation and we do not need to show
-        # error bars, this reduces the visual noise in the chart.
-        show_error = not (
-            (df["value_plus"] == 0).all() and (df["value_minus"] == 0).all()
-        )
-
-    chart_type = "scatter"
-    if datalayer.chart_type == "bar":
-        chart_type = "bar"
-
-    x = df[str(datalayer.temporal_resolution)].tolist()
-    legendgroup_id = uuid.uuid4()
-
-    json_data = {"traces": []}
-
-    add_range = True
-
-    if chart_type == "bar":
-        add_range = False
-
-    if add_range:
-        color_limits = hex_to_rgba_string(color, alpha=0.8)
-        color_fill = hex_to_rgba_string(color, alpha=0.2)
-
-        json_data["traces"].append(
-            {
-                "name": f"{datalayer.name}: {shape_type.name} (max) ",
-                "x": x,
-                "y": df["max"].tolist(),
-                "type": "scatter",
-                "mode": "lines",
-                "line": {
-                    "color": color_limits,
-                    "dash": "longdash",
-                    "width": 1,
-                },
-                "legendgroup": legendgroup_id,
-                "showlegend": False,
-                # "hoverinfo": "skip",
-            }
-        )
-
-        json_data["traces"].append(
-            {
-                "name": f"{datalayer.name}: {shape_type.name} (min)",
-                "x": x,
-                "y": df["min"].tolist(),
-                "type": "scatter",
-                "mode": "lines",
-                "fill": "tonexty",
-                "fillcolor": color_fill,
-                "line": {
-                    "color": color_limits,
-                    "dash": "longdash",
-                    "width": 1,
-                },
-                "legendgroup": legendgroup_id,
-                "showlegend": False,
-                # "hoverinfo": "skip",
-            }
-        )
-
-    # Normal line
-    json_data["traces"].append(
-        {
-            #'x': df.index.values.tolist(),
-            "name": f"{datalayer.name}: {shape_type.name} (avg/min/max)",
-            "x": x,
-            "y": df["value"].tolist(),
-            "type": chart_type,
-            "line": {
-                "color": color,
-            },
-            "legendgroup": legendgroup_id,
-            # "error_y": {
-            #    "type": "data",
-            #    "symmetric": False,
-            #    "array": df["value_plus"].tolist(),
-            #    "arrayminus": df["value_minus"].tolist(),
-            # }
-            # if error_y and show_error
-            # else None,
-        }
-    )
-
-    return JsonResponse(json_data)
 
 
 @router.get("meta/", summary="Data Layer Meta and Plot configuration")

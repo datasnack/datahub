@@ -46,7 +46,7 @@ SPDX-License-Identifier: AGPL-3.0-only
         sources: initialSources = "[]",
     } = $props();
 
-    let container; // reference to the DOM node of the component
+    let container: HTMLElement; // reference to the DOM node of the component
 
     /**
      * Configurable Data Layers
@@ -153,7 +153,7 @@ SPDX-License-Identifier: AGPL-3.0-only
      * Add Data Layer to the selection UI.
      */
     async function addDataLayer(key: string) {
-        const res = await fetch("/api/datalayers/meta?datalayer_key=" + key);
+        const res = await fetch("/api/datalayers/meta/?datalayer_key=" + key);
 
         if (!res.ok) {
             alert("Data Layer could not be found.");
@@ -247,6 +247,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 
         if (query.aggregate === null) {
             delete query.aggregate;
+        } else {
+            // in case we aggregate data over a shape type (affecting all  shapes of this type)
+            // we don't want to aggregate spatially but on the temporal axis
+            // get the the aggregated value at each temporal step for all shapes, instead of
+            // getting one value off all shapes over the whole time frame.
+            if ("shape_type" in query) {
+                query.aggregate_group_by = "temporal";
+            }
         }
 
         if (query.resample === null) {
@@ -255,19 +263,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 
         query.color = nextColor();
 
-        if ("shape_type" in query) {
-            const res = await fetch(
-                `/api/datalayers/plotly?${new URLSearchParams(query).toString()}`,
-            );
-            const traces = await res.json();
-            newTraces = traces.traces;
-        } else {
-            const res = await fetch(
-                `/api/datalayers/data?${new URLSearchParams(query).toString()}&format=plotly`,
-            );
-            const trace = await res.json();
-            newTraces = [trace];
+        const res = await fetch(
+            `/api/datalayers/data/?${new URLSearchParams(query).toString()}&format=plotly`,
+        );
+
+        if (!res.ok) {
+            const message = await res.text();
+            alert(message);
+            return;
         }
+
+        if (res.status == 204) {
+            alert("No data did match the query.");
+            return;
+        }
+
+        const data = await res.json();
+        newTraces = data.traces;
 
         let traceOverwrite = {};
         if (source.yaxis != "y1") {
@@ -394,6 +406,9 @@ SPDX-License-Identifier: AGPL-3.0-only
                 // shape is added directly as source
                 item.query.shape_key = null;
                 item.query.shape_type = feedback.selection.value.key;
+
+                item.query.aggregate = "mean";
+
                 node.value = feedback.selection.value.label;
                 //addTrace({
                 //    shape_type: feedback.selection.value.key,
@@ -494,12 +509,12 @@ SPDX-License-Identifier: AGPL-3.0-only
                             <div class="col-12 col-md-3 col-lg-2">
                                 <div>
                                     <label
-                                        for={`${instanceId}-shapes`}
+                                        for={`${instanceId}-${i}-shapes`}
                                         class="form-label">Select shape</label
                                     >
                                 </div>
                                 <input
-                                    id={`${instanceId}-shapes`}
+                                    id={`${instanceId}-${i}-shapes`}
                                     use:initAutocomplete={{
                                         scope: "shapes,shape_types",
                                         item: item,
@@ -512,14 +527,14 @@ SPDX-License-Identifier: AGPL-3.0-only
                             <div class="col-6 c col-md-3 col-lg-2">
                                 <div class="mb-3">
                                     <label
-                                        for="start_date"
+                                        for={`${instanceId}-${i}-start_date`}
                                         class="form-label small"
                                         >Start date</label
                                     >
 
                                     {#if item.datalayer.temporal_resolution == "year"}
                                         <select
-                                            id="start_date"
+                                            id={`${instanceId}-${i}-start_date`}
                                             class="form-select form-select-sm"
                                             bind:value={item.query.start_date}
                                         >
@@ -532,6 +547,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         </select>
                                     {:else if item.datalayer.temporal_resolution == "month"}
                                         <input
+                                            id={`${instanceId}-${i}-start_date`}
                                             type="text"
                                             class="form-control form-control-sm"
                                             placeholder="yyyy-mm"
@@ -539,6 +555,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         />
                                     {:else if item.datalayer.temporal_resolution == "week"}
                                         <input
+                                            id={`${instanceId}-${i}-start_date`}
                                             type="text"
                                             class="form-control form-control-sm"
                                             placeholder="yyyy-Www"
@@ -546,7 +563,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         />
                                     {:else if item.datalayer.temporal_resolution == "date"}
                                         <input
-                                            id="start_date"
+                                            id={`${instanceId}-${i}-start_date`}
                                             type="date"
                                             class="form-control form-control-sm"
                                             bind:value={item.query.start_date}
@@ -560,13 +577,13 @@ SPDX-License-Identifier: AGPL-3.0-only
                             <div class="col-6 col-md-3 col-lg-2">
                                 <div class="mb-3">
                                     <label
-                                        for="end_date"
+                                        for={`${instanceId}-${i}-end_date`}
                                         class="form-label small">End date</label
                                     >
 
                                     {#if item.datalayer.temporal_resolution == "year"}
                                         <select
-                                            id="end_date"
+                                            id={`${instanceId}-${i}-end_date`}
                                             class="form-select form-select-sm"
                                             bind:value={item.query.end_date}
                                         >
@@ -578,6 +595,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         </select>
                                     {:else if item.datalayer.temporal_resolution == "month"}
                                         <input
+                                            id={`${instanceId}-${i}-end_date`}
                                             type="text"
                                             class="form-control form-control-sm"
                                             placeholder="yyyy-mm"
@@ -585,6 +603,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         />
                                     {:else if item.datalayer.temporal_resolution == "week"}
                                         <input
+                                            id={`${instanceId}-${i}-end_date`}
                                             type="text"
                                             class="form-control form-control-sm"
                                             placeholder="yyyy-Www"
@@ -592,7 +611,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         />
                                     {:else if item.datalayer.temporal_resolution == "date"}
                                         <input
-                                            id="end_date"
+                                            id={`${instanceId}-${i}-end_date`}
                                             type="date"
                                             class="form-control form-control-sm"
                                             bind:value={item.query.end_date}
@@ -606,13 +625,74 @@ SPDX-License-Identifier: AGPL-3.0-only
                             <div class="col-6 col-md-3 col-lg-2">
                                 <div class="mb-3">
                                     <label
-                                        for="aggregate_function"
+                                        for={`${instanceId}-${i}-temporal_resolution`}
+                                        class="form-label small"
+                                        >Temporal resampling</label
+                                    >
+
+                                    {#if item.datalayer.temporal_resolution == "date"}
+                                        <select
+                                            id={`${instanceId}-${i}-temporal_resolution`}
+                                            class="form-select form-select-sm"
+                                            bind:value={item.query.resample}
+                                        >
+                                            <option value={null}>None</option>
+                                            <option value="W-MON"
+                                                >Week (W-MON)</option
+                                            >
+                                            <option value="MS"
+                                                >Month (MS)</option
+                                            >
+                                            <option value="YS">Year (YS)</option
+                                            >
+                                        </select>
+                                    {:else if item.datalayer.temporal_resolution == "week"}
+                                        <select
+                                            id={`${instanceId}-${i}-temporal_resolution`}
+                                            class="form-select form-select-sm"
+                                            bind:value={item.query.resample}
+                                        >
+                                            <option value={null}>None</option>
+                                            <option value="MS"
+                                                >Month (MS)</option
+                                            >
+                                            <option value="YS">Year (YS)</option
+                                            >
+                                        </select>
+                                    {:else if item.datalayer.temporal_resolution == "month"}
+                                        <select
+                                            id={`${instanceId}-${i}-temporal_resolution`}
+                                            class="form-select form-select-sm"
+                                            bind:value={item.query.resample}
+                                        >
+                                            <option value={null}>None</option>
+                                            <option value="YS"
+                                                >Year start (YS)</option
+                                            >
+                                            <option value="YE"
+                                                >Year end (YE)</option
+                                            >
+                                        </select>
+                                    {:else}
+                                        <div
+                                            class="col-form-label-sm text-muted fst-italic"
+                                        >
+                                            No resampling.
+                                        </div>
+                                    {/if}
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3 col-lg-2">
+                                <div class="mb-3">
+                                    <label
+                                        for={`${instanceId}-${i}-aggregate_function`}
                                         class="form-label small"
                                         >Aggregate function</label
                                     >
 
                                     <select
-                                        id="aggregate_function"
+                                        id={`${instanceId}-${i}-aggregate_function`}
                                         class="form-select form-select-sm"
                                         bind:value={item.query.aggregate}
                                     >
@@ -628,56 +708,11 @@ SPDX-License-Identifier: AGPL-3.0-only
                                 </div>
                             </div>
 
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <div class="mb-3">
-                                    <label
-                                        for="temporal_resolution"
-                                        class="form-label small"
-                                        >Temporal resolution</label
-                                    >
-
-                                    {#if item.datalayer.temporal_resolution == "date"}
-                                        <select
-                                            id="temporal_resolution"
-                                            class="form-select form-select-sm"
-                                            bind:value={item.query.resample}
-                                        >
-                                            <option value=""
-                                                >Original (D)</option
-                                            >
-                                            <option value="W-MON"
-                                                >Week (W-MON)</option
-                                            >
-                                            <option value="M">Month (M)</option>
-                                            <option value="Y">Year (Y)</option>
-                                        </select>
-                                    {:else if item.datalayer.temporal_resolution == "week"}
-                                        <select
-                                            id="temporal_resolution"
-                                            class="form-select form-select-sm"
-                                            bind:value={item.query.resample}
-                                        >
-                                            <option value=""
-                                                >Original (W-MON)</option
-                                            >
-                                            <option value="M">Month (M)</option>
-                                            <option value="Y">Year (Y)</option>
-                                        </select>
-                                    {:else}
-                                        <div
-                                            class="col-form-label-sm text-muted fst-italic"
-                                        >
-                                            No resampling.
-                                        </div>
-                                    {/if}
-                                </div>
-                            </div>
-
                             <div class="col-12 col-sm-4 col-lg-2">
                                 <label
                                     for="aggregate_function"
                                     class="form-label small"
-                                    >Selext y-axis
+                                    >Select y-axis
                                 </label>
 
                                 <div class="input-group">

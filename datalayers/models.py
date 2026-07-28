@@ -5,6 +5,7 @@
 import datetime as dt
 import logging
 import os
+from typing import Literal
 import string
 from pathlib import Path
 from timeit import default_timer as timer
@@ -855,6 +856,35 @@ class Datalayer(models.Model):
 
         return DatalayerValue(self, result)
 
+    def _data_df_resample(self, df: pd.DataFrame, resample: str) -> pd.DataFrame:
+        # convert temporal column to valid ISO8601 (Y-m-d) index
+        df[str(self.temporal_resolution)] = pd.to_datetime(
+            df[str(self.temporal_resolution)]
+        )
+        df = df.set_index(str(self.temporal_resolution))
+
+        # resample on value column only, mete data columns get dropped
+        # df = df[["value"]].resample(resample).mean()
+
+        df = df.resample(resample).agg(
+            {
+                "value": "mean",
+                "dh_shape_id": "first",
+                "shape_key": "first",
+                "type_key": "first",
+                "shape_name": "first",
+            }
+        )
+
+        # make resampled temporal available not only as index, but also as
+        # DataFrame column
+        df[str(self.temporal_resolution)] = df.index
+        df = df.reset_index(drop=True)
+
+        df = df.dropna()
+
+        return df
+
     def data(
         self,
         shape: Shape | None = None,
@@ -862,6 +892,10 @@ class Datalayer(models.Model):
         start_date: dt.datetime | None = None,
         end_date: dt.datetime | None = None,
         shape_type: Type | None = None,
+        resample: str | None = None,
+        aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
+        | None = None,
+        aggregate_group_by: Literal["spatial", "temporal"] = "spatial",
         select_shape_name=True,
         fallback_previous=False,
         latest_value_only=False,
@@ -912,16 +946,51 @@ class Datalayer(models.Model):
         if latest_value_only:
             query += "ORDER BY {table}.shape_id, {temporal_column} DESC"
         else:
-            query += "ORDER BY {temporal_column}, st.position ASC"
+            query += "ORDER BY {temporal_column}, st.position, s.key ASC"
 
         query = sql.SQL(query).format(
             table=sql.Identifier(self.key),
             temporal_column=sql.Identifier(str(self.temporal_resolution)),
         )
 
-        return pd.read_sql(
+        df = pd.read_sql(
             query.as_string(connection), con=get_conn_string(), params=params
         )
+
+        if resample is not None:
+            if shape_type:
+                # split each shape from the shape type, resample each, concat df's
+                shape_ids = df["dh_shape_id"].unique()
+                resampled_dfs = []
+
+                for shape_idx in shape_ids:
+                    dfx = df[df["dh_shape_id"] == shape_idx]
+                    resampled_dfs.append(self._data_df_resample(dfx, resample))
+                df = pd.concat(resampled_dfs)
+            else:
+                df = self._data_df_resample(df, resample)
+
+        if aggregate:
+            # for single shapes we group on the whole period
+            # for a shape type we group on the temporal dimension, to aggregate on all
+            # individual shapes inside this shape type
+            group_by: str = "dh_shape_id" if shape else str(self.temporal_resolution)
+            group_by = (
+                "dh_shape_id"
+                if aggregate_group_by == "spatial"
+                else str(self.temporal_resolution)
+            )
+
+            if aggregate == "mean":
+                df = df.groupby(group_by, as_index=False).agg(
+                    value=("value", "mean"),
+                    min=("value", "min"),
+                    max=("value", "max"),
+                )
+            else:
+                df = df.groupby(group_by, as_index=False)["value"].agg(aggregate)
+
+        return df
 
     def value_coverage(self, shape_type: Type | None = None) -> float:
         if not self.is_loaded():
