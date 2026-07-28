@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% comment %}
+SPDX-FileCopyrightText: 2026 Jonathan Ströbele <mail@jonathanstroebele.de>
+
+SPDX-License-Identifier: AGPL-3.0-only
+{% endcomment %}
+
+{% load i18n %}
+{% load generate_uuid %}
+
+{% block title %}{% translate "Explore" %}{% endblock %}
+
+{% block content %}
+
+<div class="m-pageheader d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+	<div class="d-grid gap-1 d-md-flex justify-content-md-end">
+	</div>
+
+	<h1>{% translate "Explore" %}</h1>
+</div>
+
+<div class="row">
+	<div class="col-12">
+		<p>
+			{% translate "On this page you can explore the data in the Data Hub. " %}
+		</p>
+
+		<dh-map sidebar explore openExplore></dh-map>
+
+		<dh-chart explore openExplore></dh-chart>
+
+	</div>
+</div>
+
+
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

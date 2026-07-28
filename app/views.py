@@ -370,3 +370,15 @@ def tools_picker(request):
                     context["datalayers"].append(layer)
 
     return render(request, "tools/picker.html", context)
+
+
+def tools_explore(request):
+    """View for a Data Layer exploration UI."""
+    context = {
+        "shapes": None,
+        "datalayers": None,
+        "point": None,
+        "warning": None,
+    }
+
+    return render(request, "tools/explore.html", context)

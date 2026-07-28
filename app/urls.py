@@ -29,5 +29,6 @@ urlpatterns = [
         name="settings_delete_token",
     ),
     path("tools/picker", views.tools_picker, name="tools_picker"),
+    path("tools/explore", views.tools_explore, name="tools_explore"),
     re_path(r"^docs/(?P<path>.+)/$", views.docs_view, name="docs_page"),
 ]
