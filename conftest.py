@@ -36,9 +36,19 @@ def super_user(db):
 
 
 # --- Shape fixtures ---
+
+
+# We use transactional_db here (which should cascade to further `db` usages?). We need
+# to persist the models *and* the data (created by dl.process() Datalayer fixtures) in the
+# same transaction so they are available to the tests.
 @pytest.fixture
-def type_country(db):
+def type_country(transactional_db):
     return Type.objects.create(name="Country", key="country")
+
+
+@pytest.fixture
+def type_region(transactional_db):
+    return Type.objects.create(name="Region", key="region")
 
 
 @pytest.fixture
@@ -61,7 +71,57 @@ def shape_country(type_country):
     geom = GEOSGeometry(geometry_string, srid=4326)
 
     return Shape.objects.create(
-        name="Test Country", key="TEST01", geometry=geom, type=type_country
+        name="Test Country", key="CC01", geometry=geom, type=type_country
+    )
+
+
+@pytest.fixture
+def shape_region_upper(type_region):
+    # upper half of the country polygon
+    geometry_string = """
+    {
+    "type": "Polygon",
+    "coordinates": [
+        [
+        [10.0, 50.5],
+        [11.0, 50.5],
+        [11.0, 51],
+        [10.0, 51],
+        [10.0, 50.5]
+        ]
+    ]
+    }
+    """
+
+    geom = GEOSGeometry(geometry_string, srid=4326)
+
+    return Shape.objects.create(
+        name="Upper region", key="CC011", geometry=geom, type=type_region
+    )
+
+
+@pytest.fixture
+def shape_region_lower(type_region):
+    # lower half of the country polygon
+    geometry_string = """
+    {
+    "type": "Polygon",
+    "coordinates": [
+        [
+        [10.0, 50.0],
+        [11.0, 50.0],
+        [11.0, 50.5],
+        [10.0, 50.5],
+        [10.0, 50.0]
+        ]
+    ]
+    }
+    """
+
+    geom = GEOSGeometry(geometry_string, srid=4326)
+
+    return Shape.objects.create(
+        name="Lower region", key="CC012", geometry=geom, type=type_region
     )
 
 
@@ -69,7 +129,7 @@ def shape_country(type_country):
 
 
 @pytest.fixture
-def dl_listed(shape_country):
+def dl_listed(shape_country, shape_region_upper, shape_region_lower):
     dl = Datalayer.objects.create(
         key="test_csv",
         name="Data Layer 1",
@@ -77,7 +137,7 @@ def dl_listed(shape_country):
         data_access=True,
     )
 
-    dl.process([shape_country])
+    dl.process([shape_country, shape_region_upper, shape_region_lower])
     dl.get_class().save()
 
     return dl

@@ -9,6 +9,41 @@ import pytest
 from django.urls import reverse
 
 
+def _prep_data(data):
+    """
+    Isolate value field from json api return.
+
+    data = [{dh_shape_id:, value: ..}, ...]
+    Return [value, ...]
+    """
+    values = []
+
+    for row in data:
+        values.append(row["value"])
+
+    return values
+
+
+class TestDatalayerProcessedDataDownload:
+    @pytest.fixture(autouse=True)
+    def require_no_login(self, settings):
+        settings.DATAHUB_LOGIN_REQUIRED = False
+
+    def test_download(self, client, dl_listed, shape_country):
+        url = reverse(
+            "api-1.0.0:data",
+            args=[],
+            query={
+                "datalayer_key": dl_listed.key,
+                "shape_id": shape_country.id,
+                "format": "json",
+            },
+        )
+        response = client.get(url)
+
+        assert _prep_data(response.json()["data"]) == [5, 2, 0, 3, 5, 10, 2, 1]
+
+
 class TestMyModelView:
     @pytest.fixture(autouse=True)
     def require_no_login(self, settings):
