@@ -11,6 +11,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0](https://github.com/datasnack/datahub/compare/v0.11.28..v0.12.0) - 2026-07-28
+
+This release contains a major rework of the Map and Chart components.
+
+- Map: sortable layers
+- Map: compare different Data Layers in same map
+- Chart: search for shape and shape types with autocomplete
+- Chart: compare multiple Data Layers with up to two y-axis
+- Aligned UI of Map/Chart components
+- Single data API for resampling/aggregation that works with both single shapes and types
+- Explore menu for quick comparison of Data Layers in Map/Chart 
+
+### Changed
+
+- Move resampling/aggregation into to the data API, works with shapes and types ([13176c4](https://github.com/datasnack/datahub/commit/13176c434f522d227cb0161d5c610f1d4abbe2c2))
+- Allow searching for shape types ([04df7dc](https://github.com/datasnack/datahub/commit/04df7dc0d0cd229caa247146ab1992842d47c579))
+- Categorical legend, custom color scale / popups ([9a543d1](https://github.com/datasnack/datahub/commit/9a543d10db1d0aa62b05140088f15c4377e35bbd))
+- Restructure categorical data layers ([ab44875](https://github.com/datasnack/datahub/commit/ab448756490cffdab1284fd90224c4c503c87b18))
+
+### Fixed
+
+- Operation as textfield with datalist suggestions ([6cc286d](https://github.com/datasnack/datahub/commit/6cc286dbe74b3aa3a14a8d05135c2159b9f05925))
+- Save and view in frontend button for data layers admin ([a873f52](https://github.com/datasnack/datahub/commit/a873f52e834cfa1d7058fa5ab403df59e1e53e74))
+
 ## [0.11.28](https://github.com/datasnack/datahub/compare/v0.11.27..v0.11.28) - 2026-06-10
 
 ### Fixed
