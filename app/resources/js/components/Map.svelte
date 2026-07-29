@@ -21,6 +21,8 @@ SPDX-License-Identifier: AGPL-3.0-only
     import autoComplete from "@tarekraafat/autocomplete.js";
     import type { Map as MapLibreMap } from "maplibre-gl";
 
+    import DataLayerTeaser from "./DataLayerTeaser.svelte";
+
     import { onMount } from "svelte";
     import { MapManager } from "./MapManager";
     import { mapControl } from "./MapControl";
@@ -643,8 +645,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                     {#if explore || datalayers.length > 1}
                         <div class="row">
                             <div class="col-12">
-                                {item.datalayer.name}
-                                (<code>{item.key}</code>)
+                                <DataLayerTeaser datalayer={item.datalayer} />
 
                                 <button
                                     class="btn btn-outline-secondary btn-xs"

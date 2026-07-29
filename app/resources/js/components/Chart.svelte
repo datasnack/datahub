@@ -20,6 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts">
     import { onMount } from "svelte";
     import autoComplete from "@tarekraafat/autocomplete.js";
+    import DataLayerTeaser from "./DataLayerTeaser.svelte";
 
     import { schemeCategory10 } from "d3";
 
@@ -492,9 +493,9 @@ SPDX-License-Identifier: AGPL-3.0-only
                         {#if explore || datalayers.length > 1}
                             <div class="row">
                                 <div class="col-12">
-                                    {item.datalayer.name}
-                                    (<code>{item.key}</code>)
-
+                                    <DataLayerTeaser
+                                        datalayer={item.datalayer}
+                                    />
                                     <button
                                         class="btn btn-outline-secondary btn-xs"
                                         onclick={() => {
