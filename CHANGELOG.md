@@ -11,6 +11,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.1](https://github.com/datasnack/datahub/compare/v0.12.0..v0.12.1) - 2026-07-29
+
+### Changed
+
+- Explanation text of explore tool ([97230b0](https://github.com/datasnack/datahub/commit/97230b04a9a079a86be18ee9a1a92139c562ca9c))
+
+### Fixed
+
+- Basic data layer teaser ([c8c69c0](https://github.com/datasnack/datahub/commit/c8c69c0e853805901de9baad51a2f8a60dd45d8d))
+- Spacing/wording ([13aff59](https://github.com/datasnack/datahub/commit/13aff59fe11d3490b83adac9a1048679c8875e8e))
+
 ## [0.12.0](https://github.com/datasnack/datahub/compare/v0.11.28..v0.12.0) - 2026-07-28
 
 This release contains a major rework of the Map and Chart components.
