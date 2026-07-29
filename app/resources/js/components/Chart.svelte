@@ -469,7 +469,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                         <div class="col-12 col-md-4">
                             <label
                                 for={`${instanceId}-datalayer`}
-                                class="form-label">Datalayers</label
+                                class="form-label">Data Layers</label
                             >
                             <input
                                 id={`${instanceId}-datalayer`}
@@ -510,7 +510,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                 <div>
                                     <label
                                         for={`${instanceId}-${i}-shapes`}
-                                        class="form-label">Select shape</label
+                                        class="form-label small">Shape</label
                                     >
                                 </div>
                                 <input
@@ -529,7 +529,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                     <label
                                         for={`${instanceId}-${i}-start_date`}
                                         class="form-label small"
-                                        >Start date</label
+                                        >Start time</label
                                     >
 
                                     {#if item.datalayer.temporal_resolution == "year"}
@@ -578,7 +578,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                 <div class="mb-3">
                                     <label
                                         for={`${instanceId}-${i}-end_date`}
-                                        class="form-label small">End date</label
+                                        class="form-label small">End time</label
                                     >
 
                                     {#if item.datalayer.temporal_resolution == "year"}

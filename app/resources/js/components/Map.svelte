@@ -592,7 +592,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                 </div>
                 <div class="col-12 col-md-4">
                     <label for={`${instanceId}-datalayer`} class="form-label"
-                        >Datalayers</label
+                        >Data Layers</label
                     >
                     <input
                         id={`${instanceId}-datalayer`}
@@ -656,11 +656,11 @@ SPDX-License-Identifier: AGPL-3.0-only
                         </div>
                     {/if}
                     <div class="row">
-                        <div class="col-12 col-sm-2">
+                        <div class="col-12 col-md-3 col-lg-2">
                             <label
                                 for="aggregate_function"
                                 class="form-label small"
-                                >Select shape
+                                >Shape
                             </label>
 
                             <div class="input-group input-group-sm">
@@ -676,11 +676,11 @@ SPDX-License-Identifier: AGPL-3.0-only
                                 </select>
                             </div>
                         </div>
-                        <div class="col-12 col-sm-3">
+                        <div class="col-12 col-md-3 col-lg-2">
                             <label
                                 for="aggregate_function"
                                 class="form-label small"
-                                >Select temporal
+                                >Start time
                             </label>
 
                             <div class="input-group input-group-sm">
@@ -733,7 +733,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                             <label
                                 for="aggregate_function"
                                 class="form-label small"
-                                ><i>Optional</i>: range with aggregation
+                                ><i>Optional</i>: end time with aggregation
                             </label>
 
                             <div class="input-group input-group-sm">
