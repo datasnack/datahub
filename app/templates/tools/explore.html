@@ -23,8 +23,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div class="row">
 	<div class="col-12">
 		<p>
-			{% translate "On this page you can explore the data in the Data Hub. " %}
+			{% translate "The <b>Explore</b> tool lets users investigate and compare multiple data layers, individually or in combination, across their spatial and temporal dimensions." %}
 		</p>
+		<ul>
+			<li>{% translate "<b>Spatial mapping</b>: Overlay data layers and spatial units (shapes) within an interactive map, with full control over layer order, color coding, and opacity to support flexible visual comparison." %}</li>
+			<li>{% translate "<b>Time-series plotting</b>: Explore how data layers evolve over time, with the option to select different temporal resolutions depending on data availability, and to display aggregated summary values (all, mean) across spatial unit types." %}</li>
+		</ul>
 
 		<dh-map sidebar explore openExplore></dh-map>
 
