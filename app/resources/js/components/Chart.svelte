@@ -630,57 +630,56 @@ SPDX-License-Identifier: AGPL-3.0-only
                                         class="form-label small"
                                         >Temporal resampling</label
                                     >
+                                    <div class="input-group">
+                                        <select
+                                            id={`${instanceId}-${i}-temporal_resolution`}
+                                            class="form-select form-select-sm"
+                                            bind:value={item.query.resample}
+                                        >
+                                            <option value={null}>None</option>
+                                            {#if item.datalayer.temporal_resolution == "date"}
+                                                <option value="W-MON"
+                                                    >Week (W-MON)</option
+                                                >
+                                                <option value="MS"
+                                                    >Month (MS)</option
+                                                >
+                                                <option value="YS"
+                                                    >Year (YS)</option
+                                                >
+                                            {:else if item.datalayer.temporal_resolution == "week"}
+                                                <option value={null}
+                                                    >None</option
+                                                >
+                                                <option value="MS"
+                                                    >Month (MS)</option
+                                                >
+                                                <option value="YS"
+                                                    >Year (YS)</option
+                                                >
+                                            {:else if item.datalayer.temporal_resolution == "month"}
+                                                <option value={null}
+                                                    >None</option
+                                                >
+                                                <option value="YS"
+                                                    >Year start (YS)</option
+                                                >
+                                                <option value="YE"
+                                                    >Year end (YE)</option
+                                                >
+                                            {:else}{/if}
+                                        </select>
 
-                                    {#if item.datalayer.temporal_resolution == "date"}
                                         <select
-                                            id={`${instanceId}-${i}-temporal_resolution`}
+                                            id={`${instanceId}-${i}-temporal_resolution_agg`}
                                             class="form-select form-select-sm"
-                                            bind:value={item.query.resample}
+                                            bind:value={item.query.resample_agg}
+                                            disabled={!item.query.resample}
                                         >
-                                            <option value={null}>None</option>
-                                            <option value="W-MON"
-                                                >Week (W-MON)</option
-                                            >
-                                            <option value="MS"
-                                                >Month (MS)</option
-                                            >
-                                            <option value="YS">Year (YS)</option
-                                            >
+                                            <option value="mean">mean</option>
+                                            <option value="sum">sum</option>
                                         </select>
-                                    {:else if item.datalayer.temporal_resolution == "week"}
-                                        <select
-                                            id={`${instanceId}-${i}-temporal_resolution`}
-                                            class="form-select form-select-sm"
-                                            bind:value={item.query.resample}
-                                        >
-                                            <option value={null}>None</option>
-                                            <option value="MS"
-                                                >Month (MS)</option
-                                            >
-                                            <option value="YS">Year (YS)</option
-                                            >
-                                        </select>
-                                    {:else if item.datalayer.temporal_resolution == "month"}
-                                        <select
-                                            id={`${instanceId}-${i}-temporal_resolution`}
-                                            class="form-select form-select-sm"
-                                            bind:value={item.query.resample}
-                                        >
-                                            <option value={null}>None</option>
-                                            <option value="YS"
-                                                >Year start (YS)</option
-                                            >
-                                            <option value="YE"
-                                                >Year end (YE)</option
-                                            >
-                                        </select>
-                                    {:else}
-                                        <div
-                                            class="col-form-label-sm text-muted fst-italic"
-                                        >
-                                            No resampling.
-                                        </div>
-                                    {/if}
+                                    </div>
                                 </div>
                             </div>
 

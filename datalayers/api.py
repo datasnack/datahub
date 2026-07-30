@@ -187,6 +187,10 @@ def data(
         None,
         description="[Pandas Offset string](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects) for `resample()` function to be applied before returning data. Only works on plotly format.",
     ),
+    resample_agg: Literal["mean", "sum"] = Query(
+        "mean",
+        description="Aggregation function used in the temporal resampling.",
+    ),
     aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
     | None = Query(
         None,
@@ -263,6 +267,7 @@ def data(
         shape=shape,
         shape_type=shape_type,
         resample=resample,
+        resample_agg=resample_agg,
         aggregate=aggregate,
         aggregate_group_by=aggregate_group_by,
     )

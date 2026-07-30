@@ -44,6 +44,7 @@ export type DataLayerQuery = {
     end_date: string | null,
     aggregate: string | null,
     resample: string | null,
+    resample_agg: "mean" | "sum" | null,
 }
 
 

@@ -856,7 +856,9 @@ class Datalayer(models.Model):
 
         return DatalayerValue(self, result)
 
-    def _data_df_resample(self, df: pd.DataFrame, resample: str) -> pd.DataFrame:
+    def _data_df_resample(
+        self, df: pd.DataFrame, resample: str, resample_agg: Literal["mean", "sum"]
+    ) -> pd.DataFrame:
         # convert temporal column to valid ISO8601 (Y-m-d) index
         df[str(self.temporal_resolution)] = pd.to_datetime(
             df[str(self.temporal_resolution)]
@@ -868,7 +870,7 @@ class Datalayer(models.Model):
 
         df = df.resample(resample).agg(
             {
-                "value": "mean",
+                "value": resample_agg,
                 "dh_shape_id": "first",
                 "shape_key": "first",
                 "type_key": "first",
@@ -893,6 +895,7 @@ class Datalayer(models.Model):
         end_date: dt.datetime | None = None,
         shape_type: Type | None = None,
         resample: str | None = None,
+        resample_agg: Literal["mean", "sum"] = "mean",
         aggregate: Literal["sum", "min", "max", "mean", "median", "std", "count"]
         | None = None,
         aggregate_group_by: Literal["spatial", "temporal"] = "spatial",
@@ -965,10 +968,12 @@ class Datalayer(models.Model):
 
                 for shape_idx in shape_ids:
                     dfx = df[df["dh_shape_id"] == shape_idx]
-                    resampled_dfs.append(self._data_df_resample(dfx, resample))
+                    resampled_dfs.append(
+                        self._data_df_resample(dfx, resample, resample_agg)
+                    )
                 df = pd.concat(resampled_dfs)
             else:
-                df = self._data_df_resample(df, resample)
+                df = self._data_df_resample(df, resample, resample_agg)
 
         if aggregate:
             # for single shapes we group on the whole period
