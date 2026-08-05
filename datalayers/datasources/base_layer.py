@@ -260,7 +260,7 @@ class BaseLayer:
             case LayerValueType.BOOL:
                 return isinstance(value, bool)
             case LayerValueType.INTEGER:
-                return isinstance(value, int)
+                return isinstance(value, (int, np.int64))
             case LayerValueType.FLOAT:
                 return isinstance(value, (float, np.floating))
             case LayerValueType.STRING:
@@ -296,7 +296,7 @@ class BaseLayer:
 
         if validate_value and not self.is_valid_value_type(value):
             raise ValueError(
-                f"Processed value ({value}) is not matching Data Layer ({self.value_type})."
+                f"Processed value ({value}, {type(value)}) is not matching Data Layer ({self.value_type})."
             )
 
         if (
