@@ -11,6 +11,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.2](https://github.com/datasnack/datahub/compare/v0.12.1..v0.12.2) - 2026-08-05
+
+### Changed
+
+- Move Data Layer unit to be defined in source code ([c45de26](https://github.com/datasnack/datahub/commit/c45de26061bad790857821791a7aa30460b3e64a))
+- Datalayer teaser for backend/frontend ([d5eab4c](https://github.com/datasnack/datahub/commit/d5eab4ce10584af144d3054b39fe03803724d1e9))
+
+### Fixed
+
+- Move categorical info into type column ([1ce344e](https://github.com/datasnack/datahub/commit/1ce344e5d07e1494089e619e8df6601c3a4970f4))
+- Allow np.int64 for integer type, print type in worng type error message ([296e682](https://github.com/datasnack/datahub/commit/296e6828130fc0bac7c1a302869365b1e7e6af6f))
+- Change tool name to Data Explorer ([bb33c52](https://github.com/datasnack/datahub/commit/bb33c5248d12104c42d2c925676b0c364810246a))
+- Change wording on temporal chart aggregation ([f694b27](https://github.com/datasnack/datahub/commit/f694b27bb3411684c0223bff735a01803a6a682a))
+- Use model url helper ([d2248b4](https://github.com/datasnack/datahub/commit/d2248b4e9e1be2d40eeb3367be81d2afeec5c819))
+- Agg fnc for temporal resampling configurable via API ([d8ae01d](https://github.com/datasnack/datahub/commit/d8ae01de719432e41a0d6e06f3fea8517ba94027))
+
 ## [0.12.1](https://github.com/datasnack/datahub/compare/v0.12.0..v0.12.1) - 2026-07-29
 
 ### Changed
