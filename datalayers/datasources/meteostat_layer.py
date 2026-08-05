@@ -27,7 +27,7 @@ class MeteostatLayer(BaseLayer):
         super().__init__()
 
         self.time_col = LayerTimeResolution.DAY
-        self.value_type = LayerValueType.VALUE
+        self.value_type = LayerValueType.FLOAT
 
         self.table_name = "meteostat_stations"
         self.raw_vector_data_table = "meteostat_stations"
