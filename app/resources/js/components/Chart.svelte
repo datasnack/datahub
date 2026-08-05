@@ -688,7 +688,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                                     <label
                                         for={`${instanceId}-${i}-aggregate_function`}
                                         class="form-label small"
-                                        >Aggregate function</label
+                                        >Summary statistics</label
                                     >
 
                                     <select
