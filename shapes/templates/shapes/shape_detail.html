@@ -131,7 +131,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<td>
 						<ul class="m-0">
 						{% for child in shape.children.all %}
-							<li><a href="{% url 'shapes:shape_detail' child.id %}">{{ child.name }}</a></li>
+							<li><a href="{{ child.get_absolute_url }}">{{ child.name }}</a></li>
 						{% endfor %}
 						</ul>
 					</td>
