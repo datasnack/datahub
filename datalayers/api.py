@@ -668,6 +668,12 @@ def meta(
         },
         "datalayer": {
             "key": datalayer.key,
+            "name": datalayer.name,
+            "value_type": datalayer.value_type_str,
+            "is_categorical": datalayer.is_categorical,
+            "categorical_type": datalayer.categorical.value
+            if datalayer.categorical
+            else None,
             "has_vector_data": datalayer.has_vector_data(),
             "temporal_resolution": str(datalayer.temporal_resolution),
             "available_years": datalayer.get_available_years,
@@ -675,9 +681,6 @@ def meta(
             "last_time": datalayer.last_value().date(),
             "shape_types": shape_types,
             "shapes": shapes,
-            "value_type": datalayer.value_type_str,
-            "is_categorical": datalayer.is_categorical,
-            "name": datalayer.name,
             "format_suffix": datalayer.format_suffix(),
             "categorical_values": datalayer.get_categorical_values(),
             "categorical_colors": datalayer.get_categorical_colors(),

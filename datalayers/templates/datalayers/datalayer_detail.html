@@ -138,19 +138,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</summary>
 			<ul>
 				{% for reld in related %}
-					<li><a class="text-reset text-decoration-none" href="{{ reld.get_absolute_url }}">
-
-						{% if reld.has_class %}
-							<span class="text-secondary" title="{% blocktranslate with resolution=reld.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
-							{% with "calendar-"|add:reld.temporal_resolution_str as dl_temporal_icon %}
-								{% icon dl_temporal_icon ignore_missing=True %}
-							{% endwith %}
-							</span>
-						{% endif %}
-
-						<span class="link-primary text-decoration-underline">{{ reld.name}}</span>
-						(<code class="text-code">{{ reld.key}}</code>)
-					</a></li>
+					<li>
+						{% include "datalayers/partials/teaser.html" with datalayer=reld %}
+					</li>
 				{% endfor %}
 			</ul>
 		</details>

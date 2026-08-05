@@ -1,0 +1,54 @@
+{% comment %}
+SPDX-FileCopyrightText: 2025 Jonathan Ströbele <mail@jonathanstroebele.de>
+
+SPDX-License-Identifier: AGPL-3.0-only
+{% endcomment %}
+
+{% load i18n %}
+
+<a href="{{ datalayer.get_absolute_url }}">{{ datalayer.name}}</a>
+(<code class="text-code">{{ datalayer.key}}</code>)
+
+
+{% if datalayer.has_class %}
+	|
+	{# type #}
+	{% if datalayer.is_categorical %}
+		<small class="text-muted">{% translate "Categorical:" %}</small>
+		{{ datalayer.categorical.value }}<code>&lt;{{ datalayer.value_type|default_if_none:"-" }}&gt;</code>
+	{% else %}
+		<code>{{ datalayer.value_type|default_if_none:"-" }}</code>
+	{% endif %}
+
+	<span class="small text-muted">
+	{{  datalayer.format_suffix|default_if_none:"-" }}
+	</span>
+	|
+	{# spatio #}
+	<span class="text-secondary">
+	{% icon "location" %}
+	</span>
+
+	{% if datalayer.is_available %}
+		{% with datalayer.get_available_shape_types|last as last %}
+			<code>{{ last.key }}</code>
+		{% endwith %}
+	{% else %}
+		-
+	{% endif %}
+
+	|
+
+
+	{# temporal #}
+	<span class="text-secondary" title="{% blocktranslate with resolution=datalayer.temporal_resolution_str%}Temporal resolution: {{ resolution }}{% endblocktranslate %}">
+	{% with "calendar-"|add:datalayer.temporal_resolution_str as dl_temporal_icon %}
+		{% icon dl_temporal_icon ignore_missing=True %}
+	{% endwith %}
+	</span>
+
+	<span class="small text-muted">
+		{{ datalayer.first_value.date }}–{{ datalayer.last_value.date }}
+	</span>
+
+{% endif %}

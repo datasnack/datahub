@@ -26,6 +26,11 @@ export type DataLayer = {
     key: string,
     name: string,
 
+    value_type: string,
+    is_categorical: boolean,
+    categorical_type: string | null,
+    format_suffix: string | null,
+
     shape_types: ShapeType[],
 
     has_vector_data: boolean,
