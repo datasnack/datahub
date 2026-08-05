@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.3](https://github.com/datasnack/datahub/compare/v0.12.2..v0.12.3) - 2026-08-05
+
+### Fixed
+
+- Base value type of meteostat is float ([428dfb3](https://github.com/datasnack/datahub/commit/428dfb3db0867ac754a6ad527cf928a8b484b78f))
+- Wrong unit getter ([a9a8303](https://github.com/datasnack/datahub/commit/a9a8303f1e2182834716a8b59e6c5e79fee3f7be))
+
 ## [0.12.2](https://github.com/datasnack/datahub/compare/v0.12.1..v0.12.2) - 2026-08-05
 
 ### Changed
