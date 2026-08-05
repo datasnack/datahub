@@ -9,6 +9,7 @@ from django.contrib import admin, messages
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path
+from django.utils.html import format_html
 
 from app.utils import datahub_key
 from app.widgets import (
@@ -139,6 +140,8 @@ class DatalayerAdmin(admin.ModelAdmin):
 
     inlines = (SourceMetadataAdminInline,)
 
+    readonly_fields = ["database_unit_hint"]  # add to whatever's already there
+
     fieldsets: ClassVar = [
         (
             None,
@@ -154,7 +157,7 @@ class DatalayerAdmin(admin.ModelAdmin):
                     "description",
                     "caveats",
                     "operation",
-                    "database_unit",
+                    "database_unit_hint",
                     "date_included",
                     "related_to",
                 ],
@@ -168,6 +171,23 @@ class DatalayerAdmin(admin.ModelAdmin):
     #        return ['key',] # Return a list or tuple of readonly fields' names
     #    else: # This is an addition
     #        return []
+
+    @admin.display(description=None)
+    def database_unit_hint(self, obj):
+
+        src_unit = None
+        if obj.has_class():
+            src_unit = obj.get_class().format_suffix
+
+        if src_unit is None:
+            src_unit = "<i>No unit defined</i>"
+
+        return format_html(
+            '<div style="padding:8px;background:#fff3cd;border-left:4px solid #ffc107;">'
+            "The Data Layer unit needs to be defined in source code!"
+            "</div>"
+            f"<div>Current unit: {src_unit}</div>"
+        )
 
     def get_urls(self):
         """Add custom 'import' URL to the admin."""
