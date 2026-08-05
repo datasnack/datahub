@@ -263,14 +263,17 @@ standard, not full view starts here.
 				</td>
 				<td>
 					{% if dl.is_categorical %}
-						<small class="text-muted">{% translate "Categorical:" %}</small>
 						{{ dl.categorical.value }}<code>&lt;{{ dl.value_type|default_if_none:"-" }}&gt;</code>
 					{% else %}
 						<code>{{ dl.value_type|default_if_none:"-" }}</code>
 					{% endif %}
 				</td>
 				<td>
-					{{ dl.database_unit }}
+					{% if dl.is_categorical %}
+						<span class="text-muted">{% translate "Categorical" %}</span>
+					{% else %}
+						{{ dl.format_suffix|default_if_none:"-" }}
+					{% endif%}
 				</td>
 				<td class="align-middle"><code>{{ dl.key }}</code></td>
 
