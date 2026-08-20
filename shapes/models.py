@@ -5,6 +5,7 @@
 from typing import Self
 
 from shapely import wkt
+from shapely.geometry.base import BaseGeometry
 
 from django.contrib.gis.db import models
 from django.db import models as djmodels
@@ -99,11 +100,14 @@ class Shape(models.Model):
 
         return default
 
-    def shapely_geometry(self):
+    def shapely_geometry(self) -> BaseGeometry:
         # todo: can this loose CRS?
         # todo: why is even necessary, doesn't GeoDjango provide a sensible way to get
         # the geometry for use with shapely?
         return wkt.loads(self.geometry.wkt)
+
+    def centroid(self):
+        return self.shapely_geometry().centroid
 
     def __str__(self) -> str:
         return str(self.name)
