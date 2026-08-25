@@ -419,7 +419,7 @@ export class MapManager {
         const isPercentage = data.value_type === "percentage";
 
         const value_map = new Map(data.data.map((d: any) => [d.dh_shape_id, d.value]));
-        const formatted_map = new Map(data.data.map((d: any) => [d.dh_shape_id, d.formatted]));
+        const formatted_map = new Map(data.data.map((d: any) => [d.dh_shape_id, d.formatted || d.value]));
 
         const actualExtent = extent(value_map.values() as Iterable<number>) as [number, number];
         const nextExtent = source.extent ?? actualExtent;
