@@ -11,6 +11,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.4](https://github.com/datasnack/datahub/compare/v0.12.3..v0.12.4) - 2026-08-25
+
+### Changed
+
+- Allow to pass down data directyl to the map source ([9d89793](https://github.com/datasnack/datahub/commit/9d897935b5ac6585a9e62aa6c7299f09c1d573e1))
+- Shape provides centroid getter ([71b2851](https://github.com/datasnack/datahub/commit/71b285103efd1a5b3c576c6b823821a8ecd2a903))
+
+### Fixed
+
+- Only show popup table if data values are available ([1a29267](https://github.com/datasnack/datahub/commit/1a29267b3d45a9448f558cb54f50e2dd5d3c500f))
+- If no formatted values are available, use raw ([f1e4124](https://github.com/datasnack/datahub/commit/f1e4124dd2c48fa2aadbda8dfa5901e78cd53072))
+
 ## [0.12.3](https://github.com/datasnack/datahub/compare/v0.12.2..v0.12.3) - 2026-08-05
 
 ### Fixed
