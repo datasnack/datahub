@@ -182,9 +182,6 @@ export class MapManager {
 
             content += '<hr class="my-1" />';
 
-            content += `<div class="small">${props.dh_source_name}</div>`;
-
-
             if (Object.hasOwn(props, 'value')) {
                 let color = "";
                 if (props.color) {
@@ -195,12 +192,11 @@ export class MapManager {
 
             } else {
                 content += `<div class="">Value: N/A</div>`;
-
             }
         }
 
         // Add other properties
-        let values = {};
+        let values = false;
         if (show_all_as_table) {
             values = props;
         } else {
