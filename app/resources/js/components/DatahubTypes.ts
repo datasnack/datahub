@@ -30,7 +30,6 @@ export type DataLayer = {
     is_categorical: boolean,
     categorical_type: string | null,
     format_suffix: string | null,
-
     shape_types: ShapeType[],
 
     has_vector_data: boolean,
@@ -109,8 +108,12 @@ export const MapSourceSchema = z.object({
     categoricalColors: z.array(z.string()).default([]),
     isPercentage: z.boolean().default(false),
     extent: z.tuple([z.number(), z.number()]).nullable().default(null),
-    actualExtent: z.tuple([z.number(), z.number()]).nullable().default(null)
+    actualExtent: z.tuple([z.number(), z.number()]).nullable().default(null),
 
+    /**
+     * Optional data to be passed down to the datalayer. if present no API request will be made.
+     */
+    data: z.record(z.any(), z.any()).optional()
 
 }).transform((data) => ({
     ...data,

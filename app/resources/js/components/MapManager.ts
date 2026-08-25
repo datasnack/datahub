@@ -343,8 +343,13 @@ export class MapManager {
 
             let patch: Partial<MapSource> = {};
             if (source.type === "datalayer") {
-                const data = await this.fetchDatalayerData(source.query, ac.signal);
-                patch = this.#applyDatalayerData(source, geom, data);
+                if (Object.hasOwn(source, "data")) {
+                    const data = source.data;
+                    patch = this.#applyDatalayerData(source, geom, data);
+                } else {
+                    const data = await this.fetchDatalayerData(source.query, ac.signal);
+                    patch = this.#applyDatalayerData(source, geom, data);
+                }
             }
 
             this.#geometry.set(source.id, geom);
