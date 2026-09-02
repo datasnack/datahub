@@ -268,6 +268,18 @@ SPDX-License-Identifier: AGPL-3.0-only
             return;
         }
 
+        // if a time range is selected, than a aggregate function is required.
+        // Otherwise the map would just show the values from the last time slice
+        // of the range (technically a aggregate is not required for the API but
+        // plotting on the map makes no sense without).
+        if (
+            actualQuery.start_date != actualQuery.end_date &&
+            !actualQuery.aggregate
+        ) {
+            alert("Please select a aggregate function first for time ranges.");
+            return;
+        }
+
         const id = mapManager.getNextSourceIdString();
 
         sources.unshift(
