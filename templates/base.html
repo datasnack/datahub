@@ -90,15 +90,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</button>
 								<ul class="dropdown-menu dropdown-menu-end">
 									{% for item in DATAHUB_FORGE_ISSUE_TEMPLATES %}
-									<li><a class="dropdown-item" href="{{ item.url}}">{{ item.name }}</a></li>
+									<li><a target="_blank" class="dropdown-item" href="{{ item.url}}">{{ item.name }}</a></li>
 									{% endfor %}
 									<li><hr class="dropdown-divider my-1"></li>
-									<li><a class="dropdown-item" href="{{ DATAHUB_FORGE }}/issues">{% translate "Show issues" %}</a></li>
+									<li><a target="_blank" class="dropdown-item" href="{{ DATAHUB_FORGE }}/issues">{% translate "Show issues" %}</a></li>
 								</ul>
 							</div>
 							{% endif %}
 
-							<a title="{% translate "Source code" %}" style="white-space: nowrap;" class="me-2 btn btn-sm btn-outline-secondary btn-outline-secondary-light" href="{{ DATAHUB_FORGE }}">
+							<a target="_blank" title="{% translate "Source code" %}" style="white-space: nowrap;" class="me-2 btn btn-sm btn-outline-secondary btn-outline-secondary-light" href="{{ DATAHUB_FORGE }}">
 								{% icon "git-branch" %}
 							</a>
 						{%endif %}
