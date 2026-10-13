@@ -21,7 +21,12 @@ export LOGLEVEL=${LOGLEVEL:-$LOGLEVEL_DEFAULT}
 # Merge/copy local saved data into actual data directory. Some data sources are stored
 # locally in the git repo due to complicated/unreliable downloads of the source.
 # Trailing slash is required!
-rsync -a data/datalayers.local/ data/datalayers/
+mkdir -p /app/data/datalayers
+if [ -d /app/data/datalayers.local ]; then
+    rsync -a data/datalayers.local/ data/datalayers/
+else
+    echo "INFO: Source directory /app/data/datalayers.local does not exist. Skipping rsync."
+fi
 
 mkdir -p data/logs/
 

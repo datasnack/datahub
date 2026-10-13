@@ -11,15 +11,20 @@ services:
       - ${DATAHUB_PORT:-8000}:8000
     volumes:
       - ./:/app/
+      - ./data:/app/data/
+      - ./src:/app/src/
+      - ./docs:/app/docs/
 
   postgis:
-    image: postgis/postgis:16-3.4
+    image: postgis/postgis:18-3.6
     environment:
-      POSTGRES_DB: ${DB_NAME:-didex}
-      POSTGRES_USER: ${DB_USER:-didex}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-didex}
-      PGDATA: /var/lib/postgresql/data/pgdat
+      POSTGRES_DB: ${DB_NAME:-datasnack}
+      POSTGRES_USER: ${DB_USER:-datasnack}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-datasnack}
     ports:
       - 5432:5432
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - postgis:/var/lib/postgresql/
+
+volumes:
+  postgis:

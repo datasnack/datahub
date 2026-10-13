@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
+# GDAL 3.13 has Ubuntu 26 with Python 3.14
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.3
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -11,8 +12,8 @@ RUN apt-get update && apt-get install -y \
     rsync \
     wget \
     nginx \
-    # postgresql-client has to match with the PostgreSQL server, in our case v16.
-    # Ubuntu 24 installs v16 so we are good. It's used for dumping/importing the database
+    # postgresql-client has to match with the PostgreSQL server, in our case v18.
+    # Ubuntu 26 installs v18 so we are good. It's used for dumping/importing the database
     postgresql-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
