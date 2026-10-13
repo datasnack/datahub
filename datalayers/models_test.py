@@ -2,12 +2,10 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from sqlalchemy.dialects.postgresql import aggregate_order_by
-from meteostat.series.aggregate import aggregate
 import datetime as dt
 
-import pytest
 import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
 
 
