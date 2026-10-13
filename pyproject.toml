@@ -7,26 +7,26 @@ description = "Web-based GIS with a data harmonization engine"
 dynamic = ["version"]
 name = "datahub"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 
 dependencies = [
-  "Django>=5.2.3,<5.3",
+  "Django>=6.1.2,<6.3",
   "psycopg[binary]>=3.2.0",
-  "datacite==1.1.3",
+  "datacite>=1.1.3",
   "django-environ>=0.12.0",
   "geopandas>=1.1.2",
-  "gunicorn==23.0.0",
-  "meteostat==1.7.4",
-  "numpy==2.1.3",
-  "openpyxl==3.1.2",
-  "osmnx==1.9.3",
-  "pandas==2.2.3",
-  "rasterio==1.4.3",
-  "shapely==2.0.6",
-  "SQLAlchemy==2.0.31", # used for pandas read_sql etc. connection string
+  "gunicorn>=23.0.0",
+  "meteostat>=1.7.4",
+  "numpy>=2.1.3",
+  "openpyxl>=3.1.2",
+  "osmnx>=1.9.3",
+  "pandas>=2.2.3",
+  "rasterio>=1.4.3",
+  "shapely>=2.0.6",
+  "SQLAlchemy>=2.0.31", # used for pandas read_sql etc. connection string
   "GeoAlchemy2", # required for GeoPandas to_postgis()
-  "django-taggit==6.1.0",
-  "geojson==3.1.0",
+  "django-taggit>=6.1.0",
+  "geojson>=3.1.0",
   "cdsapi>=0.7.4",
   "xarray>=2025.7.1",
   "fiona", # TiffLayer uses fiona for openening mask files, refactor to not depend on it
@@ -40,14 +40,17 @@ dependencies = [
   "xlrd>=2.0.2", # .xls files for pandas.read_excel() ("old style excel files")
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "rich>=13.9.2", # console log color output
   "django-debug-toolbar>=4.3.0",
   "pytest>=8.3.5",
   "ty>=0.0.2",
   "pytest-django>=4.12.0",
 ]
+
+[tool.uv]
+exclude-newer = "7 days"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -152,10 +155,6 @@ docstring-code-format = false
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
-
-[dependency-groups]
-temp = []
-
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "datahub.settings"
