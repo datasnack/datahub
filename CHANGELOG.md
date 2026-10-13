@@ -11,6 +11,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0](https://github.com/datasnack/datahub/compare/v0.12.5..v0.13.0) - 2026-10-13
+
+### Highlights
+
+- Update from Django 5.2.x to Django 6.1.x
+- Update base Docker image from GDAL 3.9 to 3.13
+	- Underlying base image changes from Ubuntu 24 to 26
+	- Python 3.14
+	- Ubuntu 26 install postgresql-client v18
+- Update to postgresql/postgis 16 to 18
+
+
+### PostGIS Container Migration
+
+1. Create dump of current database `docker compose exec -T postgis pg_dumpall -U <user> > backup_pg16.sql`
+2. Update docker compose config for postgis image.
+3. Start *only* the new PostGIS image `docker compose up -d postgis`
+4. Import dump: `docker compose exec -T postgis psql -U <user> < backup_pg16.sql`
+5. Start Data Hub
+
+```
+services:
+	# ...
+	
+  postgis:
+    image: postgis/postgis:18-3.6
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgis18:/var/lib/postgresql/
+      
+volumes:
+  postgis:
+  postgis18:
+```
+
+### Changed
+
+- Upgrade base docker image do gdal 3.13/python3.14/ubuntu26 ([7fdd37c](https://github.com/datasnack/datahub/commit/7fdd37cd8f769b253cc44a4c13f7376da4211751))
+- Import sorting ([0d4bbcc](https://github.com/datasnack/datahub/commit/0d4bbccb2c7a2a9cf9c8af1b5790955babc696c1))
+- Compression + caching in nginx/proxy ([3e9c30e](https://github.com/datasnack/datahub/commit/3e9c30e1dfc6eb3f2d11a8975680d44747639d54))
+
+### Fixed
+
+- Django 6.0 change to force kwargs in format_html ([c1cd274](https://github.com/datasnack/datahub/commit/c1cd274d51a38a1c482fe6db82433f442cb0efec))
+- Open navbar links in new tab ([1462c46](https://github.com/datasnack/datahub/commit/1462c468b2b0dac5af812222c430c1da09d0ec57))
+- Safeguard against missing aggreagte function in time ranges for map ([40c74cf](https://github.com/datasnack/datahub/commit/40c74cfafe1aeb0fa082bb2e221b92f4e9c8065b))
+
+### Removed
+
+- Remove deprecated Datalayer metadata fileds, are stored in SourceMetadata ([79b6f28](https://github.com/datasnack/datahub/commit/79b6f2887d3a77aaa90352aab646787ee0fd8a52))
+
 ## [0.12.5](https://github.com/datasnack/datahub/compare/v0.12.4..v0.12.5) - 2026-09-01
 
 ### Fixed
