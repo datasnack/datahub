@@ -324,32 +324,7 @@ class Datalayer(models.Model):
     date_included = models.DateField(blank=True, null=True, default=dt.date.today)
     related_to = models.ManyToManyField("self", blank=True)
 
-    # Original data source metadata
-    format = models.CharField(max_length=255, blank=True)
-    format_description = models.TextField(blank=True)
-    format_unit = models.CharField(max_length=255, blank=True)
-
-    spatial_details = models.CharField(max_length=255, blank=True)
-    spatial_coverage = models.CharField(max_length=255, blank=True)
-
-    temporal_details = models.CharField(max_length=255, blank=True)
-    temporal_coverage = models.CharField(max_length=255, blank=True)
-
-    source = models.TextField(blank=True)
-    source_link = models.TextField(blank=True)
-    language = models.CharField(max_length=255, blank=True)
-    license = models.CharField(max_length=255, blank=True)
-    date_published = models.TextField(
-        blank=True
-    )  # no date field. maybe only a year is known.
-    date_last_accessed = models.DateField(blank=True, null=True)
-    citation = models.TextField(blank=True)
-
     objects = DatalayerManager()
-
-    # creator       = models.CharField(max_length=255, blank=True)
-    # type          = models.CharField(max_length=255, blank=True)
-    # identifier    = models.CharField(max_length=255, blank=True)
 
     _class_instance = None
 
