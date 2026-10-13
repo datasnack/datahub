@@ -186,7 +186,8 @@ class DatalayerAdmin(admin.ModelAdmin):
             '<div style="padding:8px;background:#fff3cd;border-left:4px solid #ffc107;">'
             "The Data Layer unit needs to be defined in source code!"
             "</div>"
-            f"<div>Current unit: {src_unit}</div>"
+            "<div>Current unit: {}</div>",
+            src_unit,
         )
 
     def get_urls(self):
