@@ -11,12 +11,12 @@ import pandas as pd
 from meteostat import Daily, Hourly, Stations
 from psycopg import sql
 from shapely import wkt
+from sqlalchemy import create_engine
 
 from django.db import connection
 
-from sqlalchemy import create_engine
-from datalayers.utils import get_conn_string
 from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
+from datalayers.utils import get_conn_string
 from shapes.models import Shape
 
 from .base_layer import BaseLayer
