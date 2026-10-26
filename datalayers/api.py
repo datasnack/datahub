@@ -551,6 +551,15 @@ def meta(
         "height": 450,
     }
 
+    if datalayer.is_categorical:
+        layout["yaxis"]["type"] = "category"
+        layout["yaxis"]["categoryorder"] = "array"
+        layout["yaxis"]["categoryarray"] = datalayer.get_categorical_values()
+        layout["yaxis"]["range"] = [
+            -0.5,
+            len(datalayer.get_categorical_values()) - 0.5,
+        ]
+
     # x-axis
     layout["xaxis"].update(
         {

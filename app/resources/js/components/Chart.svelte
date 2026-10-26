@@ -408,7 +408,14 @@ SPDX-License-Identifier: AGPL-3.0-only
                 item.query.shape_key = null;
                 item.query.shape_type = feedback.selection.value.key;
 
-                item.query.aggregate = "mean";
+                // for categorical or string-typed Data Layers there is no
+                // automatic aggregation possible, due to the unknown character of the data
+                if (
+                    !item.datalayer.is_categorical &&
+                    item.datalayer.value_type != "string"
+                ) {
+                    item.query.aggregate = "mean";
+                }
 
                 node.value = feedback.selection.value.label;
                 //addTrace({

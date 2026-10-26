@@ -936,6 +936,9 @@ class Datalayer(models.Model):
         )
 
         if resample is not None:
+            if self.value_type == LayerValueType.STRING:
+                raise ValueError("Resampling of strings is not possible.")
+
             if shape_type:
                 # split each shape from the shape type, resample each, concat df's
                 shape_ids = df["dh_shape_id"].unique()
@@ -951,6 +954,9 @@ class Datalayer(models.Model):
                 df = self._data_df_resample(df, resample, resample_agg)
 
         if aggregate:
+            if self.value_type == LayerValueType.STRING:
+                raise ValueError("Aggregation of strings is not possible.")
+
             # for single shapes we group on the whole period
             # for a shape type we group on the temporal dimension, to aggregate on all
             # individual shapes inside this shape type

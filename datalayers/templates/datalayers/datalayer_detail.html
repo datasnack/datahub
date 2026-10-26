@@ -297,7 +297,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<dh-map sidebar explore dl="{{ datalayer.key }}"></dh-map>
 
 				<div class="mb-3">
-					<dh-chart explore dl="{{ datalayer.key }}" sources='[{"query": {"datalayer_key": "{{ datalayer.key }}", "shape_type": "{{ datalayer.get_available_shape_types.0.key}}", "aggregate": "mean"}}]'></dh-chart>
+					{% if datalayer.is_categorical or datalayer.value_type_str == "string" %}
+						<dh-chart explore dl="{{ datalayer.key }}" sources='[]'></dh-chart>
+					{% else %}
+						<dh-chart explore dl="{{ datalayer.key }}" sources='[{"query": {"datalayer_key": "{{ datalayer.key }}", "shape_type": "{{ datalayer.get_available_shape_types.0.key}}", "aggregate": "mean"}}]'></dh-chart>
+					{% endif %}
 				</div>
 			{%else %}
 				<div class="alert alert-info">
