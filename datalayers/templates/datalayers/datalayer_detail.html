@@ -184,15 +184,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 											<ul class="m-0 p-0">
 											{% for item in datalayer.get_categorical_items %}
 												<li>
-													<code>{{ item.value }}</code>{% if item.label %}:{%endif%}
+
+													{% if item.color %}
+														<span title="{{item.color}}" style="width: 1em; height: 1em; background-color: {{item.color}}" class="d-inline-block border border-dark rounded-circle"></span>
+													{% endif %}
 
 													{% if item.label %}
 														{{item.label}}
 													{% endif %}
 
-													{% if item.color %}
-														<span title="{{item.color}}" style="width: 1em; height: 1em; background-color: {{item.color}}" class="d-inline-block border border-dark rounded-circle"></span>
-													{% endif %}
+													{% if item.label %}({%endif%}<code>{{ item.value }}</code>{% if item.label %}){%endif%}
+
+
 												</li>
 											{% endfor %}
 											</ul>

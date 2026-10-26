@@ -5,10 +5,10 @@
 import datetime as dt
 import logging
 import os
-from typing import Literal
 import string
 from pathlib import Path
 from timeit import default_timer as timer
+from typing import Literal
 
 import pandas as pd
 from psycopg import sql
@@ -25,10 +25,10 @@ from shapes.models import Shape, Type
 
 from .datasources.base_layer import (
     BaseLayer,
+    CategoricalItem,
+    LayerCategoricalType,
     LayerTimeResolution,
     LayerValueType,
-    LayerCategoricalType,
-    CategoricalItem,
 )
 
 # Create your models here.
@@ -75,7 +75,7 @@ class Category(models.Model):
 class DatalayerValue:
     def __init__(self, datalayer, row) -> None:
         self.result = row
-        self.dl = datalayer
+        self.dl: Datalayer = datalayer
 
         self.requested_shape = None
         self.requested_ts = None
@@ -106,6 +106,12 @@ class DatalayerValue:
             self.requested_shape is not None
             and self.requested_shape.id != self.shape_id
         )
+
+    def is_categorical(self) -> bool:
+        return self.dl.is_categorical
+
+    def get_categorical_item_for_value(self) -> CategoricalItem | None:
+        return self.dl.get_categorical_item_for_value(self.value)
 
     def is_derived_temporal(self):
         if self.requested_ts is not None and self.result is not None:
@@ -424,6 +430,15 @@ class Datalayer(models.Model):
         if self.has_class() and self.is_categorical:
             return self.get_class().get_categorical_items()
         return []
+
+    def get_categorical_item_for_value(self, value) -> CategoricalItem | None:
+
+        print(value)
+        for item in self.get_categorical_items():
+            if item.value == value:
+                return item
+
+        return None
 
     def get_categorical_values(self) -> list[str]:
         if self.has_class() and self.is_categorical:

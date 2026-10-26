@@ -1,0 +1,73 @@
+{% comment %}
+SPDX-FileCopyrightText: 2026 Jonathan Ströbele <mail@jonathanstroebele.de>
+
+SPDX-License-Identifier: AGPL-3.0-only
+{% endcomment %}
+
+{% load i18n %}
+
+<div class="dlv">
+
+	{% comment %}
+	Investigate Popover API further:
+	on trigger button: button[popovertarget="popover_{{dl.key}}"]
+	on popover div: div[popover] + div[id="popover_{{dl.key}}"]
+	{% endcomment %}
+
+	{% if show_derived %}
+		<button type="button" class="btn btn-sm float-start dlv-derived-btn">
+
+			{% if dlv.has_value %}
+				{% if dlv.is_derived_value %}
+						{% icon "info" %}
+				{% else %}
+					{% icon "issue-closed" %}
+				{% endif %}
+			{% else %}
+					{% icon "no-entry" %}
+			{% endif %}
+		</button>
+
+		<div class="popover bs-popover-top">
+			<div class="popover-arrow"></div>
+			<h3 class="popover-header">{% translate "Data quality info" %}</h3>
+			<div class="popover-body">
+				{% if dlv.has_value %}
+					{% if dlv.is_derived_value %}
+						{% translate "Data derived from:" %}<br>
+						{% if dlv.is_derived_spatial%}
+							<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
+						{% endif %}
+						{% if dlv.is_derived_temporal %}
+							{{ dlv.date }}<br>
+						{% endif %}
+					{% else %}
+						{% translate "Matching data available" %}
+					{% endif %}
+				{% else %}
+					{% translate "No data available" %}
+				{% endif %}
+			</div>
+		</div>
+	{%endif%}
+
+	{% if dlv.has_value and dlv.is_categorical %}
+		{% with item=dlv.get_categorical_item_for_value %}
+			{% if item %}
+				{% if item.color %}
+					<span title="{{item.color}}" style="width: 1em; height: 1em; background-color: {{item.color}}" class="d-inline-block border border-dark rounded-circle"></span>
+				{% endif %}
+			{% endif %}
+		{% endwith %}
+	{% endif %}
+
+	<span class="js-value"
+		data-value-formatted="{{ dlv.str_format}}"
+		data-value-raw="{{ dlv.value }}">
+		{% if dlv.has_value %}
+			{{ dlv.str_format }}
+		{% else %}
+			<span class="text-muted">N/A</span>
+		{% endif %}
+	</span>
+</div>

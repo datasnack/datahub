@@ -99,54 +99,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 			{% datalayer_value shape dl temporal as dlv %}
 			<td class="align-middle text-nowrap text-end js-value dlv-derived-cell {% if dlv.has_value %}{% if dlv.is_derived_value %}bg-warning-subtle{%else%}bg-success-subtle{%endif %}{%else%}bg-danger-subtle{%endif%}" data-order="{{ dlv.value }}">
-				<div class="dlv">
-
-					{% comment %}
-					Investigate Popover API further:
-					on trigger button: button[popovertarget="popover_{{dl.key}}"]
-					on popover div: div[popover] + div[id="popover_{{dl.key}}"]
-					{% endcomment %}
-
-					<button type="button" class="btn btn-sm float-start dlv-derived-btn">
-						{% if dlv.has_value %}
-							{% if dlv.is_derived_value %}
-									{% icon "info" %}
-							{% else %}
-								{% icon "issue-closed" %}
-							{% endif %}
-						{% else %}
-								{% icon "no-entry" %}
-						{% endif %}
-					</button>
-
-					<div class="popover bs-popover-top">
-						<div class="popover-arrow"></div>
-						<h3 class="popover-header">{% translate "Data quality info" %}</h3>
-						<div class="popover-body">
-							{% if dlv.has_value %}
-								{% if dlv.is_derived_value %}
-									{% translate "Data derived from:" %}<br>
-									{% if dlv.is_derived_spatial%}
-										<a href='{{ dlv.shape.get_absolute_url }}'>{{ dlv.shape.name }}</a> ({{ dlv.shape.type.name }})<br>
-									{% endif %}
-									{% if dlv.is_derived_temporal %}
-										{{ dlv.date }}<br>
-									{% endif %}
-								{% else %}
-									{% translate "Matching data available" %}
-								{% endif %}
-							{% else %}
-								{% translate "No data available" %}
-							{% endif %}
-						</div>
-					</div>
-				</div>
-
-				<span class="js-value"
-				  data-value-formatted="{{ dlv.value|datalayerformat:dl }}"
-				  data-value-raw="{{ dlv.value }}">
-					{{ dlv.value|datalayerformat:dl }}
-				</span>
+				{% include "datalayers/partials/dlv.html" with dlv=dlv show_derived=True %}
 			</td>
 
 			{% with dlv=shape|datalayer_first_value:dl %}

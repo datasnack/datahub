@@ -187,7 +187,7 @@ export class MapManager {
                 if (props.color) {
                     color = `<span class="d-inline-block" style="border: 1px solid #000; width: 1em; height: 1em; border-radius: 50%; background-color: ${props.color}"></span>`;
                 }
-                content += `<div class="">Value: ${props.formatted} ${color}</div>`;
+                content += `<div class="">Value: ${color} ${props.formatted}</div>`;
                 content += `<div class="text-muted small">Raw: ${props.value}</div>`;
 
             } else {
