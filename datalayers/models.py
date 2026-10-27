@@ -6,9 +6,10 @@ import datetime as dt
 import logging
 import os
 import string
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import Literal
+from typing import Any, Literal, Self
 
 import pandas as pd
 import yaml
@@ -825,7 +826,9 @@ class Datalayer(models.Model):
                 params["when"] = when
 
             else:
-                raise ValueError(f"Unknown time_col={self.temporal_resolution}")
+                raise ValueError(
+                    f"[{self.key}] Unknown time_col={self.temporal_resolution}"
+                )
 
         sort_operator = "DESC"
         if mode == "up":
@@ -1498,9 +1501,39 @@ class DatalayerLogEntry(models.Model):
     level = models.CharField(max_length=10, choices=SEVERITY_CHOICES)
     message = models.TextField()
     context = models.JSONField(default=list)
+
+
+@dataclass
+class AlgorithmStep:
+    """One reasoning step of the algorithm: how a single rule changed the score."""
+
+    datalayer_key: str
+    score_in: float | None = None
+    score_out: float | None = None
+    assigned_points: float | None = None
+    threshold: str = ""
+    value: Any = None  # the input value the rule looked at (must be JSON-serializable)
+    value_formatted: str | None = None
+    message: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls(
+            score_in=data["score_in"],
+            score_out=data["score_out"],
+            assigned_points=data["assigned_points"],
+            value=data.get("value"),
+            message=data.get("message", ""),
+        )
+
+
 class Algorithm:
-    def __init__(self, file: Path) -> None:
+    def __init__(self, file: Path, dl: Datalayer | None = None) -> None:
         self.cache_dl_values = {}
+        self.dl = dl
 
         with file.open() as stream:
             try:
@@ -1592,18 +1625,12 @@ class Algorithm:
             data = shape.datalayer_value(spec["datalayer"], when=when)
             value = data.value
 
-            reason = {
-                "datalayer_key": spec["datalayer"].key,
-                "datalayer_value": value,
-                "score_in": score,
-            }
-
-            if isinstance(reason["datalayer_value"], float):
-                reason["datalayer_value"] = round(
-                    reason["datalayer_value"], spec["datalayer"].get_class().precision
-                )
-
-            reason["threshold"] = ""
+            reason = AlgorithmStep(
+                datalayer_key=spec["datalayer"].key,
+                value=value,
+                value_formatted=data.str_format(),
+                score_in=score,
+            )
 
             for threshold in spec["thresholds"]:
                 if threshold is None or "condition" not in threshold:
@@ -1616,10 +1643,12 @@ class Algorithm:
                     and value is not None
                     and threshold["value"][0] <= value <= threshold["value"][1]
                 ):
-                    reason["threshold"] += f"{threshold['condition']}"
-                    score += threshold["score"] * spec.get("score_factor", 1)
-                    reason["message"] = (
-                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({threshold['value'][0]} <= {value} <= {threshold['value'][1]})"
+                    reason.threshold += f"{threshold['condition']}"
+                    assigned_points = threshold["score"] * spec.get("score_factor", 1)
+                    score += assigned_points
+                    reason.assigned_points = assigned_points
+                    reason.message = (
+                        f"{threshold['value'][0]} <= {value} <= {threshold['value'][1]}"
                     )
                     break
 
@@ -1628,11 +1657,11 @@ class Algorithm:
                     and value is not None
                     and value > threshold["value"]
                 ):
-                    reason["threshold"] += f"{threshold['condition']}"
-                    score += threshold["score"] * spec.get("score_factor", 1)
-                    reason["message"] = (
-                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} > {threshold['value']})"
-                    )
+                    reason.threshold += f"{threshold['condition']}"
+                    assigned_points = threshold["score"] * spec.get("score_factor", 1)
+                    score += assigned_points
+                    reason.assigned_points = assigned_points
+                    reason.message = f"{value} > {threshold['value']}"
                     break
 
                 if (
@@ -1640,11 +1669,11 @@ class Algorithm:
                     and value is not None
                     and value >= threshold["value"]
                 ):
-                    reason["threshold"] += f"{threshold['condition']}"
-                    score += threshold["score"] * spec.get("score_factor", 1)
-                    reason["message"] = (
-                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} >= {threshold['value']})"
-                    )
+                    reason.threshold += f"{threshold['condition']}"
+                    assigned_points = threshold["score"] * spec.get("score_factor", 1)
+                    score += assigned_points
+                    reason.assigned_points = assigned_points
+                    reason.message = f"{value} >= {threshold['value']}"
                     break
 
                 if (
@@ -1652,11 +1681,11 @@ class Algorithm:
                     and value is not None
                     and value < threshold["value"]
                 ):
-                    reason["threshold"] += f"{threshold['condition']}"
-                    score += threshold["score"] * spec.get("score_factor", 1)
-                    reason["message"] = (
-                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} < {threshold['value']})"
-                    )
+                    reason.threshold += f"{threshold['condition']}"
+                    assigned_points = threshold["score"] * spec.get("score_factor", 1)
+                    score += assigned_points
+                    reason.assigned_points = assigned_points
+                    reason.message = f"{value} < {threshold['value']}"
                     break
 
                 if (
@@ -1664,52 +1693,50 @@ class Algorithm:
                     and value is not None
                     and value <= threshold["value"]
                 ):
-                    reason["threshold"] += f"{threshold['condition']}"
-                    score += threshold["score"] * spec.get("score_factor", 1)
-                    reason["message"] = (
-                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} <= {threshold['value']})"
-                    )
+                    reason.threshold += f"{threshold['condition']}"
+                    assigned_points = threshold["score"] * spec.get("score_factor", 1)
+                    score += assigned_points
+                    reason.assigned_points = assigned_points
+                    reason.message = f"{value} <= {threshold['value']}"
                     break
 
                 if threshold["condition"] == "==" and value == threshold["value"]:
-                    reason["threshold"] += f"{threshold['condition']}"
-                    score += threshold["score"] * spec.get("score_factor", 1)
-                    reason["message"] = (
-                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} == {threshold['value']})"
-                    )
+                    reason.threshold += f"{threshold['condition']}"
+                    assigned_points = threshold["score"] * spec.get("score_factor", 1)
+                    score += assigned_points
+                    reason.assigned_points = assigned_points
+                    reason.message = f"{value} == {threshold['value']}"
                     break
 
                 if threshold["condition"] == "isNone" and value is None:
-                    reason["threshold"] += f"{threshold['condition']}"
-                    score += threshold["score"] * spec.get("score_factor", 1)
-                    reason["message"] = (
-                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value})"
-                    )
+                    reason.threshold += f"{threshold['condition']}"
+                    assigned_points = threshold["score"] * spec.get("score_factor", 1)
+                    score += assigned_points
+                    reason.assigned_points = assigned_points
+                    reason.message = "Value isNone"
                     break
 
                 # raise ValueError(
                 #    f"Unknown algorithm threshold condition '{threshold['condition']}'"
                 # )
 
-            reason["score_out"] = score
-            reasoning[spec["datalayer"].key] = reason
+            reason.score_out = score
+            reasoning[spec["datalayer"].key] = reason.to_dict()
 
         result = {"shape_id": shape.id, "value": score, "reasoning": reasoning}
         return result
 
     def get_reason(self, shape, when, datalayer=None):
-        dl_key = f"fred_risk_{self.metadata['key']}"
-        dl = Datalayer.objects.get(key=dl_key)
-        value = dl.value(shape=shape, when=when)
+        if self.dl:
+            value = self.dl.value(shape=shape, when=when)
 
-        if "reasoning" in value.result and datalayer:
-            return value.result["reasoning"][datalayer.key]
+            if "reasoning" in value.result and datalayer:
+                return value.result["reasoning"][datalayer.key]
 
         return None
 
     def get_value(self, shape, when):
-        dl_key = f"fred_risk_{self.metadata['key']}"
-        dl = Datalayer.objects.get(key=dl_key)
-        value = dl.value(shape=shape, when=when)
-
-        return value.value
+        if self.dl:
+            value = self.dl.value(shape=shape, when=when)
+            return value.value
+        return None

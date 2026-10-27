@@ -28,7 +28,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<thead>
 		<tr>
 			<th rowspan="2">Data Layer</th>
-			<th class="text-center" colspan="3">Score</th>
+			<th class="text-center" colspan="3">Risk points</th>
 
 			{% if shape %}
 				<th colspan="4" class="text-center border-start">{{ shape.name }} ({{ when|date:"Y-m-d" }})</th>
@@ -41,9 +41,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 			{% if shape %}
 				<th class="text-center border-start">Value</th>
-				<th class="text-center border-start">in</th>
-				<th class="text-center">reason</th>
-				<th class="text-center">out</th>
+				<th class="text-center border-start">Assigned points</th>
+				<th class="text-center">Reasoning</th>
+				<th class="text-center">Score</th>
 			{% endif %}
 		</tr>
 	</thead>
@@ -69,7 +69,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</td>
 				{% for threshold in spec.thresholds %}
-				<td class="text-center align-middle">
+				<td class="text-center align-middle text-nowrap">
 					{% if threshold.condition == "between" %}
 						{{ threshold.value.0 }} - {{ threshold.value.1 }}
 					{% else %}
@@ -94,15 +94,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 
 				{% call_method algorithm "get_reason" shape when spec.datalayer as reason %}
-				<td class="border-start text-end">
-					{{ reason.score_in|floatformat:2 }}&nbsp;→
+				<td class="border-start text-center align-middle">
+					{{ reason.assigned_points }}
 				</td>
 
-				<td class="text-muted">
-					{% markdown reason.message %}
+				<td class="text-muted  align-middle">
+					{{ reason.message }}
 				</td>
-				<td class="text-end">
-					→&nbsp;{{ reason.score_out|floatformat:2 }}
+
+				<td class="text-end  align-middle">
+					{{ reason.score_out|floatformat:2 }}
 				</td>
 
 
