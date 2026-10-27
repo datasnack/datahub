@@ -11,6 +11,7 @@ from timeit import default_timer as timer
 from typing import Literal
 
 import pandas as pd
+import yaml
 from psycopg import sql
 from taggit.managers import TaggableManager
 
@@ -1497,3 +1498,218 @@ class DatalayerLogEntry(models.Model):
     level = models.CharField(max_length=10, choices=SEVERITY_CHOICES)
     message = models.TextField()
     context = models.JSONField(default=list)
+class Algorithm:
+    def __init__(self, file: Path) -> None:
+        self.cache_dl_values = {}
+
+        with file.open() as stream:
+            try:
+                algorithm = yaml.safe_load(stream)
+
+                # Add datalayer models to specs
+                for spec in algorithm["spec"]:
+                    if spec.get("datalayer"):
+                        datalayer = Datalayer.objects.get(key=spec["datalayer"])
+                        spec["datalayer"] = datalayer
+
+                self.metadata = algorithm["metadata"]
+                self.spec = algorithm["spec"]
+            except yaml.YAMLError as exc:
+                print(exc)
+
+    def min_score(self) -> float:
+        min_score = 0
+
+        for spec in self.spec:
+            if spec is None:
+                continue
+            if not spec.get("datalayer", None):
+                continue
+            scores = []
+            for tr in spec.get("thresholds", {}):
+                if tr is None:
+                    continue
+                score = tr.get("score", None)
+                if score:
+                    scores.append(score)
+
+            min_score += min(scores) * spec.get("score_factor", 1)
+
+        return min_score
+
+    def max_score(self) -> float:
+        max_score = 0
+
+        for spec in self.spec:
+            if spec is None:
+                continue
+            if not spec.get("datalayer", None):
+                continue
+
+            scores = []
+            for tr in spec.get("thresholds", {}):
+                if tr is None:
+                    continue
+                score = tr.get("score", None)
+                if score:
+                    scores.append(score)
+
+            max_score += max(scores) * spec.get("score_factor", 1)
+
+        return max_score
+
+    def datalayer_keys(self) -> list[str]:
+        keys = []
+        for spec in self.spec:
+            if not spec.get("datalayer"):
+                continue
+
+            keys.append(spec["datalayer"].key)
+
+        return keys
+
+    def pre_load_shape_type(self, shape_type, when):
+        for spec in self.spec:
+            if not spec.get("datalayer"):
+                continue
+
+            dl = spec.get("datalayer")
+            df = dl.data(shape_type=shape_type, end_date=when, latest_value_only=True)
+            self.cache_dl_values[dl.key] = dict(
+                zip(df["shape_id"], df["value"], strict=True)
+            )
+
+    def run(self, shape, when):
+        score = 0
+        reasoning = {}
+
+        for spec in self.spec:
+            if not spec.get("datalayer"):
+                continue
+
+            # data = spec["datalayer"].value(shape=shape, when=when)
+
+            data = shape.datalayer_value(spec["datalayer"], when=when)
+            value = data.value
+
+            reason = {
+                "datalayer_key": spec["datalayer"].key,
+                "datalayer_value": value,
+                "score_in": score,
+            }
+
+            if isinstance(reason["datalayer_value"], float):
+                reason["datalayer_value"] = round(
+                    reason["datalayer_value"], spec["datalayer"].get_class().precision
+                )
+
+            reason["threshold"] = ""
+
+            for threshold in spec["thresholds"]:
+                if threshold is None or "condition" not in threshold:
+                    continue
+
+                # between needs to be first, so upper/lower thresholds don't get counted twice
+                # we break after the first successful threshold
+                if (
+                    threshold["condition"] == "between"
+                    and value is not None
+                    and threshold["value"][0] <= value <= threshold["value"][1]
+                ):
+                    reason["threshold"] += f"{threshold['condition']}"
+                    score += threshold["score"] * spec.get("score_factor", 1)
+                    reason["message"] = (
+                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({threshold['value'][0]} <= {value} <= {threshold['value'][1]})"
+                    )
+                    break
+
+                if (
+                    threshold["condition"] == ">"
+                    and value is not None
+                    and value > threshold["value"]
+                ):
+                    reason["threshold"] += f"{threshold['condition']}"
+                    score += threshold["score"] * spec.get("score_factor", 1)
+                    reason["message"] = (
+                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} > {threshold['value']})"
+                    )
+                    break
+
+                if (
+                    threshold["condition"] == ">="
+                    and value is not None
+                    and value >= threshold["value"]
+                ):
+                    reason["threshold"] += f"{threshold['condition']}"
+                    score += threshold["score"] * spec.get("score_factor", 1)
+                    reason["message"] = (
+                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} >= {threshold['value']})"
+                    )
+                    break
+
+                if (
+                    threshold["condition"] == "<"
+                    and value is not None
+                    and value < threshold["value"]
+                ):
+                    reason["threshold"] += f"{threshold['condition']}"
+                    score += threshold["score"] * spec.get("score_factor", 1)
+                    reason["message"] = (
+                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} < {threshold['value']})"
+                    )
+                    break
+
+                if (
+                    threshold["condition"] == "<="
+                    and value is not None
+                    and value <= threshold["value"]
+                ):
+                    reason["threshold"] += f"{threshold['condition']}"
+                    score += threshold["score"] * spec.get("score_factor", 1)
+                    reason["message"] = (
+                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} <= {threshold['value']})"
+                    )
+                    break
+
+                if threshold["condition"] == "==" and value == threshold["value"]:
+                    reason["threshold"] += f"{threshold['condition']}"
+                    score += threshold["score"] * spec.get("score_factor", 1)
+                    reason["message"] = (
+                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value} == {threshold['value']})"
+                    )
+                    break
+
+                if threshold["condition"] == "isNone" and value is None:
+                    reason["threshold"] += f"{threshold['condition']}"
+                    score += threshold["score"] * spec.get("score_factor", 1)
+                    reason["message"] = (
+                        f"+{threshold['score'] * spec.get('score_factor', 1)} ({value})"
+                    )
+                    break
+
+                # raise ValueError(
+                #    f"Unknown algorithm threshold condition '{threshold['condition']}'"
+                # )
+
+            reason["score_out"] = score
+            reasoning[spec["datalayer"].key] = reason
+
+        result = {"shape_id": shape.id, "value": score, "reasoning": reasoning}
+        return result
+
+    def get_reason(self, shape, when, datalayer=None):
+        dl_key = f"fred_risk_{self.metadata['key']}"
+        dl = Datalayer.objects.get(key=dl_key)
+        value = dl.value(shape=shape, when=when)
+
+        if "reasoning" in value.result and datalayer:
+            return value.result["reasoning"][datalayer.key]
+
+        return None
+
+    def get_value(self, shape, when):
+        dl_key = f"fred_risk_{self.metadata['key']}"
+        dl = Datalayer.objects.get(key=dl_key)
+        value = dl.value(shape=shape, when=when)
+
+        return value.value
