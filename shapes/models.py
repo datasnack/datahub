@@ -89,7 +89,7 @@ class Shape(models.Model):
 
     @property
     def has_properties(self, default=None):
-        return len(self.properties) > 0
+        return self.properties and len(self.properties) > 0
 
     def get_property(self, key: str, default=NO_DEFAULT):
         if self.has_properties and key in self.properties:
