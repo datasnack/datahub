@@ -199,7 +199,7 @@ class DatalayerValue:
                 raise ValueError(msg)
 
     def str_format(self):
-        if self.dl.has_class():
+        if self.dl.has_class() and self.has_value():
             return self.dl.get_class().str_format(self.value)
 
         return self.value
