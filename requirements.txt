@@ -149,7 +149,7 @@ pyproj==3.8.0
     # via
     #   geopandas
     #   rioxarray
-python-dateutil==2.9.0.post0
+python-dateutil==3.0.0
     # via
     #   multiurl
     #   pandas
@@ -189,7 +189,7 @@ shapely==2.2.0
     #   osmnx
 six==1.17.0
     # via python-dateutil
-sqlalchemy==2.1.5
+sqlalchemy==2.1.6
     # via
     #   datahub (pyproject.toml)
     #   geoalchemy2
@@ -209,6 +209,8 @@ typing-extensions==4.16.0
     #   typing-inspection
 typing-inspection==0.4.4
     # via pydantic
+tzdata==2026.5
+    # via python-dateutil
 urllib3==2.8.0
     # via requests
 werkzeug==3.1.9

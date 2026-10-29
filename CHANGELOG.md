@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.2](https://github.com/datasnack/datahub/compare/v0.13.1..v0.13.2) - 2026-10-29
+
+### Fixed
+
+- Don't try to format none value ([428aad5](https://github.com/datasnack/datahub/commit/428aad5f1585d6df7bb6d4abec3be4a83e4a5e78))
+- Shape shoperties might be unset ([1468ed0](https://github.com/datasnack/datahub/commit/1468ed00ae32583afc48a0e266f75017fff85cc3))
+
 ## [0.13.1](https://github.com/datasnack/datahub/compare/v0.13.0..v0.13.1) - 2026-10-28
 
 ### Changed
