@@ -1525,10 +1525,13 @@ class AlgorithmStep:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         return cls(
+            datalayer_key=data["datalayer_key"],
             score_in=data["score_in"],
             score_out=data["score_out"],
             assigned_points=data["assigned_points"],
+            threshold=data.get("threshold", ""),
             value=data.get("value"),
+            value_formatted=data.get("value_formatted"),
             message=data.get("message", ""),
         )
 
@@ -1650,9 +1653,7 @@ class Algorithm:
                     assigned_points = threshold["score"] * spec.get("score_factor", 1)
                     score += assigned_points
                     reason.assigned_points = assigned_points
-                    reason.message = (
-                        f"{threshold['value'][0]} <= {value} <= {threshold['value'][1]}"
-                    )
+                    reason.message = f"{threshold['value'][0]} <= {round(value, 3)} <= {threshold['value'][1]}"
                     break
 
                 if (
@@ -1664,7 +1665,7 @@ class Algorithm:
                     assigned_points = threshold["score"] * spec.get("score_factor", 1)
                     score += assigned_points
                     reason.assigned_points = assigned_points
-                    reason.message = f"{value} > {threshold['value']}"
+                    reason.message = f"{round(value, 3)} > {threshold['value']}"
                     break
 
                 if (
@@ -1676,7 +1677,7 @@ class Algorithm:
                     assigned_points = threshold["score"] * spec.get("score_factor", 1)
                     score += assigned_points
                     reason.assigned_points = assigned_points
-                    reason.message = f"{value} >= {threshold['value']}"
+                    reason.message = f"{round(value, 3)} >= {threshold['value']}"
                     break
 
                 if (
@@ -1688,7 +1689,7 @@ class Algorithm:
                     assigned_points = threshold["score"] * spec.get("score_factor", 1)
                     score += assigned_points
                     reason.assigned_points = assigned_points
-                    reason.message = f"{value} < {threshold['value']}"
+                    reason.message = f"{round(value, 3)} < {threshold['value']}"
                     break
 
                 if (
@@ -1700,7 +1701,7 @@ class Algorithm:
                     assigned_points = threshold["score"] * spec.get("score_factor", 1)
                     score += assigned_points
                     reason.assigned_points = assigned_points
-                    reason.message = f"{value} <= {threshold['value']}"
+                    reason.message = f"{round(value, 3)} <= {threshold['value']}"
                     break
 
                 if threshold["condition"] == "==" and value == threshold["value"]:
@@ -1708,7 +1709,7 @@ class Algorithm:
                     assigned_points = threshold["score"] * spec.get("score_factor", 1)
                     score += assigned_points
                     reason.assigned_points = assigned_points
-                    reason.message = f"{value} == {threshold['value']}"
+                    reason.message = f"{round(value, 3)} == {threshold['value']}"
                     break
 
                 if threshold["condition"] == "isNone" and value is None:
