@@ -81,6 +81,7 @@ export const MapSourceSchema = z.object({
     loading: z.boolean().default(true),
     visible: z.boolean().default(true),
     fitBounds: z.boolean().default(false),
+    showLegend: z.boolean().default(true),
     name: z.string().nullable().default(null),
 
     showControls: z.boolean().default(true),
