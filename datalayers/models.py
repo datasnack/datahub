@@ -800,6 +800,9 @@ class Datalayer(models.Model):
         if mode not in modes:
             raise ValueError(f"Unknown mode={mode}")
 
+        if mode == "exact" and when is None:
+            return DatalayerValue(self, None)
+
         params = {}
         query = "SELECT dl.* FROM {table} AS dl WHERE 1=1 "
 
