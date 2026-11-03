@@ -11,6 +11,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.3](https://github.com/datasnack/datahub/compare/v0.13.2..v0.13.3) - 2026-11-03
+
+### Changed
+
+- Give MapSource option to hide legend completely ([4ea28cf](https://github.com/datasnack/datahub/commit/4ea28cf52beb3a51cadfdbfcb17957f368fde2b2))
+
+### Fixed
+
+- Mkae algo reasoning more compact in reasoning rendering ([48dcb71](https://github.com/datasnack/datahub/commit/48dcb71ab40e6f555300c3ed7a2d52af2677eff9))
+- Make data() return empty DatalayerValue fir mode=exakt with None date ([0e4c613](https://github.com/datasnack/datahub/commit/0e4c613bd92b01915647213bfce3a35323f2d901))
+- Change wording in algo table ([94b7117](https://github.com/datasnack/datahub/commit/94b711769f20375e40cbb790973a2ceb5a96fc9e))
+
 ## [0.13.2](https://github.com/datasnack/datahub/compare/v0.13.1..v0.13.2) - 2026-10-29
 
 ### Fixed
