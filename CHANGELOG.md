@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.4](https://github.com/datasnack/datahub/compare/v0.13.3..v0.13.4) - 2026-11-04
+
+### Changed
+
+- Option to add extern/custom map sources with own maplibre setup, but folow ordering ([cf15c2e](https://github.com/datasnack/datahub/commit/cf15c2e8118e341870e8b4bdd844881a58f58682))
+
 ## [0.13.3](https://github.com/datasnack/datahub/compare/v0.13.2..v0.13.3) - 2026-11-03
 
 ### Changed
