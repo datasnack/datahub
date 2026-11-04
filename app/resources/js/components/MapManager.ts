@@ -20,6 +20,28 @@ import type { DataLayer, MapSource } from "./DatahubTypes";
 import { buildScale } from "./legend";
 
 
+/**
+ * What an external source's `setup` callback returns.
+ */
+export type ExternalSetupResult = {
+    /** MapLibre layer ids the setup added, top-to-bottom. Drives ordering/visibility/removal. */
+    layers: string[];
+    /** MapLibre source id the setup added (used for fit-bounds and removal). */
+    source?: string;
+    /** Remove handlers, popups, ... that the setup attached. */
+    cleanup?: () => void;
+};
+
+/**
+ * Called by the manager once the map is ready and the source is due to be
+ * added. Add your MapLibre source(s), layers and handlers here.
+ */
+export type ExternalSetup = (ctx: {
+    map: MapLibreMap;
+    maplibregl: typeof maplibregl;
+}) => ExternalSetupResult;
+
+
 export class MapManager {
 
     #map: MapLibreMap;
@@ -31,7 +53,8 @@ export class MapManager {
 
     // geometry payloads, owned by the manager (NOT reactive on purpose:
     // FeatureCollections are large and we don't want Svelte deep-proxying them).
-    // A source is "present on the map" iff we hold geometry for it here.
+    // A source is "present on the map" iff we hold geometry for it here
+    // (or it is an external source, see #external).
     #geometry = new Map<string, GeoJSON.FeatureCollection>();
 
     // in-flight fetches, so a newer load can supersede an older one
@@ -39,6 +62,7 @@ export class MapManager {
 
     // per-source teardown for popup/cursor event handlers, so we can remove
     // exactly the listeners we added (map.removeLayer does NOT remove them).
+    // For external sources this holds the cleanup returned by their setup.
     #popupCleanups = new Map<string, () => void>();
 
     // optional externally-supplied color scales (d3 scales), keyed by source id.
@@ -47,6 +71,12 @@ export class MapManager {
     #colorScales = new Map<string, (value: any) => string>();
 
     #popupCallbacks = new Map<string, (value: any) => string>();
+
+    // external sources: dh source id -> setup callback (run once per add)
+    #external = new Map<string, ExternalSetup>();
+
+    // dh source id -> MapLibre source id, when they differ (external sources)
+    #mapSourceIds = new Map<string, string>();
 
     private sources: MapSource[] = [];
 
@@ -154,7 +184,10 @@ export class MapManager {
     }
 
     async fitToSourceBounds(sourceId: string) {
-        const bounds = await this.#map.getSource(sourceId).getBounds();
+        const src: any = this.#map.getSource(this.#mapSourceIds.get(sourceId) ?? sourceId);
+        if (!src?.getBounds) return; // e.g. vector tile sources have no bounds
+        const bounds = await src.getBounds();
+        if (!bounds || bounds.isEmpty?.()) return;
         this.#map.fitBounds(bounds, {
             linear: true,
             padding: 42,
@@ -312,11 +345,28 @@ export class MapManager {
 
     setPopupCallback(id: string, callback?: (value: any) => string): void {
         if (callback) this.#popupCallbacks.set(id, callback);
-        else this.#colorScales.delete(id);
+        else this.#popupCallbacks.delete(id);
     }
 
     getPopupCallback(id: string): ((value: any) => string) | undefined {
         return this.#popupCallbacks.get(id);
+    }
+
+    // ---- external sources -------------------------------------------------
+
+    /**
+     * Register the setup callback of an external source. The callback is run
+     * by `reconcile` once the map is ready, so callers don't need to wait.
+     */
+    registerExternal(id: string, setup: ExternalSetup): void {
+        if (typeof setup !== "function") {
+            throw new Error(`External source ${id} needs a setup function`);
+        }
+        this.#external.set(id, setup);
+    }
+
+    hasExternal(id: string): boolean {
+        return this.#external.has(id);
     }
 
 
@@ -329,6 +379,11 @@ export class MapManager {
      * returns a patch describing the failure, on supersede it returns {}.
      */
     async loadSource(source: MapSource): Promise<Partial<MapSource>> {
+        // external sources set themselves up in reconcile; nothing to fetch
+        if (source.type === "external") {
+            return { status: this.#external.has(source.id) ? "ready" : "error" };
+        }
+
         // a newer load for the same id wins
         this.#controllers.get(source.id)?.abort();
         const ac = new AbortController();
@@ -384,6 +439,8 @@ export class MapManager {
         this.#controllers.delete(id);
         this.#geometry.delete(id);
         this.#colorScales.delete(id);
+        this.#popupCallbacks.delete(id);
+        this.#external.delete(id);
     }
 
     #fetchGeometryFor(source: MapSource, signal: AbortSignal): Promise<any> {
@@ -476,28 +533,35 @@ export class MapManager {
         const map = this.#map;
         const desiredIds = new Set(desired.map((d) => d.id));
 
-        // 0. forget geometry/fetches for sources that no longer exist at all
-        for (const id of [...this.#geometry.keys()]) {
+        // 0. forget geometry/fetches/external setups for sources that no longer exist at all
+        for (const id of new Set([...this.#geometry.keys(), ...this.#external.keys()])) {
             if (!desiredIds.has(id)) this.dropSource(id);
         }
 
-        // a source is shown on the map iff we hold geometry for it.
+        // a source is shown on the map iff we hold geometry for it (or it is external).
         // NOTE: this is deliberately decoupled from `status`. A source that is
         // re-loading ("loading") but already has geometry stays on the map, so
         // we never tear down + rebuild its layers/popups on a refresh.
         const present = new Map(
             desired
-                .filter((d) => this.#geometry.has(d.id))
+                .filter((d) => this.#geometry.has(d.id) || this.#external.has(d.id))
                 .map((d) => [d.id, d] as const),
         );
 
         // 1. remove sources that should no longer be displayed
+        //    order matters: handlers -> layers -> source
         for (const [id, layerIds] of this.#added) {
             if (!present.has(id)) {
-                this.#popupCleanups.get(id)?.(); // remove click/hover listeners
+                try {
+                    this.#popupCleanups.get(id)?.(); // remove click/hover listeners
+                } catch (e) {
+                    console.error("Cleanup failed for source", id, e);
+                }
                 this.#popupCleanups.delete(id);
                 for (const l of layerIds) if (map.getLayer(l)) map.removeLayer(l);
-                if (map.getSource(id)) map.removeSource(id);
+                const srcId = this.#mapSourceIds.get(id) ?? id;
+                if (map.getSource(srcId)) map.removeSource(srcId);
+                this.#mapSourceIds.delete(id);
                 this.#added.delete(id);
             }
         }
@@ -505,14 +569,28 @@ export class MapManager {
         // 2. add newly-present sources + their layers (+ popups, once)
         for (const d of present.values()) {
             if (this.#added.has(d.id)) continue;
-            const data = this.#geometry.get(d.id);
-            if (!data) continue;
-            map.addSource(d.id, { type: "geojson", data });
-            const layers = this.#buildLayers(d); // top-to-bottom
-            for (const layer of layers) map.addLayer(layer);
-            this.#added.set(d.id, layers.map((l) => l.id));
 
-            this.#attachPopup(d);
+            const setup = this.#external.get(d.id);
+            if (setup) {
+                try {
+                    const r = setup({ map, maplibregl });
+                    this.#added.set(d.id, r?.layers ?? []);
+                    if (r?.source) this.#mapSourceIds.set(d.id, r.source);
+                    this.#popupCleanups.set(d.id, r?.cleanup ?? (() => { }));
+                } catch (e) {
+                    console.error("External source setup failed", d.id, e);
+                    continue;
+                }
+            } else {
+                const data = this.#geometry.get(d.id);
+                if (!data) continue;
+                map.addSource(d.id, { type: "geojson", data });
+                const layers = this.#buildLayers(d); // top-to-bottom
+                for (const layer of layers) map.addLayer(layer);
+                this.#added.set(d.id, layers.map((l) => l.id));
+
+                this.#attachPopup(d);
+            }
 
             if (d.fitBounds) {
                 this.fitToSourceBounds(d.id);
@@ -524,7 +602,7 @@ export class MapManager {
             const ids = this.#added.get(d.id);
             if (!ids) continue;
             const v = d.visible ? "visible" : "none";
-            for (const l of ids) map.setLayoutProperty(l, "visibility", v);
+            for (const l of ids) if (map.getLayer(l)) map.setLayoutProperty(l, "visibility", v);
         }
 
         // update color/opacity
@@ -533,7 +611,8 @@ export class MapManager {
         // 4. THE order authority — flatten items (display order) → layer ids, then chain moveLayer
         const order = desired
             .filter((d) => this.#added.has(d.id))
-            .flatMap((d) => this.#added.get(d.id)!);
+            .flatMap((d) => this.#added.get(d.id)!)
+            .filter((l) => map.getLayer(l));
         let beforeId: string | undefined;
         for (const layerId of order) {
             map.moveLayer(layerId, beforeId); // places layerId just below beforeId
@@ -784,6 +863,7 @@ export class MapManager {
     }
 
     // style — paint props per layer id, recomputed from current state
+    // (external sources style themselves → falls through to {})
     #paintFor(s: MapSource): Record<string, Record<string, unknown>> {
         switch (s.type) {
             case 'shape': return {
@@ -802,7 +882,6 @@ export class MapManager {
             };
         }
         return {};
-        throw new Error(`No layer styles for source of type ${s.type} `)
     }
 
     destroy(): void {

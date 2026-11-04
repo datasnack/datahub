@@ -294,17 +294,44 @@ SPDX-License-Identifier: AGPL-3.0-only
         fetchSource(id);
     }
 
+    /**
+     * Public API: add a source to the map (on top).
+     *
+     * Non-serializable extras (only available via this JS call, not via the
+     * serialized `sources` attribute):
+     *
+     *   colorScale – d3 scale for datalayer sources (overrides cmap)
+     *   setup      – required for type "external": called once the map is
+     *                ready; add your own MapLibre sources/layers/handlers and
+     *                return { layers: [...top-to-bottom], source?, cleanup? }.
+     *                Can be called right away, no need to wait for the map.
+     *
+     *   el.addSource({
+     *       type: "external",
+     *       name: "Locations",
+     *       fitBounds: true,
+     *       setup({ map, maplibregl }) {
+     *           map.addSource("points", { type: "geojson", data });
+     *           map.addLayer({ id: "points", type: "circle", source: "points" });
+     *           return { source: "points", layers: ["points"] };
+     *       },
+     *   });
+     */
     export function addSource(source: any) {
-        // pull the (non-serializable) color scale out before Zod parsing; it's
-        // only available via this JS call, not the serialized `sources` attribute.
-        const { colorScale, ...rest } = source;
+        const { colorScale, setup, ...rest } = source;
 
         rest.id = rest.id ?? mapManager.getNextSourceIdString();
         const parsed = MapSourceSchema.parse(rest);
-        sources.unshift(parsed);
 
+        if (parsed.type === SourceType.External) {
+            mapManager.registerExternal(parsed.id, setup);
+        }
         mapManager.setColorScale(parsed.id, colorScale);
+
+        sources.unshift(parsed);
         fetchSource(parsed.id);
+
+        return parsed.id;
     }
 
     /**

@@ -17,6 +17,12 @@ export type DataLayerItem = {
     datalayer: DataLayer,
 }
 
+export type Shape = {
+    id: number,
+    key: string,
+    name: string,
+}
+
 export type ShapeType = {
     key: string,
     name: string,
@@ -57,12 +63,16 @@ export type DataLayerQuery = {
  *
  * datalayer -> a datalayer choropleth map
  * shape -> a single shape, or all shapes of a shape type
+ * external -> MapLibre sources/layers set up by the embedding page via a
+ *             `setup` callback; the manager only handles ordering,
+ *             visibility, removal and fit-bounds.
  */
 export enum SourceType {
     Datalayer = "datalayer",
     Shape = "shape",
     BBox = "bbox",
     Vector = "vector",
+    External = "external",
 }
 
 export enum LegendMode {
@@ -86,7 +96,7 @@ export const MapSourceSchema = z.object({
 
     showControls: z.boolean().default(true),
 
-    query: z.record(z.string(), z.union([z.string(), z.number(), z.null()])),
+    query: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).default({}),
     showQueryLabel: z.boolean().default(true),
 
     alpha: z.number().min(0).max(1).optional(),
@@ -119,7 +129,7 @@ export const MapSourceSchema = z.object({
 }).transform((data) => ({
     ...data,
     alpha: data.alpha ?? (data.type === SourceType.Shape ? 0.3 : 1),
-}));;
+}));
 
 export type MapSource = z.infer<typeof MapSourceSchema>;
 

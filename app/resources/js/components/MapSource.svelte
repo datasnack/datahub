@@ -112,21 +112,24 @@ SPDX-License-Identifier: AGPL-3.0-only
                 {:else if source.type === "bbox"}
                     <!--<BboxControls bind:source />-->
                 {/if}
+                <!-- external: no controls, it styles itself -->
             </div>
         {/if}
 
-        <div>
-            <label class="d-flex align-items-center w-50">
-                <abbr title="Alpha">A</abbr>:
-                <input
-                    class="ms-1 w-100"
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    bind:value={source.alpha}
-                />
-            </label>
-        </div>
+        {#if source.type !== "external"}
+            <div>
+                <label class="d-flex align-items-center w-50">
+                    <abbr title="Alpha">A</abbr>:
+                    <input
+                        class="ms-1 w-100"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        bind:value={source.alpha}
+                    />
+                </label>
+            </div>
+        {/if}
     </div>
 {/if}
