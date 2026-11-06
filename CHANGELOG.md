@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.5](https://github.com/datasnack/datahub/compare/v0.13.4..v0.13.5) - 2026-11-06
+
+### Fixed
+
+- Show % as unit for percentage layers ([0aac173](https://github.com/datasnack/datahub/commit/0aac173587d93a784ba53d4726bf7eab56498383))
+- Show label fopr data type ([1897bf7](https://github.com/datasnack/datahub/commit/1897bf7d09214243be57603e81d5bcb62acd4de7))
+
 ## [0.13.4](https://github.com/datasnack/datahub/compare/v0.13.3..v0.13.4) - 2026-11-04
 
 ### Changed
