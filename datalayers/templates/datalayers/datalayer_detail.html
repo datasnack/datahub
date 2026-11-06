@@ -75,7 +75,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div class="mb-3 small text-muted">
 			{% translate "Key" %}: <code>{{ datalayer.key }}</code>
 
-			| {% if datalayer.data_type == 'primary' %}
+			| {% translate "Data type" %}: {% if datalayer.data_type == 'primary' %}
 				{% translate "Primary data" %}
 			{% elif datalayer.data_type == 'secondary' %}
 				{% translate "Secondary data" %}
