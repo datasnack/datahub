@@ -88,6 +88,7 @@ const hotFilePlugin = () => ({
 
 export default defineConfig({
 	//root: 'app/resources',
+	base: '/static/build/',
 	build: {
 		// explicitly set path of manifest, the value true would lead to it being
 		// created at ./.vite/ and Djangos collectstatic ignores dot folders

@@ -3,12 +3,24 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 
-import type { Map as MapLibreMap, IControl } from "maplibre-gl";
-
-import maplibregl, {
-    type StyleSpecification,
-    type LayerSpecification,
+import * as maplibregl from 'maplibre-gl';
+import type {
+    Map as MapLibreMap,
+    IControl,
+    StyleSpecification,
+    LayerSpecification,
 } from 'maplibre-gl';
+
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+
+let url = workerUrl;
+if (import.meta.env.DEV) {
+    const abs = new URL(workerUrl, import.meta.url).href;
+    url = URL.createObjectURL(
+        new Blob([`import ${JSON.stringify(abs)};`], { type: 'text/javascript' })
+    );
+}
+maplibregl.setWorkerUrl(url);
 
 import StyleControl from "../maplibre/StyleControl";
 import ScreenshotControl from "../maplibre/ScreenshotControl";
