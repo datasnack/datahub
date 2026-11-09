@@ -28,24 +28,16 @@ window.d3 = d3;
 
 import { Legend } from "./d3/d3.legend.js";
 window.Legend = Legend;
-
 import { Swatches } from "./d3/d3.swatches.js";
 window.Swatches = Swatches;
 
 import hljs from "highlight.js/lib/core";
 import python from "highlight.js/lib/languages/python";
 import r from "highlight.js/lib/languages/r";
-
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("r", r);
-
 window.hljs = hljs;
 
-/**
- * Own scripts
- *
- */
-import "./search";
 
 window.loadPlotly = async function () {
 	if (!window.Plotly) {
@@ -54,4 +46,9 @@ window.loadPlotly = async function () {
 	return Plotly;
 };
 
+/**
+ * Own scripts
+ *
+ */
+import "./cmd-k.js"
 import "./copy2clipboard";

@@ -344,8 +344,7 @@ SPDX-License-Identifier: AGPL-3.0-only
                             `/search?f=${scope}&q=${query}`,
                         );
                         const results = await response.json();
-                        // @todo: remove nesting of results
-                        return results["results"][0];
+                        return results["results"];
                     } catch (error) {
                         return error;
                     }

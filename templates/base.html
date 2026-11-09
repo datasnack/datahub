@@ -57,23 +57,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</a>
 
 				{% if not datahub_login_required or user.is_authenticated %}
-					<button id="open-search" type="button" class="btn btn-sm btn-outline-secondary m-searchbutton" aria-label="{% translate "Search" %}">
-						<span class="m-searchbutton-label">
-							<span class="m-searchbutton-icon">{% icon "search" %}</span>
-							<span class="m-searchbutton-placeholder">{% translate "Search" %}</span>
-						</span>
-						<span class="m-searchbutton-keys">
-							<kbd class="m-searchbutton-key m-searchbutton-key--mod"></kbd>
-							<kbd class="m-searchbutton-key">K</kbd>
-						</span>
-					</button>
-					{% comment %}
-					agolia/autocomplete needs a container where it renders the inputfield, since we
-					have our own button, we hide it. There is no functionality to hide/provide a
-					custom html for the trigger element, hiding it is actually recommended
-					by the github discussions from the repo. https://github.com/algolia/autocomplete/discussions/1029
-					{% endcomment %}
-					<div style="display: none" id="autocomplete"></div>
+					<cmd-k
+						endpoint="/search"
+						debounce="300"
+						min-chars="2"
+						placeholder="Search for Shapes or Data Layers"
+						show-button
+					>
+						{% comment %}
+						<!-- Currently we don't have a dedicated search result page -->
+						<noscript>
+							<form action="/search" method="get">
+								<input type="search" name="q" placeholder="Search...">
+								<button type="submit">Search</button>
+							</form>
+						</noscript>{% endcomment %}
+					</cmd-k>
 				{% endif %}
 
 				<div class="d-flex align-items-center ms-auto"> {% comment %} ms-auto makes sure the div is positioned on the "end" in the flex parent {% endcomment %}
