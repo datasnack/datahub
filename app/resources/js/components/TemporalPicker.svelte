@@ -6,7 +6,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts">
     import { onMount } from "svelte";
     import { Calendar, type Options, weeks } from "vanilla-calendar-pro";
-    import "vanilla-calendar-pro/styles/index.css";
 
     let {
         id,
