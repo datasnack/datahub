@@ -14,6 +14,7 @@
 We overwrite the CSS styling, to make it match out Bootstrap frontend
 @import "@tarekraafat/autocomplete.js/dist/css/autoComplete.css"; */
 @import "components/autoComplete.css";
+
 @import "layout.css";
 
 @import "prose.css";
@@ -224,4 +225,36 @@ dh-chart .aa-Form {
 
 .map-sidebar>div:not(:first-of-type) {
 	margin-top: 10px;
+}
+
+
+/* TemporalPicker Svelte component */
+/* only calendars that render week numbers (our week picker) */
+/* opt-in: styles: { calendar: "vc vc-week-picker" } */
+.vc-week-picker {
+	& .vc-dates__row {
+		column-gap: 0;
+	}
+
+	/* hover a row, or its week number -> highlight the whole week as one bar */
+	& .vc-dates__row:hover,
+	& .vc-wrapper:has(.vc-week-number:nth-child(1):hover) .vc-dates__row:nth-child(1),
+	& .vc-wrapper:has(.vc-week-number:nth-child(2):hover) .vc-dates__row:nth-child(2),
+	& .vc-wrapper:has(.vc-week-number:nth-child(3):hover) .vc-dates__row:nth-child(3),
+	& .vc-wrapper:has(.vc-week-number:nth-child(4):hover) .vc-dates__row:nth-child(4),
+	& .vc-wrapper:has(.vc-week-number:nth-child(5):hover) .vc-dates__row:nth-child(5),
+	& .vc-wrapper:has(.vc-week-number:nth-child(6):hover) .vc-dates__row:nth-child(6) {
+		& .vc-date:not([data-vc-date-disabled]):not([data-vc-date-selected]) .vc-date__btn {
+			background-color: var(--vc-date-bg-hover, #f1f5f9);
+			border-radius: 0;
+		}
+
+		& .vc-date:not([data-vc-date-disabled]):not([data-vc-date-selected]):first-child .vc-date__btn {
+			border-radius: 0.5rem 0 0 0.5rem;
+		}
+
+		& .vc-date:not([data-vc-date-disabled]):not([data-vc-date-selected]):last-child .vc-date__btn {
+			border-radius: 0 0.5rem 0.5rem 0;
+		}
+	}
 }

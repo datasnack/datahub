@@ -17,6 +17,7 @@
     "maplibre-gl": "^5.24.0",
     "plotly.js-cartesian-dist-min": "^3.7.0",
     "pmtiles": "^4.3.0",
+    "vanilla-calendar-pro": "^3.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

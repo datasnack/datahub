@@ -27,6 +27,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     //import Plotly, { addTraces, reverse } from 'plotly.js-dist';
     import type { ChartSource, DataLayer, DataLayerItem } from "./DatahubTypes";
     import { ChartSourceSchema } from "./DatahubTypes";
+    import TemporalPicker from "./TemporalPicker.svelte";
 
     let Plotly;
 
@@ -496,6 +497,9 @@ SPDX-License-Identifier: AGPL-3.0-only
             {#if datalayers.length > 0}
                 <div class="card-body">
                     {#each datalayers as item, i (item.key)}
+                        {@const id_start_date = `${instanceId}-${i}-start_date`}
+                        {@const id_end_date = `${instanceId}-${i}-end_date`}
+
                         {#if explore || datalayers.length > 1}
                             <div class="row">
                                 <div class="col-12">
@@ -534,98 +538,29 @@ SPDX-License-Identifier: AGPL-3.0-only
                             <div class="col-6 c col-md-3 col-lg-2">
                                 <div class="mb-3">
                                     <label
-                                        for={`${instanceId}-${i}-start_date`}
+                                        for={id_start_date}
                                         class="form-label small"
                                         >Start time</label
                                     >
-
-                                    {#if item.datalayer.temporal_resolution == "year"}
-                                        <select
-                                            id={`${instanceId}-${i}-start_date`}
-                                            class="form-select form-select-sm"
-                                            bind:value={item.query.start_date}
-                                        >
-                                            <!-- expand the array with [...var] and reverse, so we don't reverse the original array! -->
-                                            {#each [...item.datalayer.available_years].reverse() as year}
-                                                <option value={year}
-                                                    >{year}</option
-                                                >
-                                            {/each}
-                                        </select>
-                                    {:else if item.datalayer.temporal_resolution == "month"}
-                                        <input
-                                            id={`${instanceId}-${i}-start_date`}
-                                            type="text"
-                                            class="form-control form-control-sm"
-                                            placeholder="yyyy-mm"
-                                            bind:value={item.query.start_date}
-                                        />
-                                    {:else if item.datalayer.temporal_resolution == "week"}
-                                        <input
-                                            id={`${instanceId}-${i}-start_date`}
-                                            type="text"
-                                            class="form-control form-control-sm"
-                                            placeholder="yyyy-Www"
-                                            bind:value={item.query.start_date}
-                                        />
-                                    {:else if item.datalayer.temporal_resolution == "date"}
-                                        <input
-                                            id={`${instanceId}-${i}-start_date`}
-                                            type="date"
-                                            class="form-control form-control-sm"
-                                            bind:value={item.query.start_date}
-                                            min={item.datalayer.first_time}
-                                            max={item.datalayer.last_time}
-                                        />
-                                    {/if}
+                                    <TemporalPicker
+                                        id={id_start_date}
+                                        bind:value={item.query.start_date}
+                                        datalayer={item.datalayer}
+                                    />
                                 </div>
                             </div>
 
                             <div class="col-6 col-md-3 col-lg-2">
                                 <div class="mb-3">
                                     <label
-                                        for={`${instanceId}-${i}-end_date`}
+                                        for={id_end_date}
                                         class="form-label small">End time</label
                                     >
-
-                                    {#if item.datalayer.temporal_resolution == "year"}
-                                        <select
-                                            id={`${instanceId}-${i}-end_date`}
-                                            class="form-select form-select-sm"
-                                            bind:value={item.query.end_date}
-                                        >
-                                            {#each item.datalayer.available_years as year}
-                                                <option value={year}
-                                                    >{year}</option
-                                                >
-                                            {/each}
-                                        </select>
-                                    {:else if item.datalayer.temporal_resolution == "month"}
-                                        <input
-                                            id={`${instanceId}-${i}-end_date`}
-                                            type="text"
-                                            class="form-control form-control-sm"
-                                            placeholder="yyyy-mm"
-                                            bind:value={item.query.end_date}
-                                        />
-                                    {:else if item.datalayer.temporal_resolution == "week"}
-                                        <input
-                                            id={`${instanceId}-${i}-end_date`}
-                                            type="text"
-                                            class="form-control form-control-sm"
-                                            placeholder="yyyy-Www"
-                                            bind:value={item.query.end_date}
-                                        />
-                                    {:else if item.datalayer.temporal_resolution == "date"}
-                                        <input
-                                            id={`${instanceId}-${i}-end_date`}
-                                            type="date"
-                                            class="form-control form-control-sm"
-                                            bind:value={item.query.end_date}
-                                            min={item.datalayer.first_time}
-                                            max={item.datalayer.last_time}
-                                        />
-                                    {/if}
+                                    <TemporalPicker
+                                        id={id_end_date}
+                                        bind:value={item.query.end_date}
+                                        datalayer={item.datalayer}
+                                    />
                                 </div>
                             </div>
 

@@ -22,6 +22,7 @@ SPDX-License-Identifier: AGPL-3.0-only
     import type { Map as MapLibreMap } from "maplibre-gl";
 
     import DataLayerTeaser from "./DataLayerTeaser.svelte";
+    import TemporalPicker from "./TemporalPicker.svelte";
 
     import { onMount } from "svelte";
     import { MapManager } from "./MapManager";
@@ -679,6 +680,9 @@ SPDX-License-Identifier: AGPL-3.0-only
     {#if datalayers.length > 0}
         <div class="border-bottom">
             {#each datalayers as item, i (item.key)}
+                {@const id_start_date = `${instanceId}-${i}-start_date`}
+                {@const id_end_date = `${instanceId}-${i}-end_date`}
+
                 <div class="card-body">
                     {#if explore || datalayers.length > 1}
                         <div class="row">
@@ -697,13 +701,14 @@ SPDX-License-Identifier: AGPL-3.0-only
                     <div class="row">
                         <div class="col-12 col-md-3 col-lg-2">
                             <label
-                                for="aggregate_function"
+                                for={`${instanceId}-shape`}
                                 class="form-label small"
                                 >Shape
                             </label>
 
                             <div class="input-group input-group-sm">
                                 <select
+                                    id={`${instanceId}-shape`}
                                     class="form-select form-select-sm"
                                     bind:value={item.query.shape_type}
                                 >
@@ -716,103 +721,28 @@ SPDX-License-Identifier: AGPL-3.0-only
                             </div>
                         </div>
                         <div class="col-12 col-md-3 col-lg-2">
-                            <label
-                                for="aggregate_function"
-                                class="form-label small"
+                            <label for={id_start_date} class="form-label small"
                                 >Start time
                             </label>
 
-                            <div class="input-group input-group-sm">
-                                <!--
-                    <button class="btn btn-outline-secondary btn-sm">
-                        &lt;
-                    </button>
-                     -->
-
-                                {#if item.datalayer.temporal_resolution == "year"}
-                                    <select
-                                        class="form-select form-select-sm"
-                                        bind:value={item.query.start_date}
-                                    >
-                                        {#each item.datalayer.available_years as year}
-                                            <option value={year}>{year}</option>
-                                        {/each}
-                                    </select>
-                                {:else if item.datalayer.temporal_resolution == "month"}
-                                    <input
-                                        class="form-control form-control-sm"
-                                        bind:value={item.query.start_date}
-                                        placeholder="yyyy-mm"
-                                    />
-                                {:else if item.datalayer.temporal_resolution == "week"}
-                                    <input
-                                        class="form-control form-control-sm"
-                                        bind:value={item.query.start_date}
-                                        placeholder="yyyy-Www"
-                                    />
-                                {:else if item.datalayer.temporal_resolution == "date"}
-                                    <input
-                                        type="date"
-                                        class="form-control form-control-sm"
-                                        bind:value={item.query.start_date}
-                                        min={item.datalayer.first_time}
-                                        max={item.datalayer.last_time}
-                                    />
-                                {/if}
-
-                                <!--
-                    <button disabled class="btn btn-outline-secondary btn-sm">
-                        &gt;
-                    </button>
-                    -->
-                            </div>
+                            <TemporalPicker
+                                id={id_start_date}
+                                bind:value={item.query.start_date}
+                                datalayer={item.datalayer}
+                            />
                         </div>
 
                         <div class="col-12 col-sm-3">
-                            <label
-                                for="aggregate_function"
-                                class="form-label small"
+                            <label for={id_end_date} class="form-label small"
                                 ><i>Optional</i>: end time with aggregation
                             </label>
 
                             <div class="input-group input-group-sm">
-                                {#if item.datalayer.temporal_resolution == "year"}
-                                    <select
-                                        class="form-select form-select-sm"
-                                        onchange={handleEndDate}
-                                        bind:value={item.query.end_date}
-                                    >
-                                        <option value={null}>None</option>
-                                        {#each item.datalayer.available_years as year}
-                                            <option value={year}>{year}</option>
-                                        {/each}
-                                    </select>
-                                {:else if item.datalayer.temporal_resolution == "month"}
-                                    <input
-                                        type="text"
-                                        class="form-control form-control-sm"
-                                        placeholder="yyyy-mm"
-                                        bind:value={item.query.end_date}
-                                        onchange={handleEndDate}
-                                    />
-                                {:else if item.datalayer.temporal_resolution == "week"}
-                                    <input
-                                        type="text"
-                                        class="form-control form-control-sm"
-                                        placeholder="yyyy-Www"
-                                        bind:value={item.query.end_date}
-                                        onchange={handleEndDate}
-                                    />
-                                {:else if item.datalayer.temporal_resolution == "date"}
-                                    <input
-                                        type="date"
-                                        class="form-control form-control-sm"
-                                        bind:value={item.query.end_date}
-                                        onchange={handleEndDate}
-                                        min={item.datalayer.first_time}
-                                        max={item.datalayer.last_time}
-                                    />
-                                {/if}
+                                <TemporalPicker
+                                    id={id_end_date}
+                                    bind:value={item.query.end_date}
+                                    datalayer={item.datalayer}
+                                />
 
                                 <select
                                     bind:value={item.query.aggregate}
