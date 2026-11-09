@@ -50,7 +50,7 @@ dev = [
 ]
 
 [tool.uv]
-exclude-newer = "7 days"
+exclude-newer = "5 days"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
