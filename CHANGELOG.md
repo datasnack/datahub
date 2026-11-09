@@ -11,6 +11,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.7](https://github.com/datasnack/datahub/compare/v0.13.6..v0.13.7) - 2026-11-09
+
+## [0.13.6](https://github.com/datasnack/datahub/compare/v0.13.5..v0.13.6) - 2026-11-09
+
+### Changed
+
+- Updated MapLibre from 5.x to 6.x
+- Date picker for month, week, date ([816f7f2](https://github.com/datasnack/datahub/commit/816f7f2f3a26a7f74c9dee045cdbdb462e13332a))
+- Use own cmd-k implementation, cleanup search json response ([aeb4a8e](https://github.com/datasnack/datahub/commit/aeb4a8ebb5f9ef546cdd3cd011593f7a6ab20223))
+
+### Fixed
+
+- Pin meteostat to <2.0.0 due to breaking changes ([2445532](https://github.com/datasnack/datahub/commit/2445532763d377d8311371b399cc27b00f374211))
+
 ## [0.13.5](https://github.com/datasnack/datahub/compare/v0.13.4..v0.13.5) - 2026-11-06
 
 ### Fixed
