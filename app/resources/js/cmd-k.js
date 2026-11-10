@@ -202,6 +202,7 @@ class CmdK extends HTMLElement {
           border-bottom: 1px solid var(--cmd-k-input-border);
           transition: background-color 0.15s;
           gap: 12px;
+		  text-decoration: none;
         }
 
         .cmd-k-result:last-child {
@@ -589,7 +590,7 @@ class CmdK extends HTMLElement {
       return this.escapeHtml(data[key] || '', query);
     });
 
-    return `<div class="cmd-k-result" data-index="${index}" data-url="${this.escapeHtml(data.url)}">${html}</div>`;
+    return `<a class="cmd-k-result" data-index="${index}" href="${this.escapeHtml(data.url)}" data-url="${this.escapeHtml(data.url)}">${html}</a>`;
   }
 
 attachResultListeners() {
