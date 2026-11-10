@@ -11,6 +11,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.8](https://github.com/datasnack/datahub/compare/v0.13.7..v0.13.8) - 2026-11-10
+
+### Fixed
+
+- Disable darkmode for search results popup ([791ffb6](https://github.com/datasnack/datahub/commit/791ffb69a127eac8bfdb3c40c1ec8a30432f65e7))
+- Use <a> in search result popup so link is clickable ([de8a76f](https://github.com/datasnack/datahub/commit/de8a76f835a15d8adf505ee5a9b58a73033b31cc))
+- Missing groups in search api ([00ae669](https://github.com/datasnack/datahub/commit/00ae66957ed94cf1c8da27c1051e20c571d66292))
+
 ## [0.13.7](https://github.com/datasnack/datahub/compare/v0.13.6..v0.13.7) - 2026-11-09
 
 ## [0.13.6](https://github.com/datasnack/datahub/compare/v0.13.5..v0.13.6) - 2026-11-09
