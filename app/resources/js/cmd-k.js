@@ -117,11 +117,12 @@ class CmdK extends HTMLElement {
           --cmd-k-trigger-color: light-dark(oklch(44.6% 0.03 256.802), oklch(87.2% 0.01 258.338));
         }
 
-        @media (prefers-color-scheme: dark) {
+		/* rest of the page has no dark mode yet */
+        /*@media (prefers-color-scheme: dark) {
             :host {
                 color-scheme: dark;
             }
-        }
+        }*/
 
         .cmd-k-backdrop {
           display: none;
