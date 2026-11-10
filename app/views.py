@@ -185,8 +185,10 @@ def search(request):
     search_filter = request.GET.get("f", "shapes,datalayers").split(",")
 
     results = []
+    groups = []
 
     if "shapes" in search_filter:
+        groups.append("Shapes")
         shapes = Shape.objects.filter(
             Q(name__icontains=search_term) | Q(key__icontains=search_term)
         )
@@ -195,6 +197,7 @@ def search(request):
             results.append(
                 {
                     "type": "shape",
+                    "group": "Shapes",
                     "url": s.get_absolute_url(),
                     "label": f"{s.name} ({s.type.name})",
                     "key": s.key,
@@ -203,6 +206,7 @@ def search(request):
             )
 
     if "shape_types" in search_filter:
+        groups.append("Shape types")
         shape_types = Type.objects.filter(
             Q(name__icontains=search_term) | Q(key__icontains=search_term)
         )
@@ -211,6 +215,7 @@ def search(request):
             results.append(
                 {
                     "type": "shape_type",
+                    "group": "Shape types",
                     "url": st.get_absolute_url(),
                     "label": f"{st.name}",
                     "key": st.key,
@@ -219,6 +224,7 @@ def search(request):
             )
 
     if "datalayers" in search_filter:
+        groups.append("Data Layers")
         datalayers = (
             Datalayer.objects.filter(
                 Q(name__icontains=search_term)
@@ -237,6 +243,7 @@ def search(request):
             results.append(
                 {
                     "type": "datalayer",
+                    "group": "Data Layers",
                     "url": d.get_absolute_url(),
                     "label": d.name,
                     "key": d.key,
@@ -244,7 +251,7 @@ def search(request):
                 }
             )
 
-    return JsonResponse({"results": [results]})
+    return JsonResponse({"results": results, "groups": groups})
 
 
 @login_required
