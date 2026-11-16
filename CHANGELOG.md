@@ -11,6 +11,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.9](https://github.com/datasnack/datahub/compare/v0.13.8..v0.13.9) - 2026-11-16
+
+### Changed
+
+- Move Home.md into src/Home.md ([847061a](https://github.com/datasnack/datahub/commit/847061a9065f72ba76a22a4997a58913bb2ff95c))
+- Split docs/ into docs/ and about/ ([2d8d994](https://github.com/datasnack/datahub/commit/2d8d99435f7711ee062efb5c66113d6a5894b5c9))
+
+### Fixed
+
+- Force light mode also in cmd-k button ([f536dc9](https://github.com/datasnack/datahub/commit/f536dc9ad0084147812ada9586093f521b08937d))
+
 ## [0.13.8](https://github.com/datasnack/datahub/compare/v0.13.7..v0.13.8) - 2026-11-10
 
 ### Fixed
