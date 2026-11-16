@@ -115,6 +115,9 @@ class CmdK extends HTMLElement {
           --cmd-k-trigger-bg: light-dark(oklch(98.5% 0.002 247.839), oklch(21% 0.034 264.665));
           --cmd-k-trigger-border: light-dark(oklch(0.872 0.01 258.338), oklch(55.1% 0.027 264.364));
           --cmd-k-trigger-color: light-dark(oklch(44.6% 0.03 256.802), oklch(87.2% 0.01 258.338));
+
+		  /* rest of the page has no dark mode yet */
+		  color-scheme: light;
         }
 
 		/* rest of the page has no dark mode yet */
