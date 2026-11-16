@@ -118,9 +118,6 @@ def get_docs_structure(docs_root) -> list[DocItem]:
             if item.name.startswith("."):
                 continue
 
-            if relative_path == "" and item.name.lower().startswith("home."):
-                continue
-
             if item.name.startswith("_"):
                 continue
 

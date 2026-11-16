@@ -47,13 +47,13 @@ def home(request):
     home_file = None
     language_code = get_language()
     if language_code != "en":  # en is always or default
-        translation_file = Path(f"docs/Home.{language_code}.md")
+        translation_file = Path(f"src/Home.{language_code}.md")
         if translation_file.exists():
             home_file = translation_file
 
     # no translation found, use default
     if home_file is None:
-        default_file = Path("docs/Home.md")
+        default_file = Path("src/Home.md")
         if default_file.exists():
             home_file = default_file
 
