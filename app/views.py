@@ -24,10 +24,12 @@ from datalayers.models import Datalayer
 from shapes.models import Shape, Type
 
 from .docs import (
+    DocItem,
     extract_title_from_md,
     get_docs_structure,
+    get_instance_about_root,
+    get_instance_docs_root,
     render_dj_md_to_html,
-    DocItem,
 )
 from .models import BearerToken
 
@@ -97,10 +99,11 @@ def file_download(request, file_path):
     return FileResponse(abs_path.open("rb"), as_attachment=True)
 
 
-def docs_view(request, path=""):
-    docs = get_docs_structure()
+def docs_view(request, section, path=""):
+    root = get_instance_about_root() if section == "about" else get_instance_docs_root()
+    docs = get_docs_structure(root)
 
-    def rec_search_item(path: str, docs: list[DocItem]) -> DocItem:
+    def rec_search_item(path: str, docs: list[DocItem]) -> DocItem | None:
         match = None
         for item in docs:
             if item.is_dir():

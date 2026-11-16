@@ -30,5 +30,13 @@ urlpatterns = [
     ),
     path("tools/picker", views.tools_picker, name="tools_picker"),
     path("tools/explore", views.tools_explore, name="tools_explore"),
-    re_path(r"^docs/(?P<path>.+)/$", views.docs_view, name="docs_page"),
+    re_path(
+        r"^docs/(?P<path>.+)/$", views.docs_view, {"section": "docs"}, name="docs_page"
+    ),
+    re_path(
+        r"^about/(?P<path>.+)/$",
+        views.docs_view,
+        {"section": "about"},
+        name="about_page",
+    ),
 ]

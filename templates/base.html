@@ -215,13 +215,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 					<li class="nav-item">
 						<span class="nav-link">
-							{% icon "book" %}
+							{% icon "pencil" %}
 							<b>{% translate "Docs" %}</b></span>
 
 						<ul class="nav flex-column">
 
 
-							{% for item in DOCS_STRUCTURE %}
+							{% for item in INSTANCE_DOCS_STRUCTURE %}
 							<li class="nav-item">
 								{% if item.type == 'file' %}
 								<a class="nav-link" href="{% url 'app:docs_page' path=item.url %}">{{ item.localized_name }}</a>
@@ -243,11 +243,46 @@ SPDX-License-Identifier: AGPL-3.0-only
 							{% endfor %}
 
 							{% include 'app/nav_docs.html' %}
-							<li class="nav-item"><a class="nav-link" href="{% url 'app:changelog' %}">{% translate "Changelog" %}</a></li>
 						</ul>
 					</li>
 
 					{% include 'app/nav.html' %}
+
+
+					<li class="nav-item mt-3">
+						<span class="nav-link">
+							{% icon "book" %}
+							<b>{% translate "About" %}</b></span>
+
+						<ul class="nav flex-column">
+
+
+							{% for item in INSTANCE_ABOUT_STRUCTURE %}
+							<li class="nav-item">
+								{% if item.type == 'file' %}
+								<a class="nav-link" href="{% url 'app:about_page' path=item.url %}">{{ item.localized_name }}</a>
+
+								{%else %}
+
+								<span class="nav-link">{{ item.name }}</span>
+
+
+								<ul class="nav flex-column border-start ms-2 ps-2 mb-2">
+									{% for item2 in item.children %}
+									<li class="nav-item">
+										<a class="nav-link" href="{% url 'app:about_page' path=item2.url %}">{{ item2.localized_name }}</a>
+									</li>
+									{% endfor %}
+								</ul>
+								{%endif %}
+							</li>
+							{% endfor %}
+
+							{% include 'app/nav_docs.html' %}
+							<li class="nav-item"><a class="nav-link" href="https://datasnack.org/guide/">{% translate "Documentation" %} {% icon "link-external" %}</a></li>
+						</ul>
+					</li>
+
 				</ul>
 			</nav>
 		</aside>

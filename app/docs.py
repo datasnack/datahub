@@ -19,7 +19,12 @@ from django.utils.translation import get_language
 from app.utils.mistune import DjangoTemplateRenderer
 
 
-def get_docs_root() -> Path:
+def get_instance_about_root() -> Path:
+    """Get the docs directory path."""
+    return Path(settings.BASE_DIR) / "src/about"
+
+
+def get_instance_docs_root() -> Path:
     """Get the docs directory path."""
     return Path(settings.BASE_DIR) / "docs"
 
@@ -83,14 +88,12 @@ class DocItem:
         return self.translations[language_code].name
 
 
-def get_docs_structure() -> list[DocItem]:
+def get_docs_structure(docs_root) -> list[DocItem]:
     """
     Build the complete docs navigation structure.
 
     The functions enumerated all markdown files below the ./docs/ directory.
     """
-    docs_root = get_docs_root()
-
     if not docs_root.exists():
         return []
 
