@@ -49,6 +49,9 @@ dev = [
   "pytest-django>=4.12.0",
 ]
 
+[project.scripts]
+datahub = "datahub.cli:main"
+
 [tool.uv]
 exclude-newer = "5 days"
 
