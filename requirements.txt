@@ -69,15 +69,15 @@ geopandas==1.2.0
     #   osmnx
 gpxpy==1.6.2
     # via datahub (pyproject.toml)
-gunicorn==27.0.0
+gunicorn==27.0.1
     # via datahub (pyproject.toml)
 hda==2.40
     # via datahub (pyproject.toml)
 idna==3.20
     # via requests
-idutils==1.7.1
+idutils==1.7.2
     # via datacite
-isbnlib2==3.11.24
+isbnlib2==3.11.26
     # via idutils
 jsonresolver==0.5.2
     # via datacite
@@ -101,7 +101,7 @@ netcdf4==1.7.5.1.post1
     # via datahub (pyproject.toml)
 networkx==3.7
     # via osmnx
-numpy==2.5.4
+numpy==2.5.5
     # via
     #   datahub (pyproject.toml)
     #   cftime
@@ -117,7 +117,7 @@ numpy==2.5.4
     #   xarray
 openpyxl==3.1.5
     # via datahub (pyproject.toml)
-osmnx==2.1.1
+osmnx==2.2.0
     # via datahub (pyproject.toml)
 packaging==26.3
     # via
@@ -135,9 +135,9 @@ pandas==3.1.1
     #   xarray
 pluggy==1.7.0
     # via jsonresolver
-psycopg==3.3.8
+psycopg==3.3.9
     # via datahub (pyproject.toml)
-psycopg-binary==3.3.8
+psycopg-binary==3.3.9
     # via psycopg
 pydantic==2.14.3
     # via django-ninja
@@ -188,7 +188,7 @@ shapely==2.2.0
     #   datahub (pyproject.toml)
     #   geopandas
     #   osmnx
-sqlalchemy==2.1.8
+sqlalchemy==2.1.9
     # via
     #   datahub (pyproject.toml)
     #   geoalchemy2
