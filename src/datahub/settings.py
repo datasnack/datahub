@@ -145,8 +145,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.gis",
-    "datalayers",
-    "shapes",
+    "datahub.datalayers",
+    "datahub.shapes",
     "taggit",
     "ninja",
     "django.contrib.admin",  # lower position to allow core apps to overwrite admin templates
@@ -156,7 +156,7 @@ INSTALLED_APPS = [
 # inject potential user apps that should be able to overwrite templates in app
 INSTALLED_APPS += env("INSTALLED_USER_APPS")
 
-INSTALLED_APPS += ["app"]
+INSTALLED_APPS += ["datahub.app"]
 
 INSTALLED_USER_APPS = env("INSTALLED_USER_APPS")
 
@@ -169,7 +169,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
-    "app.middleware.require_login_middleware.RequireLoginMiddleware",
+    "datahub.app.middleware.require_login_middleware.RequireLoginMiddleware",
 ]
 
 # Enable debug toolbar only if DEBUG=True and the package is installed
@@ -191,15 +191,15 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "app.context_processors.add_datahub_login_required",
-                "shapes.context_processors.add_navigation",
-                "datalayers.context_processors.add_navigation",
+                "datahub.app.context_processors.add_datahub_login_required",
+                "datahub.shapes.context_processors.add_navigation",
+                "datahub.datalayers.context_processors.add_navigation",
             ],
             "builtins": [
                 "django.templatetags.static",
-                "app.templatetags.icon",
-                "app.templatetags.file",
-                "datalayers.templatetags.dl",
+                "datahub.app.templatetags.icon",
+                "datahub.app.templatetags.file",
+                "datahub.datalayers.templatetags.dl",
             ],
         },
     },
