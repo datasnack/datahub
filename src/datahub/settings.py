@@ -14,6 +14,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import contextlib
+import importlib
 import os
 from datetime import date
 from importlib.util import find_spec
@@ -374,10 +376,16 @@ DATAHUB_FORGE: str = env("DATAHUB_FORGE")
 DATAHUB_FORGE_ISSUE_SHOW_ADD: bool = env("DATAHUB_FORGE_ISSUE_SHOW_ADD")
 DATAHUB_FORGE_ISSUE_TEMPLATES_PATH = env("DATAHUB_FORGE_ISSUE_TEMPLATES_PATH")
 DATAHUB_FORGE_ISSUE_TEMPLATES_REPO = env("DATAHUB_FORGE_ISSUE_TEMPLATES_REPO")
-INSTANCE_VERSION = False
-try:
-    from src import __version__ as instance_version
 
-    INSTANCE_VERSION = instance_version
-except:  # noqa: S110, E722 disable for this, we just want to know if a version can be found or not
-    pass
+
+# Module name of the Data Layers
+_project_pkg = os.environ.get("DJANGO_SETTINGS_MODULE", "").split(".")[0]
+DATAHUB_DATALAYERS_MODULE = f"{_project_pkg}.datalayer"
+
+
+INSTANCE_VERSION = False
+if _project_pkg:
+    with contextlib.suppress(ImportError):
+        INSTANCE_VERSION = getattr(
+            importlib.import_module(_project_pkg), "__version__", False
+        )
