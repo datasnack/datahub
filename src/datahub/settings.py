@@ -14,13 +14,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from datetime import date
 from importlib.util import find_spec
 from pathlib import Path
 
 import environ
-
-from django.utils.translation import gettext_lazy as _
 
 from . import __version__, __version_date__
 
@@ -50,8 +49,35 @@ env = environ.Env(
     DATAHUB_GEOMETRY_SIMPLIFY=(float, None),
 )
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# The framework's own location (rarely needed; app templates/static are found automatically)
+FRAMEWORK_DIR = Path(__file__).resolve().parent
+
+
+def _detect_base_dir() -> Path:
+    # 1. explicit override always wins
+    if env := os.environ.get("DATAHUB_BASE_DIR"):
+        return Path(env).resolve()
+
+    # 2. derive from the project's settings module: myproject.settings -> myproject/ -> its parent
+    module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
+    top_package = module.split(".")[0]
+    if top_package and top_package != "datahub":
+        spec = find_spec(top_package)
+        if spec and spec.submodule_search_locations:
+            return (
+                Path(list(spec.submodule_search_locations)[0]).resolve().parent.parent
+            )
+
+    # 3. fallback (e.g. running the framework standalone)
+    return Path.cwd()
+
+
+BASE_DIR = _detect_base_dir()
+
 
 # Take environment variables from .env file
 environ.Env.read_env(BASE_DIR / ".env")

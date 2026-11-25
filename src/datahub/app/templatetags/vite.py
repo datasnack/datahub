@@ -20,7 +20,7 @@ register = template.Library()
 def vite_dev():
     """Include vite dev server client for hot reloading."""
     if settings.DEBUG:
-        hot_file = Path(f"{settings.BASE_DIR}/app/static/hot")
+        hot_file = Path(settings.FRAMEWORK_DIR / "app/static/hot")
         if hot_file.exists():
             dev_server_url = escape(hot_file.read_text())
             return mark_safe(
@@ -43,16 +43,16 @@ def _tag_for_type(file):
 def vite_asset(file):
     if settings.DEBUG:
         # if a hot file is present, Vite dev mode runs and we return dev server path
-        hot_file = Path(f"{settings.BASE_DIR}/app/static/hot")
+        hot_file = Path(settings.FRAMEWORK_DIR / "app/static/hot")
         if hot_file.exists():
             dev_server_url = escape(hot_file.read_text())
             return _tag_for_type(f"{dev_server_url}/{quote(file)}")
 
         # no dev mode look fpr manifest and return last built file
-        manifest_file = Path(f"{settings.BASE_DIR}/app/static/build/manifest.json")
+        manifest_file = Path(settings.FRAMEWORK_DIR / "app/static/build/manifest.json")
     else:
         # look for manifest.json in prod, after collectstatic has been run
-        manifest_file = Path(f"{settings.STATIC_ROOT}/build/manifest.json")
+        manifest_file = Path(settings.STATIC_ROOT / "build/manifest.json")
 
     if not manifest_file.exists():
         raise Exception(f"manifest.json not found at {manifest_file.as_posix()}")
@@ -65,4 +65,4 @@ def vite_asset(file):
     static = settings.STATIC_URL
     static = static if static.endswith("/") else static + "/"
 
-    return _tag_for_type(f"{static}build/{quote(manifest[file]["file"])}")
+    return _tag_for_type(f"{static}build/{quote(manifest[file]['file'])}")

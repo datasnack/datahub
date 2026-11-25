@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from django import forms
+from django.conf import settings
 
 
 class DatalistTextInput(forms.TextInput):
@@ -55,7 +56,9 @@ class LicenseWidget(DatalistTextInput):
     def __init__(self, attrs=None) -> None:
         license_options = {}
 
-        with Path("app/resources/spdx/licenses.json").open() as fp:
+        with Path(
+            settings.FRAMEWORK_DIR / "app/resources/spdx/licenses.json"
+        ).open() as fp:
             spdx = json.load(fp)
 
             for el in spdx["licenses"]:
@@ -111,7 +114,9 @@ class SpatialCoverageWidget(DatalistTextInput):
         }
 
         # Append country codes
-        with Path("app/resources/iso3166/iso-3166-1-alpha3.json").open() as fp:
+        with Path(
+            settings.FRAMEWORK_DIR / "app/resources/iso3166/iso-3166-1-alpha3.json"
+        ).open() as fp:
             iso6311a3 = json.load(fp)
 
             for el in iso6311a3:
@@ -128,7 +133,9 @@ class LanguageWidget(DatalistTextInput):
         }
 
         # Append country codes
-        with Path("app/resources/iso639/iso-639-3.json").open() as fp:
+        with Path(
+            settings.FRAMEWORK_DIR / "app/resources/iso639/iso-639-3.json"
+        ).open() as fp:
             iso639a2 = json.load(fp)
 
             for el in iso639a2:

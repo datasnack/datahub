@@ -6,13 +6,14 @@ import json
 from pathlib import Path
 
 from django import template
+from django.conf import settings
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 register = template.Library()
 
 SPDX = {}
-with Path.open("app/resources/spdx/licenses.json") as f:
+with Path(settings.FRAMEWORK_DIR / "app/resources/spdx/licenses.json").open() as f:
     spdx_json = json.load(f)
 
     for license_info in spdx_json["licenses"]:

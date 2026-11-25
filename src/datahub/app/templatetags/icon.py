@@ -21,8 +21,10 @@ def icon(name, size=16, *, ignore_missing=False, classes=""):
     if key in icon_cache:
         return mark_safe(icon_cache[key])  # noqa: S308
 
-    file1 = Path(f"{settings.BASE_DIR}/app/resources/svg/octicons/{name}-{size}.svg")
-    file2 = Path(f"{settings.BASE_DIR}/app/resources/svg/{name}-{size}.svg")
+    file1 = Path(
+        settings.FRAMEWORK_DIR / f"app/resources/svg/octicons/{name}-{size}.svg"
+    )
+    file2 = Path(settings.FRAMEWORK_DIR / f"app/resources/svg/{name}-{size}.svg")
     file = None
 
     if file1.exists():
