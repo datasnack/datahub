@@ -56,7 +56,7 @@ const hotFilePlugin = () => ({
 
 		let exitHandlersBound = false;
 
-		let hotFile = 'app/static/hot';
+		let hotFile = 'src/datahub/app/static/hot';
 
 		server.httpServer?.once('listening', () => {
 			const address = server.httpServer?.address()
@@ -93,11 +93,11 @@ export default defineConfig({
 		// explicitly set path of manifest, the value true would lead to it being
 		// created at ./.vite/ and Djangos collectstatic ignores dot folders
 		manifest: "manifest.json",
-		outDir: 'app/static/build',
+		outDir: 'src/datahub/app/static/build',
 		rollupOptions: {
 			input: [
-				'app/resources/js/app.js',
-				'app/resources/css/app.css',
+				'src/datahub/app/resources/js/app.js',
+				'src/datahub/app/resources/css/app.css',
 			]
 		},
 
