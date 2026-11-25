@@ -7,9 +7,9 @@ from django.template.loader import render_to_string
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString, mark_safe
 
-from app.templatetags.icon import icon
-from datalayers.models import Datalayer
-from shapes.models import Type
+from datahub.app.templatetags.icon import icon
+from datahub.datalayers.models import Datalayer
+from datahub.shapes.models import Type
 
 register = template.Library()
 

@@ -7,7 +7,7 @@ from psycopg import sql
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 
-from datalayers.models import Datalayer
+from datahub.datalayers.models import Datalayer
 
 
 class Command(BaseCommand):
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             )
 
         if dl.has_class():
-            data_dir = dl._get_class().get_data_path()
+            data_dir = dl.get_class().get_data_path()
             class_file = dl.get_class_path()
 
             if options["data"] and data_dir.exists():

@@ -16,7 +16,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import get_language
 
-from app.utils.mistune import DjangoTemplateRenderer
+from datahub.app.utils.mistune import DjangoTemplateRenderer
 
 
 def get_instance_about_root() -> Path:

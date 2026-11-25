@@ -10,8 +10,8 @@ from urllib.request import urlopen
 
 import pandas as pd
 
-from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
-from shapes.models import Shape, Type
+from datahub.datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
+from datahub.shapes.models import Shape, Type
 
 from .base_layer import BaseLayer
 

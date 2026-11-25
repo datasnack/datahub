@@ -11,8 +11,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path
 from django.utils.html import format_html
 
-from app.utils import datahub_key
-from app.widgets import (
+from datahub.app.utils import datahub_key
+from datahub.app.widgets import (
     DatalistTextInput,
     FormatWidget,
     LanguageWidget,

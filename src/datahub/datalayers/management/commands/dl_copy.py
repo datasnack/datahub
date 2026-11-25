@@ -4,11 +4,10 @@
 
 from pathlib import Path
 
-
-from django.db import connection
 from django.core.management.base import BaseCommand, CommandError
+from django.db import connection
 
-from datalayers.models import Datalayer, camel
+from datahub.datalayers.models import Datalayer, camel
 
 
 class Command(BaseCommand):

@@ -3,7 +3,7 @@
 from django.db import migrations, models
 from django.utils.text import slugify
 
-from datalayers.models import Category
+from datahub.datalayers.models import Category
 
 def migrate_data_forward(apps, schema_editor):
     for instance in Category.objects.all().values('name'):

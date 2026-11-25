@@ -6,8 +6,8 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from datalayers.models import Datalayer
-from datalayers.utils import dumpdata
+from datahub.datalayers.models import Datalayer
+from datahub.datalayers.utils import dumpdata
 
 
 class Command(BaseCommand):

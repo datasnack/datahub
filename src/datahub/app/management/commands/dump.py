@@ -8,8 +8,8 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
-from app.utils import datahub_key
-from datalayers.utils import get_conn_string
+from datahub.app.utils import datahub_key
+from datahub.datalayers.utils import get_conn_string
 
 
 class Command(BaseCommand):

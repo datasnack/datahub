@@ -8,7 +8,7 @@ from shapely import wkb
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 
-from shapes.models import Shape, Type
+from datahub.shapes.models import Shape, Type
 
 
 class Command(BaseCommand):

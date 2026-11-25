@@ -8,8 +8,8 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, ListView
 
-from app.utils import prase_date_or_today
-from datalayers.models import Datalayer
+from datahub.app.utils import prase_date_or_today
+from datahub.datalayers.models import Datalayer
 
 from .models import Shape, Type
 

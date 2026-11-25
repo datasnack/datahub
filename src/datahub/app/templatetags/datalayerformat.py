@@ -4,7 +4,7 @@
 
 from django import template
 
-from datalayers.models import Datalayer
+from datahub.datalayers.models import Datalayer
 
 register = template.Library()
 

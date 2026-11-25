@@ -11,8 +11,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 from django.utils.timezone import now
 
-from datalayers.utils import get_engine
-from shapes.models import Shape, Type
+from datahub.datalayers.utils import get_engine
+from datahub.shapes.models import Shape, Type
 
 
 class Command(BaseCommand):

@@ -11,7 +11,7 @@ from shapely import wkt
 
 from django.core.management.base import BaseCommand, CommandError
 
-from shapes.models import Shape
+from datahub.shapes.models import Shape
 
 
 class Command(BaseCommand):

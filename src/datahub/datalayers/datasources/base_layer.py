@@ -19,7 +19,7 @@ from django.db import connection
 from django.utils import formats
 from django.utils.translation import gettext as _
 
-from datalayers.utils import get_conn_string, get_engine
+from datahub.datalayers.utils import get_conn_string, get_engine
 
 
 class LayerTimeResolution(Enum):

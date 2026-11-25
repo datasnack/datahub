@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from datalayers.datasources.base_layer import (
+from datahub.datalayers.datasources.base_layer import (
     BaseLayer,
     LayerTimeResolution,
     LayerValueType,
 )
-from shapes.models import Shape
+from datahub.shapes.models import Shape
 
 
 class TestCsv3(BaseLayer):

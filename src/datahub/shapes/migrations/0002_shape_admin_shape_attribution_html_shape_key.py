@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 
-from shapes.models import Shape
+from datahub.shapes.models import Shape
 
 def migrate_data_forward(apps, schema_editor):
     # select ONLY the needed id column. In a later migration we add a new field

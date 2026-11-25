@@ -19,9 +19,9 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 
-from app.utils import prase_date_or_today
-from datalayers.models import Datalayer
-from shapes.models import Shape, Type
+from datahub.app.utils import prase_date_or_today
+from datahub.datalayers.models import Datalayer
+from datahub.shapes.models import Shape, Type
 
 from .docs import (
     DocItem,

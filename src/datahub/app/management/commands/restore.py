@@ -7,7 +7,7 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
-from datalayers.utils import get_conn_string
+from datahub.datalayers.utils import get_conn_string
 
 
 class Command(BaseCommand):

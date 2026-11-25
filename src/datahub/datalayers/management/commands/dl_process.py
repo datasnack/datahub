@@ -6,8 +6,8 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from datalayers.models import Datalayer
-from shapes.models import Shape
+from datahub.datalayers.models import Datalayer
+from datahub.shapes.models import Shape
 
 
 class Command(BaseCommand):

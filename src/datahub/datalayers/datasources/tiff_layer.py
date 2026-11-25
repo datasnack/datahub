@@ -12,7 +12,7 @@ import rasterio
 import rasterio.mask
 from shapely import wkt
 
-from shapes.models import Shape
+from datahub.shapes.models import Shape
 
 from .base_layer import BaseLayer
 

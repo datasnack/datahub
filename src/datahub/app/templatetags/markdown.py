@@ -6,8 +6,8 @@ import mistune
 
 from django import template
 from django.utils.safestring import mark_safe
-from app.utils.mistune import DjangoTemplateRenderer
 
+from datahub.app.utils.mistune import DjangoTemplateRenderer
 
 register = template.Library()
 

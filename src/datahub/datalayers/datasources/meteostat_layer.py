@@ -15,9 +15,9 @@ from sqlalchemy import create_engine
 
 from django.db import connection
 
-from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
-from datalayers.utils import get_conn_string
-from shapes.models import Shape
+from datahub.datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
+from datahub.datalayers.utils import get_conn_string
+from datahub.shapes.models import Shape
 
 from .base_layer import BaseLayer
 

@@ -24,8 +24,8 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 
-from app.utils import datahub_key, generate_unique_hash
-from shapes.models import Shape, Type
+from datahub.app.utils import datahub_key, generate_unique_hash
+from datahub.shapes.models import Shape, Type
 
 router = Router(tags=["Shapes"])
 

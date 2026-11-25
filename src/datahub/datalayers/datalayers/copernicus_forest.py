@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from datalayers.datasources.copernicus_layer import CopernicusLayer
+from datahub.datalayers.datasources.copernicus_layer import CopernicusLayer
 
 
 class CopernicusForest(CopernicusLayer):

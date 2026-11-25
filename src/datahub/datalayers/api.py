@@ -26,10 +26,10 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 
-from datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
-from datalayers.models import Datalayer
-from datalayers.utils import get_conn_string
-from shapes.models import Shape, Type
+from datahub.datalayers.datasources.base_layer import LayerTimeResolution, LayerValueType
+from datahub.datalayers.models import Datalayer
+from datahub.datalayers.utils import get_conn_string
+from datahub.shapes.models import Shape, Type
 
 router = Router(tags=["Data Layers"])
 

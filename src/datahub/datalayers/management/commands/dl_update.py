@@ -4,7 +4,7 @@
 
 from django.core.management.base import BaseCommand, CommandError
 
-from datalayers.models import Category, Datalayer
+from datahub.datalayers.models import Category, Datalayer
 
 
 class Command(BaseCommand):

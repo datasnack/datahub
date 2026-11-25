@@ -7,7 +7,7 @@ from pathlib import Path
 from django.contrib import messages
 from django.core.management.base import BaseCommand
 
-from datalayers.utils import loaddata
+from datahub.datalayers.utils import loaddata
 
 
 class Command(BaseCommand):

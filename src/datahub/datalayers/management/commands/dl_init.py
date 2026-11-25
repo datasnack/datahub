@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
+import importlib
 from pathlib import Path
 
-from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
+from django.core.management.base import BaseCommand
 
-from datalayers.models import Datalayer, camel
+from datahub.datalayers.models import Datalayer, camel
 
 
 class Command(BaseCommand):
@@ -54,7 +56,7 @@ class Command(BaseCommand):
         if not dl_file.exists():
             name_camel = camel(options["key"])
             # Create source file
-            tpl = f"""from datalayers.datasources.base_layer import (
+            tpl = f"""from datahub.datalayers.datasources.base_layer import (
     BaseLayer,
     LayerTimeResolution,
     LayerValueType,

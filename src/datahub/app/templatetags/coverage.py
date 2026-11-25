@@ -4,8 +4,8 @@
 
 from django import template
 
-from datalayers.models import Datalayer
-from shapes.models import Type
+from datahub.datalayers.models import Datalayer
+from datahub.shapes.models import Type
 
 register = template.Library()
 

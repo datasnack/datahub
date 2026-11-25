@@ -7,7 +7,7 @@ from psycopg import sql
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 
-from datalayers.models import Datalayer
+from datahub.datalayers.models import Datalayer
 
 
 class Command(BaseCommand):

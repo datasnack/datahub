@@ -6,8 +6,8 @@ import datetime as dt
 
 from django import template
 
-from datalayers.models import Datalayer
-from shapes.models import Shape
+from datahub.datalayers.models import Datalayer
+from datahub.shapes.models import Shape
 
 register = template.Library()
 

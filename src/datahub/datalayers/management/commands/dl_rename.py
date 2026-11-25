@@ -10,7 +10,7 @@ from psycopg import sql
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 
-from datalayers.models import Datalayer, camel
+from datahub.datalayers.models import Datalayer, camel
 
 
 class Command(BaseCommand):
@@ -246,10 +246,10 @@ class Command(BaseCommand):
 
             # Fetch the (possibly just-renamed) model instance for the vector table check
             dl = Datalayer.objects.get(key=new_key if ops["model"] else old_key)
-            if dl.has_class() and dl._get_class().raw_vector_data_table:
+            if dl.has_class() and dl.get_class().raw_vector_data_table:
                 self.stdout.write(
                     self.style.WARNING(
-                        f'  Vector data table "{dl._get_class().raw_vector_data_table}" '
+                        f'  Vector data table "{dl.get_class().raw_vector_data_table}" '
                         f"must be renamed/updated manually"
                     )
                 )

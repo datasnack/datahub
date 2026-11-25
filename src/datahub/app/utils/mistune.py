@@ -10,8 +10,8 @@ from mistune.util import safe_entity, striptags
 
 from django.urls import reverse
 
-from datalayers.models import Datalayer
-from shapes.models import Shape, Type
+from datahub.datalayers.models import Datalayer
+from datahub.shapes.models import Shape, Type
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class DjangoTemplateRenderer(HTMLRenderer):
 
         # link to local markdown file
         if url.startswith("./") and url.endswith(".md"):
-            from app.docs import clean_path
+            from datahub.app.docs import clean_path
 
             url = reverse(
                 "app:docs_page",

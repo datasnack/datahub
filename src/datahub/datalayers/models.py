@@ -22,8 +22,8 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from datalayers.utils import dictfetchone, get_conn_string
-from shapes.models import Shape, Type
+from datahub.datalayers.utils import dictfetchone, get_conn_string
+from datahub.shapes.models import Shape, Type
 
 from .datasources.base_layer import (
     BaseLayer,
