@@ -3,6 +3,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 # GDAL 3.13 has Ubuntu 26 with Python 3.14
+FROM python:3.14-slim AS build
+WORKDIR /src
+COPY . .
+RUN pip wheel --no-deps -w /wheels .
+
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.3
 
 RUN apt-get update && apt-get install -y \

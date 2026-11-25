@@ -52,6 +52,12 @@ dev = [
 [project.scripts]
 datahub = "datahub.cli:main"
 
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 [tool.uv]
 exclude-newer = "5 days"
 

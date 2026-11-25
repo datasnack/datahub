@@ -1,0 +1,5 @@
+recursive-include src/datahub/app/resources/ *
+recursive-include src/datahub/app/templates *
+recursive-include src/datahub/datalayers/templates *
+recursive-include src/datahub/shapes/templates *
+recursive-include src/datahub/app/static *
