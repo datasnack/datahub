@@ -10,6 +10,7 @@ from psycopg import sql
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 
+from datahub.conf import datalayers_path
 from datahub.datalayers.models import Datalayer, camel
 
 
@@ -209,7 +210,7 @@ class Command(BaseCommand):
                 pass
 
         if ops["class"]:
-            new_class = Path(f"src/datalayer/{new_key}.py")
+            new_class = Path(datalayers_path() / f"{new_key}.py")
             if new_class.exists():
                 errors.append(f'class file "{new_class.as_posix()}" already exists')
 
@@ -256,7 +257,7 @@ class Command(BaseCommand):
 
         # 3. Rename class file and class name inside the file
         if ops["class"]:
-            class_path = Path(f"src/datalayer/{old_key}.py")
+            class_path = Path(datalayers_path() / f"{old_key}.py")
             if class_path.exists():
                 class_path = class_path.rename(f"src/datalayer/{new_key}.py")
                 self.stdout.write(self.style.SUCCESS("  Renamed class file"))

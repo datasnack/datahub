@@ -8,6 +8,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from datahub.conf import datalayers_path
 from datahub.datalayers.models import Datalayer, camel
 
 
@@ -49,10 +50,9 @@ class Command(BaseCommand):
                 )
             )
 
-        dl_file = Path(f"src/datalayer/{options['key']}.py")
+        dl_file = Path(datalayers_path() / f"{options['key']}.py")
 
         # Check if it already exists
-
         if not dl_file.exists():
             name_camel = camel(options["key"])
             # Create source file

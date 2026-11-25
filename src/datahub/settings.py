@@ -176,7 +176,6 @@ INSTALLED_APPS = [
     "taggit",
     "ninja",
     "django.contrib.admin",  # lower position to allow core apps to overwrite admin templates
-    "src.datalayer",
 ]
 
 # inject potential user apps that should be able to overwrite templates in app

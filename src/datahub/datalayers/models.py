@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
+
 import datetime as dt
 import logging
 import os
@@ -16,12 +17,14 @@ import yaml
 from psycopg import sql
 from taggit.managers import TaggableManager
 
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
+from datahub.conf import datalayers_path
 from datahub.datalayers.utils import dictfetchone, get_conn_string
 from datahub.shapes.models import Shape, Type
 
@@ -632,12 +635,12 @@ class Datalayer(models.Model):
     def _import_and_create_class(self) -> BaseLayer:
         # spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
 
-        ns = "src"
+        ns = settings.DATAHUB_DATALAYERS_MODULE
 
         if "PYTEST_CURRENT_TEST" in os.environ:
             ns = "tests"
 
-        mod = __import__(f"{ns}.datalayer.{self.key}", fromlist=[camel(self.key)])
+        mod = __import__(f"{ns}.{self.key}", fromlist=[camel(self.key)])
         cls = getattr(mod, camel(self.key))()
         cls.layer = self
         return cls
@@ -676,7 +679,7 @@ class Datalayer(models.Model):
         return self.get_class_path().exists()
 
     def get_class_path(self) -> Path:
-        return Path(f"src/datalayer/{self.key}.py")
+        return Path(datalayers_path() / f"{self.key}.py")
 
     def get_class_source_code(self):
         """Get the actual file contents of the data layer source file."""

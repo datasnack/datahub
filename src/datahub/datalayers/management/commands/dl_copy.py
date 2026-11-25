@@ -7,6 +7,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 
+from datahub.conf import datalayers_path
 from datahub.datalayers.models import Datalayer, camel
 
 
@@ -52,7 +53,7 @@ class Command(BaseCommand):
             ) from None
 
         old_class = dl.get_class_path()
-        new_class = Path(f"src/datalayer/{new_key}.py")
+        new_class = Path(datalayers_path() / f"{new_key}.py")
 
         if new_class.exists():
             raise CommandError(
