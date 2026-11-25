@@ -15,6 +15,9 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "datahub.settings")
+from .cli import _find_settings
+
+settings = _find_settings() or "datahub.settings.default"
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings)
 
 application = get_wsgi_application()
