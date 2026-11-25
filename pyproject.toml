@@ -132,6 +132,14 @@ split-on-trailing-comma = false
 [tool.ruff.lint.extend-per-file-ignores]
 "*_test.py" = ["S101"]
 
+[tool.ruff.lint.flake8-copyright]
+# Matches e.g.
+#   SPDX-FileCopyrightText: 2024 Jane Doe <jane@example.org>
+#   SPDX-FileCopyrightText: © 2021-2024 Jane Doe <jane@example.org>
+notice-rgx = '(?i)SPDX-FileCopyrightText:\s+(?:©\s+)?\d{4}(?:[-,]\s*\d{4})*'
+# skip tiny files like empty __init__.py (size in bytes)
+min-file-size = 1
+
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
 quote-style = "double"
