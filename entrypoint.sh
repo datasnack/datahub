@@ -30,12 +30,19 @@ fi
 
 mkdir -p data/logs/
 
-python manage.py collectstatic --clear --noinput
-python manage.py migrate
+# update deps
+pip install --no-cache-dir --require-hashes -r requirements.txt
+
+#python manage.py collectstatic --clear --noinput
+#python manage.py migrate
+
+datahub collectstatic --clear --noinput
+datahub migrate
+
 
 # Start dev server or nginx/gunicorn for prod
 if [ "${DEBUG}" == "True" ]; then
-    python manage.py runserver 0.0.0.0:8000 --noreload
+    datahub runserver 0.0.0.0:8000 --noreload
 else
     service nginx start
     gunicorn --bind 127.0.0.1:8001 \

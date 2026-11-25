@@ -243,3 +243,4 @@ data/
 
 /app/static/build/
 /app/static/hot
+*.override.yaml

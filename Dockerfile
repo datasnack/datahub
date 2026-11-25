@@ -25,17 +25,27 @@ RUN apt-get update && apt-get install -y \
 
 # In accordance with PEP668 we create a venv for our dependencies, which is also the
 # the default for Ubuntu 24.x that is used in gdal image since 3.9.x
-RUN python -m venv /opt/datahub/venv \
-    && /opt/datahub/venv/bin/python -m pip install --upgrade pip
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/python -m pip install --upgrade pip
 
-# To leverage Docker layer caching we copy the requirements.txt and install it and copy
-# the rest of our files after, so during build the pip install is only executed when
-# the requirements.txt changed
+# Install Data Hub dependencies
+COPY requirements.txt /opt/datahub/constraints.txt
+RUN /opt/venv/bin/pip install --no-cache-dir --require-hashes -r /opt/datahub/constraints.txt
+# Install Data Hub wheel
+COPY --from=build /wheels /wheels
+RUN /opt/venv/bin/pip install --no-cache-dir --no-index --no-deps /wheels/*.whl && rm -rf /wheels
+
+
+
+COPY entrypoint.sh /opt/datahub/entrypoint.sh
+
+# Prepare image for dependant project
 RUN mkdir -p /app
-COPY ./requirements.txt /app/requirements.txt
 WORKDIR /app
-RUN /opt/datahub/venv/bin/pip install --no-cache-dir -r requirements.txt
-COPY . /app
+
+# put "/app/src" into to site-packages folder inside the .venv, so the packages below /src of the
+# actual project, will be discovered.
+RUN echo /app/src > "$(/opt/venv/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/app-src.pth"
 
 
 COPY ./nginx.conf /etc/nginx/sites-enabled/default
@@ -43,5 +53,5 @@ COPY ./nginx.conf /etc/nginx/sites-enabled/default
 EXPOSE 8000
 
 # Activate the venv globally before we start our app in the entrypoint.sh
-ENV PATH=/opt/datahub/venv/bin:$PATH
-CMD ["./entrypoint.sh"]
+ENV PATH=/opt/venv/bin:$PATH
+CMD ["/opt/datahub/entrypoint.sh"]
