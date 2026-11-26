@@ -47,13 +47,13 @@ def home(request):
     home_file = None
     language_code = get_language()
     if language_code != "en":  # en is always or default
-        translation_file = Path(f"src/Home.{language_code}.md")
+        translation_file = settings.BASE_DIR / f"src/Home.{language_code}.md"
         if translation_file.exists():
             home_file = translation_file
 
     # no translation found, use default
     if home_file is None:
-        default_file = Path("src/Home.md")
+        default_file = settings.BASE_DIR / "src/Home.md"
         if default_file.exists():
             home_file = default_file
 
@@ -77,7 +77,7 @@ def home(request):
 
 def file_download(request, file_path):
     file_path = unquote(file_path)
-    base_dir = Path(settings.BASE_DIR) / "docs"
+    base_dir = settings.BASE_DIR / "docs"
 
     try:
         # Fully resolve both base and target file
@@ -154,7 +154,7 @@ def changelog(request):
         "The project has not defined a changelog yet. Create a `CHANGELOG.md` inside your project root to track changes of the project and show them here."
     )
 
-    changelog_file = settings.BASE_DIR / "src/CHANGELOG.md"
+    changelog_file = settings.BASE_DIR / "CHANGELOG.md"
 
     if changelog_file.is_file():
         text = changelog_file.read_text()
