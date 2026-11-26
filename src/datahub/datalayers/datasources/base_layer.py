@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from psycopg import sql
 
+from django.conf import settings
 from django.db import connection
 from django.utils import formats
 from django.utils.translation import gettext as _
@@ -168,7 +169,7 @@ class BaseLayer:
 
     def get_data_path(self) -> Path:
         """Path to where to store the data of the layer."""
-        return Path(f"./data/datalayers/{self.layer.key}/")
+        return settings.BASE_DIR / f"data/datalayers/{self.layer.key}/"
 
     def str_format(self, value) -> str:
         if self.is_categorical():
