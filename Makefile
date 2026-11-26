@@ -22,8 +22,8 @@ release: update_python_deps
 	@git cliff -t $(VERSION) --unreleased --prepend CHANGELOG.md
 
 	@# 2. Update version and release date in datahub/__init__.py
-	@sed -i '' 's/__version__ = .*/__version__ = "$(VERSION_STRIPPED)"/' datahub/__init__.py
-	@sed -i '' 's/__version_date__ = .*/__version_date__ = "$(VERSION_DATE)"/' datahub/__init__.py
+	@sed -i '' 's/__version__ = .*/__version__ = "$(VERSION_STRIPPED)"/' src/datahub/__init__.py
+	@sed -i '' 's/__version_date__ = .*/__version_date__ = "$(VERSION_DATE)"/' src/datahub/__init__.py
 
 
 	@# 3. Update version in CITATION.cff
@@ -38,7 +38,7 @@ release: update_python_deps
 	@# Display hint to create commit and tag
 	@echo "--------------------------------------------------"
 	@echo "To finalize the release, please commit the changes:"
-	@echo "    git add CHANGELOG.md datahub/__init__.py CITATION.cff requirements.txt"
+	@echo "    git add CHANGELOG.md datahub/__init__.py CITATION.cff requirements.txt uv.lock"
 	@echo "    git commit -m 'chore: release $(VERSION)'"
 	@echo "    git tag $(VERSION)"
 	@echo "    git push origin main --tags"
