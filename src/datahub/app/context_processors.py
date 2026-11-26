@@ -4,7 +4,11 @@
 
 from django.conf import settings
 
-from datahub.app.docs import get_docs_structure, get_instance_about_root, get_instance_docs_root
+from datahub.app.docs import (
+    get_docs_structure,
+    get_instance_about_root,
+    get_instance_docs_root,
+)
 from datahub.app.utils.issue_templates import enumerate_issue_templates
 
 

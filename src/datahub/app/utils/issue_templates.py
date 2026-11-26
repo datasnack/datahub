@@ -26,7 +26,9 @@ def enumerate_issue_templates() -> list[IssueTemplate]:
     if not settings.DATAHUB_FORGE_ISSUE_SHOW_ADD:
         return issue_templates
 
-    issue_template_path: Path = Path(settings.DATAHUB_FORGE_ISSUE_TEMPLATES_PATH)
+    issue_template_path: Path = (
+        settings.BASE_DIR / settings.DATAHUB_FORGE_ISSUE_TEMPLATES_DIR
+    )
 
     if not issue_template_path.exists():
         return issue_templates
