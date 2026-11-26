@@ -633,13 +633,7 @@ class Datalayer(models.Model):
         return months
 
     def _import_and_create_class(self) -> BaseLayer:
-        # spec = importlib.util.spec_from_file_location("module.name", settings.DATAHUB_DATALAYER_DIR)
-
         ns = settings.DATAHUB_DATALAYERS_MODULE
-
-        if "PYTEST_CURRENT_TEST" in os.environ:
-            ns = "tests"
-
         mod = __import__(f"{ns}.{self.key}", fromlist=[camel(self.key)])
         cls = getattr(mod, camel(self.key))()
         cls.layer = self

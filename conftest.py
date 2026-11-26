@@ -7,8 +7,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import GEOSGeometry
 
-from datalayers.models import Datalayer
-from shapes.models import Shape, Type
+from datahub.datalayers.models import Datalayer
+from datahub.shapes.models import Shape, Type
 
 User = get_user_model()
 

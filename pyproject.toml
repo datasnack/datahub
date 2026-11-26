@@ -58,6 +58,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.datahub]
+settings = "example.settings"
+
 [tool.uv]
 exclude-newer = "5 days"
 
@@ -174,6 +178,6 @@ docstring-code-format = false
 docstring-code-line-length = "dynamic"
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "datahub.settings"
+DJANGO_SETTINGS_MODULE = "example.settings"
 # -- recommended but optional:
 python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
