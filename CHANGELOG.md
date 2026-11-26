@@ -11,6 +11,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0](https://github.com/datasnack/datahub/compare/v0.14.0-rc.2..v0.14.0) - 2026-11-26
+
+BREAKING CHANGE, project structure follows now the src/ package layout.
+
+How to migrate:
+
+1. create `pyproject.toml` based on datahub repo.
+2. Move Django apps from `src/` to `src/<project>/`, also move `__init__.py`. `<project>` can only be `[a-z0-9_]`, no `-`!
+3. Reflect that change in the `name=` in each apps `apps.py`
+4. create `src/<project>/settings.py` with 
+
+```python
+from datahub.settings import *  # noqa: F403
+```
+
+5. In `.env` update the key `INSTALLED_USER_APPS=` to no langer use `src.* ` but `<project>.*`
+
+6. Replace imports of `shapes`, `datalayer`, `app` to `datahub.*` 
+
+```bash
+find . -type f -name "*.py" -exec sed -i '' 's/from app./from datahub.app./g' {} +
+find . -type f -name "*.py" -exec sed -i '' 's/from datalayers./from datahub.datalayers./g' {} +
+find . -type f -name "*.py" -exec sed -i '' 's/from shapes./from datahub.shapes./g' {} +
+```
+
+7. Check import paths of your own packages.
+8. Create `requirements.txt` with `uv export --no-dev --no-emit-project --prune datahub > requirements.txt`
+9. Update volume mounts as needed:
+
+```yaml
+    volumes:
+      - ./src:/app/src/
+      - ./docs:/app/docs/
+      - ./data:/app/data/
+      - ./.forgejo:/app/.forgejo/
+      - ./CHANGELOG.md:/app/CHANGELOG.md
+      - ./requirements.txt:/app/requirements.txt
+      - ./pyproject.toml:/app/pyproject.toml
+```
+
+
+
 ## [0.13.10](https://github.com/datasnack/datahub/compare/v0.13.9..v0.13.10) - 2026-11-24
 
 ### Fixed
